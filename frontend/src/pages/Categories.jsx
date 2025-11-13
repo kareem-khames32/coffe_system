@@ -98,41 +98,69 @@ const Categories = () => {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {categories.map((category) => (
-          <div
-            key={category.id}
-            className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="bg-cream-100 p-3 rounded-lg">
-                <FolderOpen className="w-6 h-6 text-coffee-600" />
+        {categories.map((category, index) => {
+          const gradients = [
+            'from-coffee-600 to-coffee-700',
+            'from-coffee-500 to-coffee-600',
+            'from-cream-500 to-coffee-400',
+            'from-coffee-700 to-coffee-800',
+          ];
+          const gradient = gradients[index % gradients.length];
+
+          return (
+            <div
+              key={category.id}
+              className="relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+            >
+              {/* Gradient Background */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-95`}></div>
+
+              {/* Content */}
+              <div className="relative p-6 text-white">
+                {/* Icon & Actions */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
+                    <FolderOpen className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(category)}
+                      className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition"
+                    >
+                      <Edit className="w-4 h-4 text-white" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(category.id)}
+                      className="p-2 bg-red-500/70 hover:bg-red-500 rounded-lg transition"
+                    >
+                      <Trash2 className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Category Name */}
+                <h3 className="text-xl font-bold mb-2">{category.name}</h3>
+
+                {/* Description */}
+                <p className="text-sm text-white/80 mb-4 line-clamp-2">
+                  {category.description || 'لا يوجد وصف'}
+                </p>
+
+                {/* Product Count Badge */}
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 inline-block">
+                    <span className="text-sm font-semibold">
+                      {category.product_count || 0} منتج
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(category)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(category.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+
+              {/* Decorative Element */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">{category.name}</h3>
-            <p className="text-sm text-gray-600">
-              {category.description || 'لا يوجد وصف'}
-            </p>
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <span className="text-sm text-gray-500">
-                عدد المنتجات: {category.product_count || 0}
-              </span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {categories.length === 0 && (

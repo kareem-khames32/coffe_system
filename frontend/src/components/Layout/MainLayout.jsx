@@ -2,6 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import Footer from '../Footer';
 
 const MainLayout = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -29,6 +30,7 @@ const MainLayout = () => {
         <main className="flex-1 p-6 overflow-auto">
           <Outlet />
         </main>
+        <Footer />
       </div>
     </div>
   );
