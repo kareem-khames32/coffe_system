@@ -1,0 +1,371 @@
+const db = require('../config/database');
+
+// Dashboard Statistics
+exports.getDashboardStats = async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+
+        // Today's sales
+        const [todaySales] = await db.query(
+            `SELECT COALESCE(SUM(total), 0) as total
+             FROM orders
+             WHERE DATE(created_at) = ? AND status IN ('completed', 'ready')`,
+            [today]
+        );
+
+        // Today's orders count
+        const [todayOrders] = await db.query(
+            `SELECT COUNT(*) as count
+             FROM orders
+             WHERE DATE(created_at) = ?`,
+            [today]
+        );
+
+        // Pending orders count
+        const [pendingOrders] = await db.query(
+            `SELECT COUNT(*) as count
+             FROM orders
+             WHERE status = 'pending'`
+        );
+
+        // Today's profit
+        const [todayProfit] = await db.query(
+            `SELECT COALESCE(SUM(profit), 0) as profit
+             FROM orders
+             WHERE DATE(created_at) = ? AND status IN ('completed', 'ready')`,
+            [today]
+        );
+
+        // Low stock products count
+        const [lowStock] = await db.query(
+            `SELECT COUNT(*) as count
+             FROM products
+             WHERE stock <= low_stock_alert AND is_active = TRUE`
+        );
+
+        // Top selling products (last 30 days)
+        const [topProducts] = await db.query(
+            `SELECT oi.product_name, SUM(oi.quantity) as total_sold, SUM(oi.subtotal) as revenue
+             FROM order_items oi
+             JOIN orders o ON oi.order_id = o.id
+             WHERE o.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+             AND o.status IN ('completed', 'ready')
+             GROUP BY oi.product_id, oi.product_name
+             ORDER BY total_sold DESC
+             LIMIT 5`
+        );
+
+        // Sales chart data (last 7 days)
+        const [salesChart] = await db.query(
+            `SELECT DATE(created_at) as date, SUM(total) as sales, COUNT(*) as orders
+             FROM orders
+             WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+             AND status IN ('completed', 'ready')
+             GROUP BY DATE(created_at)
+             ORDER BY DATE(created_at) ASC`
+        );
+
+        // Online vs In-Store comparison (last 30 days)
+        const [orderTypes] = await db.query(
+            `SELECT order_type, COUNT(*) as count, SUM(total) as total
+             FROM orders
+             WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+             AND status IN ('completed', 'ready')
+             GROUP BY order_type`
+        );
+
+        res.json({
+            success: true,
+            data: {
+                todaySales: todaySales[0].total,
+                todayOrders: todayOrders[0].count,
+                pendingOrders: pendingOrders[0].count,
+                todayProfit: todayProfit[0].profit,
+                lowStockProducts: lowStock[0].count,
+                topProducts,
+                salesChart,
+                orderTypes
+            }
+        });
+    } catch (error) {
+        console.error('Get dashboard stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+// Sales Report
+exports.getSalesReport = async (req, res) => {
+    try {
+        const { start_date, end_date, order_type, status } = req.query;
+
+        let query = `
+            SELECT o.*, u.full_name as cashier_name
+            FROM orders o
+            LEFT JOIN users u ON o.cashier_id = u.id
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (start_date) {
+            query += ' AND DATE(o.created_at) >= ?';
+            params.push(start_date);
+        }
+
+        if (end_date) {
+            query += ' AND DATE(o.created_at) <= ?';
+            params.push(end_date);
+        }
+
+        if (order_type && order_type !== 'all') {
+            query += ' AND o.order_type = ?';
+            params.push(order_type);
+        }
+
+        if (status && status !== 'all') {
+            query += ' AND o.status = ?';
+            params.push(status);
+        }
+
+        query += ' ORDER BY o.created_at DESC';
+
+        const [orders] = await db.query(query, params);
+
+        // Calculate totals
+        const totalSales = orders.reduce((sum, order) => sum + parseFloat(order.total), 0);
+        const totalProfit = orders.reduce((sum, order) => sum + parseFloat(order.profit), 0);
+        const totalOrders = orders.length;
+        const averageOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
+
+        res.json({
+            success: true,
+            data: {
+                orders,
+                summary: {
+                    totalSales,
+                    totalProfit,
+                    totalOrders,
+                    averageOrderValue
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Get sales report error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+// Products Report
+exports.getProductsReport = async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+
+        let query = `
+            SELECT
+                oi.product_id,
+                oi.product_name,
+                SUM(oi.quantity) as total_sold,
+                SUM(oi.subtotal) as total_revenue,
+                SUM(oi.cost_price * oi.quantity) as total_cost,
+                SUM(oi.profit) as total_profit
+            FROM order_items oi
+            JOIN orders o ON oi.order_id = o.id
+            WHERE o.status IN ('completed', 'ready')
+        `;
+        const params = [];
+
+        if (start_date) {
+            query += ' AND DATE(o.created_at) >= ?';
+            params.push(start_date);
+        }
+
+        if (end_date) {
+            query += ' AND DATE(o.created_at) <= ?';
+            params.push(end_date);
+        }
+
+        query += ' GROUP BY oi.product_id, oi.product_name ORDER BY total_sold DESC';
+
+        const [products] = await db.query(query, params);
+
+        res.json({
+            success: true,
+            data: products
+        });
+    } catch (error) {
+        console.error('Get products report error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+// Profit Report
+exports.getProfitReport = async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+
+        const params = [];
+        let dateCondition = '1=1';
+
+        if (start_date && end_date) {
+            dateCondition = 'created_at >= ? AND created_at <= ?';
+            params.push(start_date, end_date);
+        }
+
+        // Total revenue from orders
+        const [revenue] = await db.query(
+            `SELECT COALESCE(SUM(total), 0) as total
+             FROM orders
+             WHERE ${dateCondition.replace('created_at', 'DATE(created_at)')}
+             AND status IN ('completed', 'ready')`,
+            params
+        );
+
+        // Total cost from orders
+        const [cost] = await db.query(
+            `SELECT COALESCE(SUM(cost), 0) as total
+             FROM orders
+             WHERE ${dateCondition.replace('created_at', 'DATE(created_at)')}
+             AND status IN ('completed', 'ready')`,
+            params
+        );
+
+        // Gross profit
+        const grossProfit = revenue[0].total - cost[0].total;
+
+        // Total expenses
+        const [expenses] = await db.query(
+            `SELECT COALESCE(SUM(amount), 0) as total
+             FROM expenses
+             WHERE ${dateCondition.replace('created_at', 'expense_date')}`,
+            params
+        );
+
+        // Total purchases
+        const [purchases] = await db.query(
+            `SELECT COALESCE(SUM(amount), 0) as total
+             FROM purchases
+             WHERE ${dateCondition.replace('created_at', 'purchase_date')}`,
+            params
+        );
+
+        // Net profit
+        const netProfit = grossProfit - expenses[0].total - purchases[0].total;
+
+        res.json({
+            success: true,
+            data: {
+                totalRevenue: revenue[0].total,
+                totalCost: cost[0].total,
+                grossProfit: grossProfit,
+                totalExpenses: expenses[0].total,
+                totalPurchases: purchases[0].total,
+                netProfit: netProfit
+            }
+        });
+    } catch (error) {
+        console.error('Get profit report error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+// Category Sales Report
+exports.getCategorySalesReport = async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+
+        let query = `
+            SELECT
+                c.id,
+                c.name as category_name,
+                COUNT(DISTINCT oi.id) as items_sold,
+                SUM(oi.quantity) as total_quantity,
+                SUM(oi.subtotal) as total_revenue
+            FROM categories c
+            LEFT JOIN products p ON c.id = p.category_id
+            LEFT JOIN order_items oi ON p.id = oi.product_id
+            LEFT JOIN orders o ON oi.order_id = o.id
+            WHERE o.status IN ('completed', 'ready')
+        `;
+        const params = [];
+
+        if (start_date) {
+            query += ' AND DATE(o.created_at) >= ?';
+            params.push(start_date);
+        }
+
+        if (end_date) {
+            query += ' AND DATE(o.created_at) <= ?';
+            params.push(end_date);
+        }
+
+        query += ' GROUP BY c.id, c.name ORDER BY total_revenue DESC';
+
+        const [categories] = await db.query(query, params);
+
+        res.json({
+            success: true,
+            data: categories
+        });
+    } catch (error) {
+        console.error('Get category sales report error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+// Customer Report (top customers by orders)
+exports.getCustomerReport = async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+
+        let query = `
+            SELECT
+                customer_name,
+                customer_phone,
+                COUNT(*) as total_orders,
+                SUM(total) as total_spent
+            FROM orders
+            WHERE customer_name IS NOT NULL
+            AND status IN ('completed', 'ready')
+        `;
+        const params = [];
+
+        if (start_date) {
+            query += ' AND DATE(created_at) >= ?';
+            params.push(start_date);
+        }
+
+        if (end_date) {
+            query += ' AND DATE(created_at) <= ?';
+            params.push(end_date);
+        }
+
+        query += ' GROUP BY customer_name, customer_phone ORDER BY total_spent DESC LIMIT 50';
+
+        const [customers] = await db.query(query, params);
+
+        res.json({
+            success: true,
+            data: customers
+        });
+    } catch (error) {
+        console.error('Get customer report error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
