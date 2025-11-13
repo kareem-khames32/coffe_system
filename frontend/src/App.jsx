@@ -13,14 +13,9 @@ import Users from './pages/Users';
 import Settings from './pages/Settings';
 import OnlineOrder from './pages/OnlineOrder';
 import TrackOrder from './pages/TrackOrder';
+import Offers from './pages/Offers';
 
 // Placeholder pages for features not yet implemented
-const Offers = () => (
-  <div>
-    <h1 className="text-2xl font-bold mb-4">إدارة العروض</h1>
-    <p>صفحة إدارة العروض - قيد التطوير</p>
-  </div>
-);
 
 const Expenses = () => (
   <div>
