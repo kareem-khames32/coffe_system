@@ -132,7 +132,7 @@ const Products = () => {
     setShowModal(true);
   };
 
-  const closeModal() => {
+  const closeModal = () => {
     setShowModal(false);
     setEditingProduct(null);
   };
