@@ -14,29 +14,9 @@ import Settings from './pages/Settings';
 import OnlineOrder from './pages/OnlineOrder';
 import TrackOrder from './pages/TrackOrder';
 import Offers from './pages/Offers';
-
-// Placeholder pages for features not yet implemented
-
-const Expenses = () => (
-  <div>
-    <h1 className="text-2xl font-bold mb-4">المصروفات</h1>
-    <p>صفحة إدارة المصروفات - قيد التطوير</p>
-  </div>
-);
-
-const Purchases = () => (
-  <div>
-    <h1 className="text-2xl font-bold mb-4">المشتريات</h1>
-    <p>صفحة إدارة المشتريات - قيد التطوير</p>
-  </div>
-);
-
-const Reports = () => (
-  <div>
-    <h1 className="text-2xl font-bold mb-4">التقارير</h1>
-    <p>صفحة التقارير - قيد التطوير</p>
-  </div>
-);
+import Expenses from './pages/Expenses';
+import Purchases from './pages/Purchases';
+import Reports from './pages/Reports';
 
 function App() {
   return (

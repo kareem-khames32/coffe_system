@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { productsAPI, categoriesAPI, ordersAPI } from '../api/services';
 import { Plus, Minus, Trash2, ShoppingCart, X, Printer, Coffee } from 'lucide-react';
+import Invoice from '../components/Invoice';
 
 const POS = () => {
   const [products, setProducts] = useState([]);
@@ -8,6 +9,8 @@ const POS = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState([]);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [lastOrder, setLastOrder] = useState(null);
   const [customerInfo, setCustomerInfo] = useState({
     customer_name: '',
     customer_phone: '',
@@ -134,10 +137,11 @@ const POS = () => {
 
       const response = await ordersAPI.createInStore(orderData);
 
-      alert('تم إنشاء الطلب بنجاح!');
-      // Print invoice
-      printInvoice(response.data.data);
-      // Reset
+      // Show invoice
+      setLastOrder(response.data.data);
+      setShowInvoice(true);
+
+      // Reset cart
       setCart([]);
       setCustomerInfo({
         customer_name: '',
@@ -151,11 +155,6 @@ const POS = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const printInvoice = (orderData) => {
-    // Simple print - يمكن تحسينها لاحقاً
-    window.print();
   };
 
   return (
@@ -397,6 +396,11 @@ const POS = () => {
           </button>
         </div>
       </div>
+
+      {/* Invoice Modal */}
+      {showInvoice && lastOrder && (
+        <Invoice orderData={lastOrder} onClose={() => setShowInvoice(false)} />
+      )}
     </div>
   );
 };
