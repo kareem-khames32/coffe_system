@@ -26,6 +26,7 @@ import {
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -33,10 +34,12 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
+      setError(null);
       const response = await reportsAPI.getDashboard();
       setStats(response.data.data);
     } catch (error) {
       console.error('Error fetching dashboard:', error);
+      setError(error.message || 'فشل في تحميل البيانات');
     } finally {
       setLoading(false);
     }
@@ -46,6 +49,26 @@ const Dashboard = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            حدث خطأ أثناء تحميل البيانات
+          </h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchDashboardData}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
       </div>
     );
   }
