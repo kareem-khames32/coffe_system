@@ -70,7 +70,7 @@ const Dashboard = () => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={fetchDashboardData}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+            className="px-6 py-2 bg-coffee-600 hover:bg-coffee-700 text-white rounded-lg transition"
           >
             إعادة المحاولة
           </button>
@@ -95,13 +95,13 @@ const Dashboard = () => {
           title="مبيعات اليوم"
           value={`${formatCurrency(stats?.todaySales)} ج.م`}
           icon={DollarSign}
-          color="bg-green-500"
+          color="bg-coffee-600"
         />
         <StatCard
           title="عدد الطلبات"
           value={stats?.todayOrders || 0}
           icon={ShoppingBag}
-          color="bg-blue-500"
+          color="bg-coffee-500"
         />
         <StatCard
           title="طلبات معلقة"
@@ -113,7 +113,7 @@ const Dashboard = () => {
           title="صافي الربح"
           value={`${formatCurrency(stats?.todayProfit)} ج.م`}
           icon={TrendingUp}
-          color="bg-purple-500"
+          color="bg-green-600"
         />
       </div>
 
@@ -132,7 +132,7 @@ const Dashboard = () => {
               <Line
                 type="monotone"
                 dataKey="sales"
-                stroke="#3b82f6"
+                stroke="#6f4e37"
                 strokeWidth={2}
                 name="المبيعات"
               />
@@ -152,8 +152,8 @@ const Dashboard = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="count" fill="#3b82f6" name="عدد الطلبات" />
-              <Bar dataKey="total" fill="#10b981" name="الإجمالي" />
+              <Bar dataKey="count" fill="#8b6f47" name="عدد الطلبات" />
+              <Bar dataKey="total" fill="#d4a574" name="الإجمالي" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -169,8 +169,8 @@ const Dashboard = () => {
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
             >
               <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Package className="w-5 h-5 text-blue-600" />
+                <div className="bg-cream-100 p-2 rounded-full">
+                  <Package className="w-5 h-5 text-coffee-600" />
                 </div>
                 <div>
                   <p className="font-semibold">{product.product_name}</p>

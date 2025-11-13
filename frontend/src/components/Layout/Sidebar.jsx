@@ -88,13 +88,13 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="bg-gray-900 text-white w-64 min-h-screen p-4 flex flex-col">
+    <div className="bg-coffee-900 text-white w-64 min-h-screen p-4 flex flex-col">
       {/* Logo */}
-      <div className="flex items-center gap-3 mb-8 p-3 bg-gray-800 rounded-lg">
-        <Coffee className="w-8 h-8 text-blue-400" />
+      <div className="flex items-center gap-3 mb-8 p-3 bg-coffee-800 rounded-lg">
+        <Coffee className="w-8 h-8 text-cream-300" />
         <div>
           <h1 className="font-bold text-lg">إدارة المقهى</h1>
-          <p className="text-xs text-gray-400">Cafe System</p>
+          <p className="text-xs text-cream-300">Cafe System</p>
         </div>
       </div>
 
@@ -109,8 +109,8 @@ const Sidebar = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800'
+                    ? 'bg-coffee-600 text-white shadow-lg'
+                    : 'text-cream-100 hover:bg-coffee-800'
                 }`
               }
             >
@@ -121,10 +121,10 @@ const Sidebar = () => {
       </nav>
 
       {/* User Info */}
-      <div className="mt-auto pt-4 border-t border-gray-800">
-        <div className="px-4 py-3 bg-gray-800 rounded-lg">
+      <div className="mt-auto pt-4 border-t border-coffee-700">
+        <div className="px-4 py-3 bg-coffee-800 rounded-lg">
           <p className="text-sm font-semibold">{user?.full_name}</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-cream-300">
             {user?.role === 'admin' ? 'مدير' : 'كاشير'}
           </p>
         </div>

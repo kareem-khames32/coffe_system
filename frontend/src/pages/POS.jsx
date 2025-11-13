@@ -182,7 +182,7 @@ const POS = () => {
               onClick={() => setSelectedCategory('all')}
               className={`px-4 py-2 rounded-lg whitespace-nowrap ${
                 selectedCategory === 'all'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-coffee-600 text-white'
                   : 'bg-gray-100'
               }`}
             >
@@ -194,7 +194,7 @@ const POS = () => {
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`px-4 py-2 rounded-lg whitespace-nowrap ${
                   selectedCategory === cat.id
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-coffee-600 text-white'
                     : 'bg-gray-100'
                 }`}
               >
@@ -218,7 +218,7 @@ const POS = () => {
               >
                 {product.name}
               </div>
-              <div className="text-blue-600 font-bold mt-2">
+              <div className="text-coffee-600 font-bold mt-2">
                 {product.price} ج.م
               </div>
               <div
@@ -237,7 +237,7 @@ const POS = () => {
           <div className="flex items-center gap-2 mb-4">
             <ShoppingCart className="w-6 h-6" />
             <h2 className="text-xl font-bold">السلة</h2>
-            <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-sm">
+            <span className="bg-coffee-600 text-white px-2 py-1 rounded-full text-sm">
               {cart.length}
             </span>
           </div>
@@ -251,7 +251,7 @@ const POS = () => {
               >
                 <div className="flex-1">
                   <div className="font-semibold text-sm">{item.product_name}</div>
-                  <div className="text-blue-600 text-sm">
+                  <div className="text-coffee-600 text-sm">
                     {item.price} × {item.quantity} ={' '}
                     {(item.price * item.quantity).toFixed(2)} ج.م
                   </div>
@@ -358,7 +358,7 @@ const POS = () => {
           <button
             onClick={handleCheckout}
             disabled={loading || cart.length === 0}
-            className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full mt-4 bg-coffee-600 hover:bg-coffee-700 text-white font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Printer className="w-5 h-5" />
             {loading ? 'جاري الإتمام...' : 'إتمام الطلب وطباعة'}
