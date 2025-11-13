@@ -23,6 +23,12 @@ import {
   Package,
 } from 'lucide-react';
 
+// Helper function to safely format numbers
+const formatCurrency = (value) => {
+  const num = parseFloat(value);
+  return isNaN(num) ? '0.00' : num.toFixed(2);
+};
+
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +93,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="مبيعات اليوم"
-          value={`${stats?.todaySales?.toFixed(2) || 0} ج.م`}
+          value={`${formatCurrency(stats?.todaySales)} ج.م`}
           icon={DollarSign}
           color="bg-green-500"
         />
@@ -105,7 +111,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="صافي الربح"
-          value={`${stats?.todayProfit?.toFixed(2) || 0} ج.م`}
+          value={`${formatCurrency(stats?.todayProfit)} ج.م`}
           icon={TrendingUp}
           color="bg-purple-500"
         />
@@ -175,7 +181,7 @@ const Dashboard = () => {
               </div>
               <div className="text-right">
                 <p className="font-bold text-green-600">
-                  {product.revenue?.toFixed(2)} ج.م
+                  {formatCurrency(product.revenue)} ج.م
                 </p>
               </div>
             </div>
