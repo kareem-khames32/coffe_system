@@ -99,6 +99,10 @@ export const settingsAPI = {
   updateSingle: (key, value) => axios.put(`/settings/${key}`, { setting_key: key, setting_value: value }),
   updateMultiple: (data) => axios.put('/settings', data),
   delete: (key) => axios.delete(`/settings/${key}`),
+  uploadLogo: (formData) => axios.post('/settings/logo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  deleteLogo: () => axios.delete('/settings/logo/delete'),
 };
 
 // Reports
