@@ -15,15 +15,14 @@ INSERT INTO users (
     full_name,
     role,
     can_make_sales,
-    can_edit_orders,
-    can_cancel_orders,
+    can_view_inventory,
+    can_edit_inventory,
     can_view_order_details,
-    can_manage_products,
-    can_manage_inventory,
+    can_cancel_orders,
+    can_edit_orders,
     can_view_reports,
-    can_manage_users,
-    can_manage_settings,
     can_add_expenses,
+    can_manage_offers,
     is_active
 ) VALUES (
     'kareem',
@@ -31,15 +30,14 @@ INSERT INTO users (
     'كريم خميس',
     'admin',
     1,  -- can_make_sales
-    1,  -- can_edit_orders
-    1,  -- can_cancel_orders
+    1,  -- can_view_inventory
+    1,  -- can_edit_inventory
     1,  -- can_view_order_details
-    1,  -- can_manage_products
-    1,  -- can_manage_inventory
+    1,  -- can_cancel_orders
+    1,  -- can_edit_orders
     1,  -- can_view_reports
-    1,  -- can_manage_users
-    1,  -- can_manage_settings
     1,  -- can_add_expenses (مهم للمشتريات!)
+    1,  -- can_manage_offers
     1   -- is_active
 );
 
@@ -60,30 +58,30 @@ SELECT id, username, full_name, role, is_active FROM users WHERE username = 'kar
 DELETE FROM users WHERE username = 'admin';
 INSERT INTO users (
     username, password, full_name, role,
-    can_make_sales, can_edit_orders, can_cancel_orders, can_view_order_details,
-    can_manage_products, can_manage_inventory, can_view_reports, can_manage_users,
-    can_manage_settings, can_add_expenses, is_active
+    can_make_sales, can_view_inventory, can_edit_inventory, can_view_order_details,
+    can_cancel_orders, can_edit_orders, can_view_reports, can_add_expenses,
+    can_manage_offers, is_active
 ) VALUES (
     'admin',
     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',  -- 123456
     'المدير العام',
     'admin',
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 );
 
 -- مستخدم manager
 DELETE FROM users WHERE username = 'manager';
 INSERT INTO users (
     username, password, full_name, role,
-    can_make_sales, can_edit_orders, can_cancel_orders, can_view_order_details,
-    can_manage_products, can_manage_inventory, can_view_reports, can_manage_users,
-    can_manage_settings, can_add_expenses, is_active
+    can_make_sales, can_view_inventory, can_edit_inventory, can_view_order_details,
+    can_cancel_orders, can_edit_orders, can_view_reports, can_add_expenses,
+    can_manage_offers, is_active
 ) VALUES (
     'manager',
     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',  -- 123456
     'مدير المقهى',
     'admin',
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 );
 
 -- عرض جميع المستخدمين

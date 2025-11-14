@@ -70,43 +70,43 @@ DELETE FROM users WHERE username IN ('kareem', 'admin', 'manager');
 -- إنشاء المستخدم الرئيسي: kareem
 INSERT INTO users (
     username, password, full_name, role,
-    can_make_sales, can_edit_orders, can_cancel_orders, can_view_order_details,
-    can_manage_products, can_manage_inventory, can_view_reports, can_manage_users,
-    can_manage_settings, can_add_expenses, is_active
+    can_make_sales, can_view_inventory, can_edit_inventory, can_view_order_details,
+    can_cancel_orders, can_edit_orders, can_view_reports, can_add_expenses,
+    can_manage_offers, is_active
 ) VALUES (
     'kareem',
     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'كريم خميس',
     'admin',
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 );
 
 -- إنشاء مستخدم احتياطي: admin
 INSERT INTO users (
     username, password, full_name, role,
-    can_make_sales, can_edit_orders, can_cancel_orders, can_view_order_details,
-    can_manage_products, can_manage_inventory, can_view_reports, can_manage_users,
-    can_manage_settings, can_add_expenses, is_active
+    can_make_sales, can_view_inventory, can_edit_inventory, can_view_order_details,
+    can_cancel_orders, can_edit_orders, can_view_reports, can_add_expenses,
+    can_manage_offers, is_active
 ) VALUES (
     'admin',
     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'المدير العام',
     'admin',
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 );
 
 -- إنشاء مستخدم احتياطي: manager
 INSERT INTO users (
     username, password, full_name, role,
-    can_make_sales, can_edit_orders, can_cancel_orders, can_view_order_details,
-    can_manage_products, can_manage_inventory, can_view_reports, can_manage_users,
-    can_manage_settings, can_add_expenses, is_active
+    can_make_sales, can_view_inventory, can_edit_inventory, can_view_order_details,
+    can_cancel_orders, can_edit_orders, can_view_reports, can_add_expenses,
+    can_manage_offers, is_active
 ) VALUES (
     'manager',
     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'مدير المقهى',
     'admin',
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 );
 
 -- ═══════════════════════════════════════════════════════════════════
