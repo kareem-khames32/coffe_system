@@ -412,3 +412,79 @@ exports.getCustomerReport = async (req, res) => {
         });
     }
 };
+
+// Purchases and Expenses Combined Report
+exports.getPurchasesAndExpensesReport = async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query;
+
+        // Build parameters for purchases
+        let purchasesQuery = 'SELECT * FROM purchases WHERE 1=1';
+        const purchasesParams = [];
+
+        if (start_date) {
+            purchasesQuery += ' AND DATE(purchase_date) >= ?';
+            purchasesParams.push(start_date);
+        }
+        if (end_date) {
+            purchasesQuery += ' AND DATE(purchase_date) <= ?';
+            purchasesParams.push(end_date);
+        }
+        purchasesQuery += ' ORDER BY purchase_date DESC';
+
+        // Build parameters for expenses
+        let expensesQuery = 'SELECT * FROM expenses WHERE 1=1';
+        const expensesParams = [];
+
+        if (start_date) {
+            expensesQuery += ' AND DATE(expense_date) >= ?';
+            expensesParams.push(start_date);
+        }
+        if (end_date) {
+            expensesQuery += ' AND DATE(expense_date) <= ?';
+            expensesParams.push(end_date);
+        }
+        expensesQuery += ' ORDER BY expense_date DESC';
+
+        // Fetch both
+        const [purchases] = await db.query(purchasesQuery, purchasesParams);
+        const [expenses] = await db.query(expensesQuery, expensesParams);
+
+        // Calculate totals
+        const totalPurchases = purchases.reduce((sum, p) => sum + parseFloat(p.total_amount || 0), 0);
+        const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+        const grandTotal = totalPurchases + totalExpenses;
+
+        console.log('Purchases and Expenses Report:', {
+            purchasesCount: purchases.length,
+            expensesCount: expenses.length,
+            totalPurchases,
+            totalExpenses,
+            grandTotal
+        });
+
+        res.json({
+            success: true,
+            data: {
+                purchases,
+                expenses,
+                summary: {
+                    totalPurchases,
+                    totalExpenses,
+                    grandTotal
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Get purchases and expenses report error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            code: error.code,
+            sql: error.sql
+        });
+        res.status(500).json({
+            success: false,
+            message: 'خطأ في تحميل التقرير'
+        });
+    }
+};

@@ -98,4 +98,5 @@ export const reportsAPI = {
   getProfit: (params) => axios.get('/reports/profit', { params }),
   getCategories: (params) => axios.get('/reports/categories', { params }),
   getCustomers: (params) => axios.get('/reports/customers', { params }),
+  getPurchasesAndExpenses: (params) => axios.get('/reports/purchases-expenses', { params }),
 };

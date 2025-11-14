@@ -6,24 +6,23 @@ exports.getAllExpenses = async (req, res) => {
         const { start_date, end_date } = req.query;
 
         let query = `
-            SELECT e.*, u.full_name as user_name
-            FROM expenses e
-            LEFT JOIN users u ON e.user_id = u.id
+            SELECT *
+            FROM expenses
             WHERE 1=1
         `;
         const params = [];
 
         if (start_date) {
-            query += ' AND e.expense_date >= ?';
+            query += ' AND expense_date >= ?';
             params.push(start_date);
         }
 
         if (end_date) {
-            query += ' AND e.expense_date <= ?';
+            query += ' AND expense_date <= ?';
             params.push(end_date);
         }
 
-        query += ' ORDER BY e.expense_date DESC';
+        query += ' ORDER BY expense_date DESC';
 
         const [expenses] = await db.query(query, params);
 
@@ -33,9 +32,13 @@ exports.getAllExpenses = async (req, res) => {
         });
     } catch (error) {
         console.error('Get expenses error:', error);
+        console.error('Error details:', {
+            code: error.code,
+            sqlMessage: error.sqlMessage
+        });
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: `خطأ في الخادم: ${error.sqlMessage || error.message}`
         });
     }
 };
@@ -44,10 +47,7 @@ exports.getAllExpenses = async (req, res) => {
 exports.getExpenseById = async (req, res) => {
     try {
         const [expenses] = await db.query(
-            `SELECT e.*, u.full_name as user_name
-             FROM expenses e
-             LEFT JOIN users u ON e.user_id = u.id
-             WHERE e.id = ?`,
+            `SELECT * FROM expenses WHERE id = ?`,
             [req.params.id]
         );
 
@@ -66,7 +66,7 @@ exports.getExpenseById = async (req, res) => {
         console.error('Get expense error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: `خطأ في الخادم: ${error.sqlMessage || error.message}`
         });
     }
 };
@@ -76,36 +76,46 @@ exports.createExpense = async (req, res) => {
     try {
         const { description, amount, category, expense_date, notes } = req.body;
 
+        console.log('Create expense request:', req.body);
+
         if (!description || !amount || !expense_date) {
+            console.log('Validation failed:', { description, amount, expense_date });
             return res.status(400).json({
                 success: false,
-                message: 'Description, amount, and expense date are required'
+                message: 'جميع الحقول مطلوبة: الوصف، المبلغ، والتاريخ'
             });
         }
 
         const [result] = await db.query(
-            `INSERT INTO expenses (description, amount, category, user_id, expense_date, notes)
-             VALUES (?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO expenses (description, amount, category, expense_date, notes)
+             VALUES (?, ?, ?, ?, ?)`,
             [
                 description,
                 amount,
                 category || null,
-                req.user.id,
                 expense_date,
                 notes || null
             ]
         );
 
+        console.log('Expense created successfully:', result.insertId);
+
         res.status(201).json({
             success: true,
-            message: 'Expense created successfully',
+            message: 'تم إضافة المصروف بنجاح',
             data: { id: result.insertId }
         });
     } catch (error) {
         console.error('Create expense error:', error);
+        console.error('Error details:', {
+            code: error.code,
+            errno: error.errno,
+            sqlMessage: error.sqlMessage,
+            sql: error.sql
+        });
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: `خطأ في الخادم: ${error.sqlMessage || error.message}`
         });
     }
 };
@@ -121,7 +131,7 @@ exports.updateExpense = async (req, res) => {
         if (expenses.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'Expense not found'
+                message: 'المصروف غير موجود'
             });
         }
 
@@ -160,13 +170,13 @@ exports.updateExpense = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Expense updated successfully'
+            message: 'تم تحديث المصروف بنجاح'
         });
     } catch (error) {
         console.error('Update expense error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: `خطأ في الخادم: ${error.sqlMessage || error.message}`
         });
     }
 };
@@ -179,19 +189,19 @@ exports.deleteExpense = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'Expense not found'
+                message: 'المصروف غير موجود'
             });
         }
 
         res.json({
             success: true,
-            message: 'Expense deleted successfully'
+            message: 'تم حذف المصروف بنجاح'
         });
     } catch (error) {
         console.error('Delete expense error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: `خطأ في الخادم: ${error.sqlMessage || error.message}`
         });
     }
 };
@@ -224,7 +234,7 @@ exports.getTotalExpenses = async (req, res) => {
         console.error('Get total expenses error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: `خطأ في الخادم: ${error.sqlMessage || error.message}`
         });
     }
 };
