@@ -54,7 +54,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coffee-600"></div>
       </div>
     );
   }
@@ -64,13 +64,13 @@ const Dashboard = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+          <h2 className="text-xl font-semibold text-amber-900 mb-2">
             حدث خطأ أثناء تحميل البيانات
           </h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-amber-700 mb-4">{error}</p>
           <button
             onClick={fetchDashboardData}
-            className="px-6 py-2 bg-coffee-600 hover:bg-coffee-700 text-white rounded-lg transition"
+            className="px-6 py-2 bg-gradient-to-r from-coffee-600 to-coffee-500 hover:from-coffee-700 hover:to-coffee-600 text-white rounded-xl transition-all shadow-lg"
           >
             إعادة المحاولة
           </button>
@@ -85,8 +85,8 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">لوحة التحكم</h1>
-        <p className="text-gray-600 mt-1">نظرة عامة على أداء المقهى</p>
+        <h1 className="text-3xl font-bold text-amber-900">لوحة التحكم</h1>
+        <p className="text-amber-700 mt-1">نظرة عامة على أداء المقهى</p>
       </div>
 
       {/* Stats Cards */}
@@ -95,33 +95,33 @@ const Dashboard = () => {
           title="مبيعات اليوم"
           value={`${formatCurrency(stats?.todaySales)} ج.م`}
           icon={DollarSign}
-          color="bg-coffee-600"
+          color="bg-gradient-to-br from-coffee-600 to-coffee-500"
         />
         <StatCard
           title="عدد الطلبات"
           value={stats?.todayOrders || 0}
           icon={ShoppingBag}
-          color="bg-coffee-500"
+          color="bg-gradient-to-br from-blue-500 to-blue-600"
         />
         <StatCard
           title="طلبات معلقة"
           value={stats?.pendingOrders || 0}
           icon={AlertCircle}
-          color="bg-orange-500"
+          color="bg-gradient-to-br from-orange-500 to-red-500"
         />
         <StatCard
           title="صافي الربح"
           value={`${formatCurrency(stats?.todayProfit)} ج.م`}
           icon={TrendingUp}
-          color="bg-green-600"
+          color="bg-gradient-to-br from-green-500 to-green-600"
         />
       </div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales Chart */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">مبيعات آخر 7 أيام</h3>
+        <div className="bg-white p-6 rounded-xl shadow-xl border-2 border-amber-200">
+          <h3 className="text-lg font-bold text-amber-900 mb-4">مبيعات آخر 7 أيام</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={stats?.salesChart || []}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -132,8 +132,8 @@ const Dashboard = () => {
               <Line
                 type="monotone"
                 dataKey="sales"
-                stroke="#6f4e37"
-                strokeWidth={2}
+                stroke="#d97706"
+                strokeWidth={3}
                 name="المبيعات"
               />
             </LineChart>
@@ -141,8 +141,8 @@ const Dashboard = () => {
         </div>
 
         {/* Order Types */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">
+        <div className="bg-white p-6 rounded-xl shadow-xl border-2 border-amber-200">
+          <h3 className="text-lg font-bold text-amber-900 mb-4">
             مقارنة الطلبات (داخلي / أونلاين)
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -152,35 +152,35 @@ const Dashboard = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="count" fill="#8b6f47" name="عدد الطلبات" />
-              <Bar dataKey="total" fill="#d4a574" name="الإجمالي" />
+              <Bar dataKey="count" fill="#d97706" name="عدد الطلبات" />
+              <Bar dataKey="total" fill="#f59e0b" name="الإجمالي" />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Top Products */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">أكثر المنتجات مبيعاً</h3>
+      <div className="bg-white p-6 rounded-xl shadow-xl border-2 border-amber-200">
+        <h3 className="text-lg font-bold text-amber-900 mb-4">أكثر المنتجات مبيعاً</h3>
         <div className="space-y-3">
           {stats?.topProducts?.map((product, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-3">
-                <div className="bg-cream-100 p-2 rounded-full">
-                  <Package className="w-5 h-5 text-coffee-600" />
+                <div className="bg-gradient-to-br from-coffee-600 to-coffee-500 p-3 rounded-full shadow-md">
+                  <Package className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="font-semibold">{product.product_name}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-bold text-amber-900">{product.product_name}</p>
+                  <p className="text-sm text-amber-700">
                     تم بيع {product.total_sold} وحدة
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-bold text-green-600">
+                <p className="font-bold text-green-600 text-lg">
                   {formatCurrency(product.revenue)} ج.م
                 </p>
               </div>
@@ -191,11 +191,11 @@ const Dashboard = () => {
 
       {/* Low Stock Alert */}
       {stats?.lowStockProducts > 0 && (
-        <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 p-5 rounded-xl shadow-lg">
           <div className="flex items-center gap-3">
-            <AlertCircle className="w-6 h-6 text-orange-600" />
+            <AlertCircle className="w-8 h-8 text-orange-600" />
             <div>
-              <p className="font-semibold text-orange-900">
+              <p className="font-bold text-orange-900 text-lg">
                 تنبيه: منتجات قليلة المخزون
               </p>
               <p className="text-sm text-orange-700">
@@ -211,14 +211,14 @@ const Dashboard = () => {
 
 const StatCard = ({ title, value, icon: Icon, color }) => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="bg-white p-6 rounded-xl shadow-xl border-2 border-amber-200 hover:shadow-2xl transition-all">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-600 text-sm">{title}</p>
-          <p className="text-2xl font-bold mt-2">{value}</p>
+          <p className="text-amber-700 text-sm font-semibold">{title}</p>
+          <p className="text-3xl font-bold mt-2 text-amber-900">{value}</p>
         </div>
-        <div className={`${color} p-3 rounded-full`}>
-          <Icon className="w-6 h-6 text-white" />
+        <div className={`${color} p-4 rounded-full shadow-lg`}>
+          <Icon className="w-7 h-7 text-white" />
         </div>
       </div>
     </div>

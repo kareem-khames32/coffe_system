@@ -162,27 +162,27 @@ const POS = () => {
       {/* Products Section */}
       <div className="lg:col-span-2 space-y-4">
         <div>
-          <h1 className="text-2xl font-bold">نقطة البيع</h1>
-          <p className="text-gray-600">اختر المنتجات لإضافتها للطلب</p>
+          <h1 className="text-3xl font-bold text-amber-900">نقطة البيع</h1>
+          <p className="text-amber-700">اختر المنتجات لإضافتها للطلب</p>
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-lg shadow space-y-4">
+        <div className="bg-white p-4 rounded-xl shadow-xl border-2 border-amber-200 space-y-4">
           <input
             type="text"
             placeholder="ابحث عن منتج..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
+            className="w-full px-4 py-2 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-coffee-500 focus:border-coffee-500 outline-none"
           />
 
           <div className="flex gap-2 overflow-x-auto">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap ${
+              className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all shadow-md ${
                 selectedCategory === 'all'
-                  ? 'bg-coffee-600 text-white'
-                  : 'bg-gray-100'
+                  ? 'bg-gradient-to-r from-coffee-600 to-coffee-500 text-white'
+                  : 'bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200'
               }`}
             >
               الكل
@@ -191,10 +191,10 @@ const POS = () => {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-2 rounded-lg whitespace-nowrap ${
+                className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all shadow-md ${
                   selectedCategory === cat.id
-                    ? 'bg-coffee-600 text-white'
-                    : 'bg-gray-100'
+                    ? 'bg-gradient-to-r from-coffee-600 to-coffee-500 text-white'
+                    : 'bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200'
                 }`}
               >
                 {cat.name}
@@ -264,11 +264,11 @@ const POS = () => {
 
       {/* Cart Section */}
       <div className="space-y-4">
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-4 rounded-xl shadow-xl border-2 border-amber-200">
           <div className="flex items-center gap-2 mb-4">
-            <ShoppingCart className="w-6 h-6" />
-            <h2 className="text-xl font-bold">السلة</h2>
-            <span className="bg-coffee-600 text-white px-2 py-1 rounded-full text-sm">
+            <ShoppingCart className="w-6 h-6 text-coffee-600" />
+            <h2 className="text-xl font-bold text-amber-900">السلة</h2>
+            <span className="bg-gradient-to-r from-coffee-600 to-coffee-500 text-white px-3 py-1 rounded-full text-sm shadow-md">
               {cart.length}
             </span>
           </div>
@@ -278,11 +278,11 @@ const POS = () => {
             {cart.map((item) => (
               <div
                 key={item.product_id}
-                className="flex items-center gap-2 p-2 bg-gray-50 rounded"
+                className="flex items-center gap-2 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200"
               >
                 <div className="flex-1">
-                  <div className="font-semibold text-sm">{item.product_name}</div>
-                  <div className="text-coffee-600 text-sm">
+                  <div className="font-bold text-sm text-amber-900">{item.product_name}</div>
+                  <div className="text-coffee-600 text-sm font-semibold">
                     {item.price} × {item.quantity} ={' '}
                     {(item.price * item.quantity).toFixed(2)} ج.م
                   </div>
@@ -290,20 +290,20 @@ const POS = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => updateQuantity(item.product_id, -1)}
-                    className="p-1 bg-gray-200 rounded hover:bg-gray-300"
+                    className="p-1 bg-amber-200 rounded-lg hover:bg-amber-300 transition"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="w-8 text-center font-bold">{item.quantity}</span>
+                  <span className="w-8 text-center font-bold text-amber-900">{item.quantity}</span>
                   <button
                     onClick={() => updateQuantity(item.product_id, 1)}
-                    className="p-1 bg-gray-200 rounded hover:bg-gray-300"
+                    className="p-1 bg-amber-200 rounded-lg hover:bg-amber-300 transition"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => removeFromCart(item.product_id)}
-                    className="p-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                    className="p-1 bg-gradient-to-r from-red-100 to-red-200 text-red-600 rounded-lg hover:from-red-200 hover:to-red-300 transition"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -314,7 +314,7 @@ const POS = () => {
 
           {/* Customer Info */}
           <div className="space-y-2 mb-4">
-            <h3 className="font-semibold text-sm">بيانات العميل (اختياري)</h3>
+            <h3 className="font-bold text-sm text-amber-900">بيانات العميل (اختياري)</h3>
             <input
               type="text"
               placeholder="اسم العميل"
@@ -322,7 +322,7 @@ const POS = () => {
               onChange={(e) =>
                 setCustomerInfo({ ...customerInfo, customer_name: e.target.value })
               }
-              className="w-full px-3 py-2 border rounded text-sm"
+              className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none"
             />
             <input
               type="tel"
@@ -331,7 +331,7 @@ const POS = () => {
               onChange={(e) =>
                 setCustomerInfo({ ...customerInfo, customer_phone: e.target.value })
               }
-              className="w-full px-3 py-2 border rounded text-sm"
+              className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none"
             />
             <input
               type="text"
@@ -340,17 +340,17 @@ const POS = () => {
               onChange={(e) =>
                 setCustomerInfo({ ...customerInfo, customer_address: e.target.value })
               }
-              className="w-full px-3 py-2 border rounded text-sm"
+              className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none"
             />
           </div>
 
           {/* Discount */}
           <div className="space-y-2 mb-4">
-            <h3 className="font-semibold text-sm">الخصم</h3>
+            <h3 className="font-bold text-sm text-amber-900">الخصم</h3>
             <select
               value={discountType}
               onChange={(e) => setDiscountType(e.target.value)}
-              className="w-full px-3 py-2 border rounded text-sm"
+              className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none"
             >
               <option value="none">بدون خصم</option>
               <option value="percentage">نسبة مئوية %</option>
@@ -361,7 +361,7 @@ const POS = () => {
                 type="number"
                 value={discountValue}
                 onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border rounded text-sm"
+                className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none"
                 placeholder={discountType === 'percentage' ? 'النسبة' : 'المبلغ'}
               />
             )}
@@ -389,7 +389,7 @@ const POS = () => {
           <button
             onClick={handleCheckout}
             disabled={loading || cart.length === 0}
-            className="w-full mt-4 bg-coffee-600 hover:bg-coffee-700 text-white font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full mt-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all"
           >
             <Printer className="w-5 h-5" />
             {loading ? 'جاري الإتمام...' : 'إتمام الطلب وطباعة'}

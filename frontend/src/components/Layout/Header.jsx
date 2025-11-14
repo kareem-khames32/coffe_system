@@ -97,7 +97,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+    <header className="bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 shadow-lg border-b-2 border-amber-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">
@@ -118,27 +118,27 @@ const Header = () => {
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+              className="relative p-3 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded-xl transition-all shadow-md hover:shadow-lg"
               title="الطلبات المعلقة"
             >
-              <Bell className={`w-6 h-6 ${pendingCount > 0 ? 'animate-pulse text-red-500' : ''}`} />
+              <Bell className={`w-6 h-6 ${pendingCount > 0 ? 'animate-pulse text-red-600' : ''}`} />
               {pendingCount > 0 && (
                 <>
-                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-bounce">
+                  <span className="absolute top-0 right-0 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce shadow-lg">
                     {pendingCount}
                   </span>
-                  <span className="absolute top-0 right-0 bg-red-500 rounded-full w-5 h-5 animate-ping"></span>
+                  <span className="absolute top-0 right-0 bg-red-500 rounded-full w-6 h-6 animate-ping"></span>
                 </>
               )}
             </button>
 
             {/* Notifications Dropdown */}
             {showNotifications && (
-              <div className="absolute left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-                <div className="p-4 border-b border-gray-200">
+              <div className="absolute left-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border-2 border-amber-200 z-50">
+                <div className="p-4 border-b-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900">الطلبات المعلقة</h3>
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    <h3 className="font-bold text-amber-900">الطلبات المعلقة</h3>
+                    <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs px-3 py-1 rounded-full shadow-md">
                       {pendingCount}
                     </span>
                   </div>
@@ -149,7 +149,7 @@ const Header = () => {
                     pendingOrders.map((order) => (
                       <div
                         key={order.id}
-                        className="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition"
+                        className="p-4 border-b border-amber-100 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 cursor-pointer transition-all"
                         onClick={() => {
                           setShowNotifications(false);
                           navigate('/orders');
@@ -193,13 +193,13 @@ const Header = () => {
                 </div>
 
                 {pendingOrders.length > 0 && (
-                  <div className="p-3 border-t border-gray-200">
+                  <div className="p-3 border-t-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
                     <button
                       onClick={() => {
                         setShowNotifications(false);
                         navigate('/orders');
                       }}
-                      className="w-full text-center text-sm text-coffee-600 hover:text-coffee-700 font-medium"
+                      className="w-full text-center text-sm text-coffee-700 hover:text-coffee-900 font-bold transition-colors"
                     >
                       عرض جميع الطلبات
                     </button>
@@ -212,7 +212,7 @@ const Header = () => {
           {/* Logout */}
           <button
             onClick={logout}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all shadow-md hover:shadow-lg"
           >
             <LogOut className="w-4 h-4" />
             <span>تسجيل الخروج</span>

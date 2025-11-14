@@ -35,26 +35,26 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-coffee-700 via-coffee-600 to-coffee-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border-2 border-amber-200">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="bg-cream-100 p-4 rounded-full">
-            <Coffee className="w-12 h-12 text-coffee-600" />
+          <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 rounded-full shadow-lg">
+            <Coffee className="w-16 h-16 text-coffee-700" />
           </div>
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
+        <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-coffee-800 to-coffee-600 bg-clip-text text-transparent mb-2">
           نظام إدارة المقهى
         </h1>
-        <p className="text-center text-gray-600 mb-8">
+        <p className="text-center text-amber-700 mb-8 font-medium">
           مرحباً بك، سجل دخولك للمتابعة
         </p>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 text-red-700 px-4 py-3 rounded-xl mb-4 shadow-md">
             {error}
           </div>
         )}
@@ -62,14 +62,14 @@ const Login = () => {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
+            <label className="block text-amber-900 text-sm font-bold mb-2">
               اسم المستخدم
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none transition"
+              className="w-full px-4 py-3 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition shadow-sm"
               placeholder="أدخل اسم المستخدم"
               required
               disabled={loading}
@@ -77,14 +77,14 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
+            <label className="block text-amber-900 text-sm font-bold mb-2">
               كلمة المرور
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none transition"
+              className="w-full px-4 py-3 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition shadow-sm"
               placeholder="أدخل كلمة المرور"
               required
               disabled={loading}
@@ -94,21 +94,21 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-coffee-600 hover:bg-coffee-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-coffee-600 to-coffee-500 hover:from-coffee-700 hover:to-coffee-600 text-white font-bold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
           >
             {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
           </button>
         </form>
 
         {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600 text-center mb-2">
+        <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 shadow-md">
+          <p className="text-sm text-amber-900 text-center mb-2 font-bold">
             بيانات تجريبية:
           </p>
-          <p className="text-xs text-gray-500 text-center">
-            اسم المستخدم: <span className="font-mono font-semibold">admin</span>
+          <p className="text-xs text-amber-700 text-center">
+            اسم المستخدم: <span className="font-mono font-bold bg-white px-2 py-1 rounded">admin</span>
             <br />
-            كلمة المرور: <span className="font-mono font-semibold">admin123</span>
+            كلمة المرور: <span className="font-mono font-bold bg-white px-2 py-1 rounded">admin123</span>
           </p>
         </div>
       </div>

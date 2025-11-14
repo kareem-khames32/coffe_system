@@ -113,21 +113,23 @@ const OnlineOrder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-coffee-700 via-coffee-600 to-coffee-800">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* Header */}
-      <div className="bg-white shadow-lg">
+      <div className="bg-gradient-to-r from-coffee-800 to-coffee-600 shadow-2xl border-b-4 border-amber-300">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Coffee className="w-10 h-10 text-coffee-600" />
+              <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full">
+                <Coffee className="w-10 h-10 text-amber-100" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">مقهى الأحلام</h1>
-                <p className="text-sm text-gray-600">اطلب الآن واستمتع بأفضل المشروبات</p>
+                <h1 className="text-3xl font-bold text-white">مقهى الأحلام</h1>
+                <p className="text-sm text-amber-100">اطلب الآن واستمتع بأفضل المشروبات</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-coffee-600 text-white px-4 py-2 rounded-lg">
-              <ShoppingCart className="w-5 h-5" />
-              <span className="font-bold">{cart.length}</span>
+            <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-5 py-3 rounded-xl shadow-lg">
+              <ShoppingCart className="w-6 h-6" />
+              <span className="font-bold text-lg">{cart.length}</span>
             </div>
           </div>
         </div>
@@ -138,14 +140,14 @@ const OnlineOrder = () => {
           {/* Products Section */}
           <div className="lg:col-span-2 space-y-4">
             {/* Categories */}
-            <div className="bg-white p-4 rounded-lg shadow-lg">
+            <div className="bg-white p-4 rounded-xl shadow-xl border-2 border-amber-200">
               <div className="flex gap-2 overflow-x-auto">
                 <button
                   onClick={() => setSelectedCategory('all')}
-                  className={`px-4 py-2 rounded-lg whitespace-nowrap transition ${
+                  className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all shadow-md ${
                     selectedCategory === 'all'
-                      ? 'bg-coffee-600 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200'
+                      ? 'bg-gradient-to-r from-coffee-600 to-coffee-500 text-white'
+                      : 'bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200'
                   }`}
                 >
                   الكل
@@ -154,10 +156,10 @@ const OnlineOrder = () => {
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-4 py-2 rounded-lg whitespace-nowrap transition ${
+                    className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all shadow-md ${
                       selectedCategory === cat.id
-                        ? 'bg-coffee-600 text-white'
-                        : 'bg-gray-100 hover:bg-gray-200'
+                        ? 'bg-gradient-to-r from-coffee-600 to-coffee-500 text-white'
+                        : 'bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200'
                     }`}
                   >
                     {cat.name}
@@ -171,22 +173,22 @@ const OnlineOrder = () => {
               {filteredProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-white p-4 rounded-lg shadow-lg hover:shadow-xl transition"
+                  className="bg-white p-4 rounded-xl shadow-xl border-2 border-amber-200 hover:shadow-2xl hover:border-coffee-400 transition-all"
                 >
                   <div className="text-center">
-                    <div className="bg-cream-100 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-3">
-                      <Coffee className="w-10 h-10 text-coffee-600" />
+                    <div className="bg-gradient-to-br from-amber-100 to-orange-100 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-3 shadow-md">
+                      <Coffee className="w-10 h-10 text-coffee-700" />
                     </div>
-                    <h3 className="font-bold text-gray-900 mb-2">{product.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    <h3 className="font-bold text-amber-900 mb-2">{product.name}</h3>
+                    <p className="text-sm text-amber-700 mb-3 line-clamp-2">
                       {product.description}
                     </p>
-                    <div className="text-coffee-600 font-bold text-lg mb-3">
+                    <div className="text-coffee-700 font-bold text-lg mb-3">
                       {product.price} ج.م
                     </div>
                     <button
                       onClick={() => addToCart(product)}
-                      className="w-full bg-coffee-600 hover:bg-coffee-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
+                      className="w-full bg-gradient-to-r from-coffee-600 to-coffee-500 hover:from-coffee-700 hover:to-coffee-600 text-white py-2 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
                     >
                       <Plus className="w-4 h-4" />
                       إضافة
@@ -200,45 +202,45 @@ const OnlineOrder = () => {
           {/* Cart & Checkout Section */}
           <div className="space-y-4">
             {/* Cart */}
-            <div className="bg-white p-4 rounded-lg shadow-lg sticky top-4">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5" />
+            <div className="bg-white p-4 rounded-xl shadow-2xl border-2 border-amber-200 sticky top-4">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-amber-900">
+                <ShoppingCart className="w-6 h-6 text-coffee-600" />
                 سلة المشتريات
               </h2>
 
               {cart.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <div className="text-center py-8 text-amber-600">
+                  <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-amber-300" />
                   <p>السلة فارغة</p>
                 </div>
               ) : (
                 <>
                   <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
                     {cart.map((item) => (
-                      <div key={item.product_id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                      <div key={item.product_id} className="flex items-center gap-2 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
                         <div className="flex-1">
-                          <div className="font-semibold text-sm">{item.product_name}</div>
-                          <div className="text-coffee-600 text-sm">
+                          <div className="font-bold text-sm text-amber-900">{item.product_name}</div>
+                          <div className="text-coffee-600 text-sm font-semibold">
                             {item.price} × {item.quantity} = {(item.price * item.quantity).toFixed(2)} ج.م
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => updateQuantity(item.product_id, -1)}
-                            className="p-1 bg-gray-200 rounded hover:bg-gray-300"
+                            className="p-1 bg-amber-200 rounded-lg hover:bg-amber-300 transition"
                           >
                             <Minus className="w-4 h-4" />
                           </button>
-                          <span className="w-8 text-center font-bold">{item.quantity}</span>
+                          <span className="w-8 text-center font-bold text-amber-900">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.product_id, 1)}
-                            className="p-1 bg-gray-200 rounded hover:bg-gray-300"
+                            className="p-1 bg-amber-200 rounded-lg hover:bg-amber-300 transition"
                           >
                             <Plus className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => removeFromCart(item.product_id)}
-                            className="p-1 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                            className="p-1 bg-gradient-to-r from-red-100 to-red-200 text-red-600 rounded-lg hover:from-red-200 hover:to-red-300 transition"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -256,7 +258,7 @@ const OnlineOrder = () => {
 
                   {/* Customer Form */}
                   <form onSubmit={handleSubmit} className="space-y-3">
-                    <h3 className="font-semibold">بياناتك</h3>
+                    <h3 className="font-bold text-amber-900">بياناتك</h3>
                     <input
                       type="text"
                       placeholder="الاسم *"
@@ -264,7 +266,7 @@ const OnlineOrder = () => {
                       onChange={(e) =>
                         setCustomerInfo({ ...customerInfo, customer_name: e.target.value })
                       }
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-coffee-500 outline-none"
+                      className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-coffee-500 outline-none"
                       required
                       disabled={loading}
                     />
@@ -275,7 +277,7 @@ const OnlineOrder = () => {
                       onChange={(e) =>
                         setCustomerInfo({ ...customerInfo, customer_phone: e.target.value })
                       }
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-coffee-500 outline-none"
+                      className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-coffee-500 outline-none"
                       required
                       disabled={loading}
                     />
@@ -285,7 +287,7 @@ const OnlineOrder = () => {
                       onChange={(e) =>
                         setCustomerInfo({ ...customerInfo, customer_address: e.target.value })
                       }
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-coffee-500 outline-none"
+                      className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-coffee-500 outline-none"
                       rows="2"
                       required
                       disabled={loading}
@@ -293,7 +295,7 @@ const OnlineOrder = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 rounded-xl font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                     >
                       <Check className="w-5 h-5" />
                       {loading ? 'جاري الإرسال...' : 'تأكيد الطلب'}

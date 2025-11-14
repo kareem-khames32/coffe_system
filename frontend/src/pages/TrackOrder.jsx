@@ -99,15 +99,17 @@ const TrackOrder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-coffee-700 via-coffee-600 to-coffee-800">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* Header */}
-      <div className="bg-white shadow-lg">
+      <div className="bg-gradient-to-r from-coffee-800 to-coffee-600 shadow-2xl border-b-4 border-amber-300">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-3">
-            <Coffee className="w-10 h-10 text-coffee-600" />
+            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full">
+              <Coffee className="w-10 h-10 text-amber-100" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">تتبع طلبك</h1>
-              <p className="text-sm text-gray-600">تابع حالة طلبك بسهولة</p>
+              <h1 className="text-3xl font-bold text-white">تتبع طلبك</h1>
+              <p className="text-sm text-amber-100">تابع حالة طلبك بسهولة</p>
             </div>
           </div>
         </div>
@@ -116,10 +118,10 @@ const TrackOrder = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Search Form */}
-          <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+          <div className="bg-white p-6 rounded-xl shadow-2xl border-2 border-amber-200 mb-6">
             <form onSubmit={handleTrack} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-amber-900 mb-2">
                   رقم الطلب
                 </label>
                 <div className="flex gap-2">
@@ -127,14 +129,14 @@ const TrackOrder = () => {
                     type="text"
                     value={orderNumber}
                     onChange={(e) => setOrderNumber(e.target.value)}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
+                    className="flex-1 px-4 py-3 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-coffee-500 focus:border-coffee-500 outline-none"
                     placeholder="مثال: 20240101-0001"
                     disabled={loading}
                   />
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-coffee-600 hover:bg-coffee-700 text-white px-6 py-3 rounded-lg transition disabled:opacity-50 flex items-center gap-2"
+                    className="bg-gradient-to-r from-coffee-600 to-coffee-500 hover:from-coffee-700 hover:to-coffee-600 text-white px-6 py-3 rounded-xl transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg"
                   >
                     <Search className="w-5 h-5" />
                     {loading ? 'جاري البحث...' : 'تتبع'}
@@ -143,7 +145,7 @@ const TrackOrder = () => {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                <div className="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 text-red-700 px-4 py-3 rounded-xl shadow-md">
                   {error}
                 </div>
               )}
@@ -173,8 +175,8 @@ const TrackOrder = () => {
 
               {/* Progress Steps (Only for non-cancelled orders) */}
               {order.status !== 'cancelled' && order.order_type === 'online' && (
-                <div className="bg-white p-6 rounded-lg shadow-lg">
-                  <h3 className="font-bold text-lg mb-6">مراحل الطلب</h3>
+                <div className="bg-white p-6 rounded-xl shadow-2xl border-2 border-amber-200">
+                  <h3 className="font-bold text-lg mb-6 text-amber-900">مراحل الطلب</h3>
                   <div className="space-y-4">
                     {getStatusSteps().map((step, index) => {
                       const StepIcon = step.icon;
@@ -217,8 +219,8 @@ const TrackOrder = () => {
               )}
 
               {/* Order Info */}
-              <div className="bg-white p-6 rounded-lg shadow-lg">
-                <h3 className="font-bold text-lg mb-4">معلومات الطلب</h3>
+              <div className="bg-white p-6 rounded-xl shadow-2xl border-2 border-amber-200">
+                <h3 className="font-bold text-lg mb-4 text-amber-900">معلومات الطلب</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">رقم الطلب:</span>
@@ -264,13 +266,13 @@ const TrackOrder = () => {
               </div>
 
               {/* Order Items */}
-              <div className="bg-white p-6 rounded-lg shadow-lg">
-                <h3 className="font-bold text-lg mb-4">تفاصيل الطلب</h3>
+              <div className="bg-white p-6 rounded-xl shadow-2xl border-2 border-amber-200">
+                <h3 className="font-bold text-lg mb-4 text-amber-900">تفاصيل الطلب</h3>
                 <div className="space-y-3">
                   {order.items?.map((item, index) => (
                     <div
                       key={index}
-                      className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                      className="flex justify-between items-center p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200"
                     >
                       <div>
                         <div className="font-semibold">{item.product_name}</div>
