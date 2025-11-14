@@ -106,8 +106,8 @@ const Orders = () => {
       confirmed: ['preparing', 'ready', 'completed', 'cancelled'],
       preparing: ['ready', 'completed', 'cancelled'],
       ready: ['completed', 'cancelled'],
-      completed: [],
-      cancelled: [],
+      completed: ['pending', 'cancelled'],  // Allow editing completed orders
+      cancelled: ['pending'],  // Allow reactivating cancelled orders
     };
     return flow[currentStatus] || [];
   };
@@ -369,7 +369,7 @@ const Orders = () => {
                   طباعة الفاتورة
                 </button>
 
-                {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'completed' && (
+                {selectedOrder.status !== 'cancelled' && (
                   <button
                     onClick={() => handleCancelOrder(selectedOrder.id)}
                     disabled={loading}

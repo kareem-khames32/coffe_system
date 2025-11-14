@@ -211,30 +211,59 @@ exports.getProfitReport = async (req, res) => {
     try {
         const { start_date, end_date } = req.query;
 
-        const params = [];
-        let dateCondition = '1=1';
+        // Build date conditions for orders
+        let orderDateCondition = 'status IN (\'completed\', \'ready\')';
+        const orderParams = [];
 
-        if (start_date && end_date) {
-            dateCondition = 'created_at >= ? AND created_at <= ?';
-            params.push(start_date, end_date);
+        if (start_date) {
+            orderDateCondition += ' AND DATE(created_at) >= ?';
+            orderParams.push(start_date);
+        }
+        if (end_date) {
+            orderDateCondition += ' AND DATE(created_at) <= ?';
+            orderParams.push(end_date);
+        }
+
+        // Build date conditions for expenses
+        let expenseDateCondition = '1=1';
+        const expenseParams = [];
+
+        if (start_date) {
+            expenseDateCondition += ' AND DATE(expense_date) >= ?';
+            expenseParams.push(start_date);
+        }
+        if (end_date) {
+            expenseDateCondition += ' AND DATE(expense_date) <= ?';
+            expenseParams.push(end_date);
+        }
+
+        // Build date conditions for purchases
+        let purchaseDateCondition = '1=1';
+        const purchaseParams = [];
+
+        if (start_date) {
+            purchaseDateCondition += ' AND DATE(purchase_date) >= ?';
+            purchaseParams.push(start_date);
+        }
+        if (end_date) {
+            purchaseDateCondition += ' AND DATE(purchase_date) <= ?';
+            purchaseParams.push(end_date);
         }
 
         // Total revenue from orders
         const [revenue] = await db.query(
             `SELECT COALESCE(SUM(total), 0) as total
              FROM orders
-             WHERE ${dateCondition.replace('created_at', 'DATE(created_at)')}
-             AND status IN ('completed', 'ready')`,
-            params
+             WHERE ${orderDateCondition}`,
+            orderParams
         );
 
         // Total cost from orders
         const [cost] = await db.query(
             `SELECT COALESCE(SUM(cost), 0) as total
              FROM orders
-             WHERE ${dateCondition.replace('created_at', 'DATE(created_at)')}
-             AND status IN ('completed', 'ready')`,
-            params
+             WHERE ${orderDateCondition}`,
+            orderParams
         );
 
         // Gross profit
@@ -244,16 +273,16 @@ exports.getProfitReport = async (req, res) => {
         const [expenses] = await db.query(
             `SELECT COALESCE(SUM(amount), 0) as total
              FROM expenses
-             WHERE ${dateCondition.replace('created_at', 'expense_date')}`,
-            params
+             WHERE ${expenseDateCondition}`,
+            expenseParams
         );
 
         // Total purchases
         const [purchases] = await db.query(
             `SELECT COALESCE(SUM(total_amount), 0) as total
              FROM purchases
-             WHERE ${dateCondition.replace('created_at', 'purchase_date')}`,
-            params
+             WHERE ${purchaseDateCondition}`,
+            purchaseParams
         );
 
         // Net profit

@@ -294,36 +294,43 @@ const Reports = () => {
             {selectedReport === 'products' && reportData && (
               <div>
                 <h3 className="text-xl font-bold mb-4">المنتجات المباعة</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-coffee-700 text-white">
-                        <th className="px-4 py-3 text-right">المنتج</th>
-                        <th className="px-4 py-3 text-right">الكمية المباعة</th>
-                        <th className="px-4 py-3 text-right">إجمالي الإيرادات</th>
-                        <th className="px-4 py-3 text-right">التكلفة</th>
-                        <th className="px-4 py-3 text-right">الربح</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData.map((product) => (
-                        <tr key={product.product_id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 font-semibold">{product.product_name}</td>
-                          <td className="px-4 py-3">{product.total_sold}</td>
-                          <td className="px-4 py-3">
-                            {parseFloat(product.total_revenue).toFixed(2)} ج.م
-                          </td>
-                          <td className="px-4 py-3">
-                            {parseFloat(product.total_cost).toFixed(2)} ج.م
-                          </td>
-                          <td className="px-4 py-3 font-semibold text-green-600">
-                            {parseFloat(product.total_profit).toFixed(2)} ج.م
-                          </td>
+                {reportData.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg">
+                    <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-lg text-gray-600">لا توجد منتجات مباعة في هذه الفترة</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-coffee-700 text-white">
+                          <th className="px-4 py-3 text-right">المنتج</th>
+                          <th className="px-4 py-3 text-right">الكمية المباعة</th>
+                          <th className="px-4 py-3 text-right">إجمالي الإيرادات</th>
+                          <th className="px-4 py-3 text-right">التكلفة</th>
+                          <th className="px-4 py-3 text-right">الربح</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {reportData.map((product) => (
+                          <tr key={product.product_id} className="border-b hover:bg-gray-50">
+                            <td className="px-4 py-3 font-semibold">{product.product_name}</td>
+                            <td className="px-4 py-3">{product.total_sold}</td>
+                            <td className="px-4 py-3">
+                              {parseFloat(product.total_revenue).toFixed(2)} ج.م
+                            </td>
+                            <td className="px-4 py-3">
+                              {parseFloat(product.total_cost).toFixed(2)} ج.م
+                            </td>
+                            <td className="px-4 py-3 font-semibold text-green-600">
+                              {parseFloat(product.total_profit).toFixed(2)} ج.م
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
