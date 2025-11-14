@@ -175,7 +175,7 @@ const Header = () => {
                           </div>
                           <div className="text-left">
                             <p className="font-bold text-green-600">
-                              {parseFloat(order.total_amount).toFixed(2)} ج.م
+                              {parseFloat(order.total || 0).toFixed(2)} ج.م
                             </p>
                             <span className="inline-block mt-1 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
                               قيد الانتظار

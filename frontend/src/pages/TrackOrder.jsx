@@ -257,7 +257,7 @@ const TrackOrder = () => {
                   <div className="flex justify-between pt-3 border-t">
                     <span className="text-gray-600 font-bold">المبلغ الإجمالي:</span>
                     <span className="font-bold text-lg text-green-600">
-                      {parseFloat(order.total_amount).toFixed(2)} ج.م
+                      {parseFloat(order.total || 0).toFixed(2)} ج.م
                     </span>
                   </div>
                 </div>
