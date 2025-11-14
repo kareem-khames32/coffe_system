@@ -1,5 +1,7 @@
 import { NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { settingsAPI } from '../../api/services';
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -18,6 +20,20 @@ import {
 
 const Sidebar = () => {
   const { user, hasPermission } = useAuth();
+  const [settings, setSettings] = useState({ cafe_name: 'إدارة المقهى', logo_path: null });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await settingsAPI.getAll();
+      setSettings(response.data.data);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
 
   const navItems = [
     {
@@ -98,9 +114,17 @@ const Sidebar = () => {
     <div className="bg-gradient-to-b from-coffee-900 via-coffee-800 to-coffee-900 text-white w-64 min-h-screen p-4 flex flex-col shadow-2xl">
       {/* Logo */}
       <div className="flex items-center gap-3 mb-8 p-4 bg-gradient-to-r from-coffee-700 to-coffee-600 rounded-xl shadow-lg">
-        <Coffee className="w-8 h-8 text-amber-100" />
-        <div>
-          <h1 className="font-bold text-lg text-white">إدارة المقهى</h1>
+        {settings.logo_path ? (
+          <img
+            src={import.meta.env.VITE_API_URL + settings.logo_path}
+            alt="Logo"
+            className="w-12 h-12 object-contain rounded-lg bg-white p-1"
+          />
+        ) : (
+          <Coffee className="w-8 h-8 text-amber-100" />
+        )}
+        <div className="flex-1">
+          <h1 className="font-bold text-lg text-white">{settings.cafe_name || 'إدارة المقهى'}</h1>
           <p className="text-xs text-amber-100">Cafe System</p>
         </div>
       </div>

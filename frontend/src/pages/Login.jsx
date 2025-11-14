@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { settingsAPI } from '../api/services';
 import { Coffee } from 'lucide-react';
 
 const Login = () => {
@@ -8,6 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [settings, setSettings] = useState({ cafe_name: 'نظام إدارة المقهى', logo_path: null });
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -17,6 +19,19 @@ const Login = () => {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  // Fetch settings for logo and cafe name
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await settingsAPI.getAll();
+        setSettings(response.data.data);
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,14 +54,24 @@ const Login = () => {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border-2 border-amber-200">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 rounded-full shadow-lg">
-            <Coffee className="w-16 h-16 text-coffee-700" />
-          </div>
+          {settings.logo_path ? (
+            <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-4 rounded-2xl shadow-lg">
+              <img
+                src={import.meta.env.VITE_API_URL + settings.logo_path}
+                alt="Logo"
+                className="w-24 h-24 object-contain"
+              />
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 rounded-full shadow-lg">
+              <Coffee className="w-16 h-16 text-coffee-700" />
+            </div>
+          )}
         </div>
 
         {/* Title */}
         <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-coffee-800 to-coffee-600 bg-clip-text text-transparent mb-2">
-          نظام إدارة المقهى
+          {settings.cafe_name || 'نظام إدارة المقهى'}
         </h1>
         <p className="text-center text-amber-700 mb-8 font-medium">
           مرحباً بك، سجل دخولك للمتابعة
