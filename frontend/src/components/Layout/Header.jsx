@@ -1,27 +1,77 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Bell, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { ordersAPI } from '../../api/services';
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [pendingCount, setPendingCount] = useState(0);
+  const previousCountRef = useRef(0);
 
   useEffect(() => {
     fetchPendingOrders();
-    // Poll every 30 seconds
-    const interval = setInterval(fetchPendingOrders, 30000);
+    // Poll every 15 seconds for better responsiveness
+    const interval = setInterval(fetchPendingOrders, 15000);
     return () => clearInterval(interval);
   }, []);
+
+  const playNotificationSound = () => {
+    try {
+      // Create a simple beep sound using Web Audio API
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+      console.error('Error playing notification sound:', error);
+    }
+  };
 
   const fetchPendingOrders = async () => {
     try {
       const response = await ordersAPI.getPendingCount();
-      setPendingCount(response.data.data.count);
+      const newCount = response.data.data.count;
+
+      // If count increased, play notification sound and show browser notification
+      if (newCount > previousCountRef.current && previousCountRef.current !== 0) {
+        playNotificationSound();
+
+        // Browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('طلب جديد!', {
+            body: `لديك ${newCount} طلب${newCount > 1 ? 'ات' : ''} قيد الانتظار`,
+            icon: '/favicon.ico',
+            tag: 'new-order',
+          });
+        }
+      }
+
+      previousCountRef.current = newCount;
+      setPendingCount(newCount);
     } catch (error) {
       console.error('Error fetching pending orders:', error);
     }
   };
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
@@ -42,12 +92,19 @@ const Header = () => {
 
         <div className="flex items-center gap-4">
           {/* Notifications */}
-          <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
-            <Bell className="w-6 h-6" />
+          <button
+            onClick={() => navigate('/orders')}
+            className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+            title="الطلبات المعلقة"
+          >
+            <Bell className={`w-6 h-6 ${pendingCount > 0 ? 'animate-pulse text-red-500' : ''}`} />
             {pendingCount > 0 && (
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {pendingCount}
-              </span>
+              <>
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-bounce">
+                  {pendingCount}
+                </span>
+                <span className="absolute top-0 right-0 bg-red-500 rounded-full w-5 h-5 animate-ping"></span>
+              </>
             )}
           </button>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ordersAPI } from '../api/services';
-import { ShoppingBag, Eye, X, Package, User, Phone, MapPin, Calendar, DollarSign, Printer, XCircle } from 'lucide-react';
+import { ShoppingBag, Eye, X, Package, User, Phone, MapPin, Calendar, DollarSign, Printer, XCircle, Link2, Copy, Check } from 'lucide-react';
 import Invoice from '../components/Invoice';
 
 const Orders = () => {
@@ -12,6 +12,7 @@ const Orders = () => {
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -112,12 +113,59 @@ const Orders = () => {
     return flow[currentStatus] || [];
   };
 
+  const copyOrderLink = () => {
+    const orderLink = `${window.location.origin}/online-order`;
+    navigator.clipboard.writeText(orderLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      alert('فشل نسخ الرابط');
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">الطلبات</h1>
         <p className="text-gray-600 mt-1">إدارة طلبات العملاء</p>
+      </div>
+
+      {/* Online Order Link */}
+      <div className="bg-gradient-to-r from-coffee-600 to-coffee-700 text-white p-6 rounded-lg shadow-lg">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-3 rounded-lg">
+              <Link2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">رابط الطلب عبر الإنترنت</h3>
+              <p className="text-sm text-white/80">شارك هذا الرابط مع العملاء لتلقي الطلبات أونلاين</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
+            <code className="text-sm text-white/90 font-mono">
+              {window.location.origin}/online-order
+            </code>
+            <button
+              onClick={copyOrderLink}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-coffee-600 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  تم النسخ!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  نسخ الرابط
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
