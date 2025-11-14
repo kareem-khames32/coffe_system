@@ -6,24 +6,23 @@ exports.getAllPurchases = async (req, res) => {
         const { start_date, end_date } = req.query;
 
         let query = `
-            SELECT p.*, u.full_name as user_name
-            FROM purchases p
-            LEFT JOIN users u ON p.user_id = u.id
+            SELECT *
+            FROM purchases
             WHERE 1=1
         `;
         const params = [];
 
         if (start_date) {
-            query += ' AND p.purchase_date >= ?';
+            query += ' AND purchase_date >= ?';
             params.push(start_date);
         }
 
         if (end_date) {
-            query += ' AND p.purchase_date <= ?';
+            query += ' AND purchase_date <= ?';
             params.push(end_date);
         }
 
-        query += ' ORDER BY p.purchase_date DESC';
+        query += ' ORDER BY purchase_date DESC';
 
         const [purchases] = await db.query(query, params);
 
@@ -44,10 +43,7 @@ exports.getAllPurchases = async (req, res) => {
 exports.getPurchaseById = async (req, res) => {
     try {
         const [purchases] = await db.query(
-            `SELECT p.*, u.full_name as user_name
-             FROM purchases p
-             LEFT JOIN users u ON p.user_id = u.id
-             WHERE p.id = ?`,
+            'SELECT * FROM purchases WHERE id = ?',
             [req.params.id]
         );
 
@@ -74,23 +70,24 @@ exports.getPurchaseById = async (req, res) => {
 // Create purchase
 exports.createPurchase = async (req, res) => {
     try {
-        const { description, amount, supplier, purchase_date, notes } = req.body;
+        const { supplier_name, item_description, quantity, unit_price, total_amount, purchase_date, notes } = req.body;
 
-        if (!description || !amount || !purchase_date) {
+        if (!supplier_name || !item_description || !quantity || !unit_price || !total_amount || !purchase_date) {
             return res.status(400).json({
                 success: false,
-                message: 'Description, amount, and purchase date are required'
+                message: 'Supplier name, item description, quantity, unit price, total amount, and purchase date are required'
             });
         }
 
         const [result] = await db.query(
-            `INSERT INTO purchases (description, amount, supplier, user_id, purchase_date, notes)
-             VALUES (?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO purchases (supplier_name, item_description, quantity, unit_price, total_amount, purchase_date, notes)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
-                description,
-                amount,
-                supplier || null,
-                req.user.id,
+                supplier_name,
+                item_description,
+                quantity,
+                unit_price,
+                total_amount,
                 purchase_date,
                 notes || null
             ]
@@ -113,7 +110,7 @@ exports.createPurchase = async (req, res) => {
 // Update purchase
 exports.updatePurchase = async (req, res) => {
     try {
-        const { description, amount, supplier, purchase_date, notes } = req.body;
+        const { supplier_name, item_description, quantity, unit_price, total_amount, purchase_date, notes } = req.body;
 
         // Check if purchase exists
         const [purchases] = await db.query('SELECT id FROM purchases WHERE id = ?', [req.params.id]);
@@ -128,19 +125,29 @@ exports.updatePurchase = async (req, res) => {
         let updateQuery = 'UPDATE purchases SET ';
         const updateValues = [];
 
-        if (description) {
-            updateQuery += 'description = ?, ';
-            updateValues.push(description);
+        if (supplier_name) {
+            updateQuery += 'supplier_name = ?, ';
+            updateValues.push(supplier_name);
         }
 
-        if (amount !== undefined) {
-            updateQuery += 'amount = ?, ';
-            updateValues.push(amount);
+        if (item_description) {
+            updateQuery += 'item_description = ?, ';
+            updateValues.push(item_description);
         }
 
-        if (supplier !== undefined) {
-            updateQuery += 'supplier = ?, ';
-            updateValues.push(supplier);
+        if (quantity !== undefined) {
+            updateQuery += 'quantity = ?, ';
+            updateValues.push(quantity);
+        }
+
+        if (unit_price !== undefined) {
+            updateQuery += 'unit_price = ?, ';
+            updateValues.push(unit_price);
+        }
+
+        if (total_amount !== undefined) {
+            updateQuery += 'total_amount = ?, ';
+            updateValues.push(total_amount);
         }
 
         if (purchase_date) {
@@ -201,7 +208,7 @@ exports.getTotalPurchases = async (req, res) => {
     try {
         const { start_date, end_date } = req.query;
 
-        let query = 'SELECT COALESCE(SUM(amount), 0) as total FROM purchases WHERE 1=1';
+        let query = 'SELECT COALESCE(SUM(total_amount), 0) as total FROM purchases WHERE 1=1';
         const params = [];
 
         if (start_date) {

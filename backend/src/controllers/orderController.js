@@ -123,13 +123,26 @@ exports.createInStoreOrder = async (req, res) => {
 
         await connection.commit();
 
+        // Get complete order data with items for invoice
+        const [completeOrder] = await connection.query(
+            `SELECT o.*, u.full_name as cashier_name
+             FROM orders o
+             LEFT JOIN users u ON o.cashier_id = u.id
+             WHERE o.id = ?`,
+            [orderId]
+        );
+
+        const [orderItems] = await connection.query(
+            'SELECT * FROM order_items WHERE order_id = ?',
+            [orderId]
+        );
+
         res.status(201).json({
             success: true,
             message: 'Order created successfully',
             data: {
-                order_id: orderId,
-                order_number: orderNumber,
-                total: total
+                ...completeOrder[0],
+                items: orderItems
             }
         });
     } catch (error) {

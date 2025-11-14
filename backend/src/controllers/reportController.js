@@ -250,7 +250,7 @@ exports.getProfitReport = async (req, res) => {
 
         // Total purchases
         const [purchases] = await db.query(
-            `SELECT COALESCE(SUM(amount), 0) as total
+            `SELECT COALESCE(SUM(total_amount), 0) as total
              FROM purchases
              WHERE ${dateCondition.replace('created_at', 'purchase_date')}`,
             params

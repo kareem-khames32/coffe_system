@@ -9,9 +9,9 @@ const Offers = () => {
   const [editingOffer, setEditingOffer] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    discount_type: 'percentage',
+    description: '',
+    offer_type: 'percentage',
     discount_value: '',
-    min_purchase: '',
     start_date: '',
     end_date: '',
     is_active: true,
@@ -36,9 +36,13 @@ const Offers = () => {
 
     try {
       const data = {
-        ...formData,
+        name: formData.name,
+        description: formData.description || null,
+        offer_type: formData.offer_type,
         discount_value: parseFloat(formData.discount_value),
-        min_purchase: formData.min_purchase ? parseFloat(formData.min_purchase) : null,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        is_active: formData.is_active,
       };
 
       if (editingOffer) {
@@ -61,9 +65,9 @@ const Offers = () => {
     setEditingOffer(offer);
     setFormData({
       name: offer.name,
-      discount_type: offer.discount_type,
+      description: offer.description || '',
+      offer_type: offer.offer_type,
       discount_value: offer.discount_value,
-      min_purchase: offer.min_purchase || '',
       start_date: offer.start_date ? offer.start_date.split('T')[0] : '',
       end_date: offer.end_date ? offer.end_date.split('T')[0] : '',
       is_active: offer.is_active,
@@ -99,9 +103,9 @@ const Offers = () => {
     setEditingOffer(null);
     setFormData({
       name: '',
-      discount_type: 'percentage',
+      description: '',
+      offer_type: 'percentage',
       discount_value: '',
-      min_purchase: '',
       start_date: '',
       end_date: '',
       is_active: true,
@@ -186,7 +190,7 @@ const Offers = () => {
                 {/* Discount Badge */}
                 <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-3 mb-4">
                   <div className="flex items-center gap-2 justify-center">
-                    {offer.discount_type === 'percentage' ? (
+                    {offer.offer_type === 'percentage' ? (
                       <>
                         <Percent className="w-6 h-6" />
                         <span className="text-3xl font-bold">{offer.discount_value}</span>
@@ -202,14 +206,13 @@ const Offers = () => {
                   </div>
                 </div>
 
+                {/* Description */}
+                {offer.description && (
+                  <p className="text-sm text-white/90 mb-4">{offer.description}</p>
+                )}
+
                 {/* Details */}
                 <div className="space-y-2 text-sm text-white/90">
-                  {offer.min_purchase && (
-                    <div className="flex justify-between">
-                      <span>الحد الأدنى:</span>
-                      <span className="font-semibold">{offer.min_purchase} ج.م</span>
-                    </div>
-                  )}
                   <div className="flex justify-between">
                     <span>يبدأ:</span>
                     <span className="font-semibold">
@@ -294,13 +297,27 @@ const Offers = () => {
                   />
                 </div>
 
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    الوصف
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-coffee-500 outline-none"
+                    placeholder="وصف العرض"
+                    rows="2"
+                    disabled={loading}
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     نوع الخصم *
                   </label>
                   <select
-                    value={formData.discount_type}
-                    onChange={(e) => setFormData({ ...formData, discount_type: e.target.value })}
+                    value={formData.offer_type}
+                    onChange={(e) => setFormData({ ...formData, offer_type: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-coffee-500 outline-none"
                     disabled={loading}
                   >
@@ -319,23 +336,8 @@ const Offers = () => {
                     value={formData.discount_value}
                     onChange={(e) => setFormData({ ...formData, discount_value: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-coffee-500 outline-none"
-                    placeholder={formData.discount_type === 'percentage' ? '20' : '50'}
+                    placeholder={formData.offer_type === 'percentage' ? '20' : '50'}
                     required
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    الحد الأدنى للشراء (ج.م)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.min_purchase}
-                    onChange={(e) => setFormData({ ...formData, min_purchase: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-coffee-500 outline-none"
-                    placeholder="اتركه فارغاً إذا لم يكن هناك حد أدنى"
                     disabled={loading}
                   />
                 </div>
