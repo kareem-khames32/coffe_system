@@ -29,7 +29,7 @@ const TrackOrder = () => {
     setOrder(null);
 
     try {
-      const response = await ordersAPI.trackByNumber(orderNumber);
+      const response = await ordersAPI.trackOrder(orderNumber);
       setOrder(response.data.data);
     } catch (error) {
       setError(error.response?.data?.message || 'لم يتم العثور على الطلب');
