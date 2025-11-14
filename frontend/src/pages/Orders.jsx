@@ -101,14 +101,10 @@ const Orders = () => {
   };
 
   const getNextStatuses = (currentStatus, orderType) => {
-    if (orderType === 'in-store') {
-      return []; // In-store orders are automatically completed
-    }
-
     const flow = {
-      pending: ['confirmed', 'cancelled'],
-      confirmed: ['preparing', 'cancelled'],
-      preparing: ['ready', 'cancelled'],
+      pending: ['confirmed', 'preparing', 'ready', 'completed', 'cancelled'],
+      confirmed: ['preparing', 'ready', 'completed', 'cancelled'],
+      preparing: ['ready', 'completed', 'cancelled'],
       ready: ['completed', 'cancelled'],
       completed: [],
       cancelled: [],

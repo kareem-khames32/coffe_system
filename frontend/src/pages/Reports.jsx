@@ -69,23 +69,27 @@ const Reports = () => {
     setLoading(true);
     try {
       let response;
-      const { start_date, end_date } = dateRange;
+      const params = {};
+
+      // Only include date parameters if they have values
+      if (dateRange.start_date) params.start_date = dateRange.start_date;
+      if (dateRange.end_date) params.end_date = dateRange.end_date;
 
       switch (selectedReport) {
         case 'sales':
-          response = await reportsAPI.getSales(start_date, end_date);
+          response = await reportsAPI.getSales(params);
           setReportData(response.data.data);
           break;
         case 'products':
-          response = await reportsAPI.getProducts(start_date, end_date);
+          response = await reportsAPI.getProducts(params);
           setReportData(response.data.data);
           break;
         case 'purchases':
-          response = await purchasesAPI.getAll(start_date, end_date);
+          response = await purchasesAPI.getAll(params);
           setReportData(response.data.data);
           break;
         case 'profit':
-          response = await reportsAPI.getProfit(start_date, end_date);
+          response = await reportsAPI.getProfit(params);
           setReportData(response.data.data);
           break;
       }
