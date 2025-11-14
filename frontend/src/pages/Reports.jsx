@@ -16,6 +16,7 @@ import {
   exportProductsReportToExcel,
   exportPurchasesReportToExcel,
   exportProfitReportToExcel,
+  exportPurchasesAndExpensesReportToExcel,
 } from '../utils/exportToExcel';
 
 const Reports = () => {
@@ -45,8 +46,8 @@ const Reports = () => {
     },
     {
       id: 'purchases',
-      title: 'تقرير المشتريات',
-      description: 'عرض جميع المشتريات والموردين',
+      title: 'تقرير المشتريات والمصروفات',
+      description: 'عرض جميع المشتريات والمصروفات معاً',
       icon: FileText,
       color: 'from-purple-600 to-purple-700',
     },
@@ -85,7 +86,7 @@ const Reports = () => {
           setReportData(response.data.data);
           break;
         case 'purchases':
-          response = await purchasesAPI.getAll(params);
+          response = await reportsAPI.getPurchasesAndExpenses(params);
           setReportData(response.data.data);
           break;
         case 'profit':
@@ -116,7 +117,7 @@ const Reports = () => {
         exportProductsReportToExcel(reportData, dateRange);
         break;
       case 'purchases':
-        exportPurchasesReportToExcel(reportData, dateRange);
+        exportPurchasesAndExpensesReportToExcel(reportData, dateRange);
         break;
       case 'profit':
         exportProfitReportToExcel(reportData, dateRange);
@@ -334,52 +335,121 @@ const Reports = () => {
               </div>
             )}
 
-            {/* Purchases Report */}
+            {/* Purchases and Expenses Report */}
             {selectedReport === 'purchases' && reportData && (
               <div>
-                <h3 className="text-xl font-bold mb-4">المشتريات</h3>
+                <h3 className="text-xl font-bold mb-4">المشتريات والمصروفات</h3>
+
                 {/* Summary */}
-                <div className="mb-6 p-4 bg-purple-50 rounded-lg">
-                  <p className="text-sm text-gray-600">إجمالي المشتريات</p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {reportData
-                      .reduce((sum, p) => sum + parseFloat(p.total_amount || 0), 0)
-                      .toFixed(2)}{' '}
-                    ج.م
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-600">
+                    <p className="text-sm text-gray-600">إجمالي المشتريات</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {parseFloat(reportData.summary?.totalPurchases || 0).toFixed(2)} ج.م
+                    </p>
+                  </div>
+                  <div className="p-4 bg-red-50 rounded-lg border-l-4 border-red-600">
+                    <p className="text-sm text-gray-600">إجمالي المصروفات</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {parseFloat(reportData.summary?.totalExpenses || 0).toFixed(2)} ج.م
+                    </p>
+                  </div>
+                  <div className="p-4 bg-orange-50 rounded-lg border-l-4 border-orange-600">
+                    <p className="text-sm text-gray-600">المجموع الكلي</p>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {parseFloat(reportData.summary?.grandTotal || 0).toFixed(2)} ج.م
+                    </p>
+                  </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-coffee-700 text-white">
-                        <th className="px-4 py-3 text-right">التاريخ</th>
-                        <th className="px-4 py-3 text-right">المورد</th>
-                        <th className="px-4 py-3 text-right">الصنف</th>
-                        <th className="px-4 py-3 text-right">الكمية</th>
-                        <th className="px-4 py-3 text-right">سعر الوحدة</th>
-                        <th className="px-4 py-3 text-right">الإجمالي</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData.map((purchase) => (
-                        <tr key={purchase.id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3">
-                            {new Date(purchase.purchase_date).toLocaleDateString('ar-EG')}
-                          </td>
-                          <td className="px-4 py-3">{purchase.supplier_name}</td>
-                          <td className="px-4 py-3">{purchase.item_description}</td>
-                          <td className="px-4 py-3">{purchase.quantity}</td>
-                          <td className="px-4 py-3">
-                            {parseFloat(purchase.unit_price).toFixed(2)} ج.م
-                          </td>
-                          <td className="px-4 py-3 font-semibold">
-                            {parseFloat(purchase.total_amount).toFixed(2)} ج.م
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {/* Purchases Table */}
+                <div className="mb-8">
+                  <h4 className="text-lg font-bold mb-3 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-purple-600" />
+                    المشتريات ({reportData.purchases?.length || 0})
+                  </h4>
+                  {reportData.purchases && reportData.purchases.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-purple-700 text-white">
+                            <th className="px-4 py-3 text-right">التاريخ</th>
+                            <th className="px-4 py-3 text-right">المورد</th>
+                            <th className="px-4 py-3 text-right">الصنف</th>
+                            <th className="px-4 py-3 text-right">الكمية</th>
+                            <th className="px-4 py-3 text-right">سعر الوحدة</th>
+                            <th className="px-4 py-3 text-right">الإجمالي</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportData.purchases.map((purchase) => (
+                            <tr key={`purchase-${purchase.id}`} className="border-b hover:bg-gray-50">
+                              <td className="px-4 py-3">
+                                {new Date(purchase.purchase_date).toLocaleDateString('ar-EG')}
+                              </td>
+                              <td className="px-4 py-3">{purchase.supplier_name}</td>
+                              <td className="px-4 py-3">{purchase.item_description}</td>
+                              <td className="px-4 py-3">{purchase.quantity}</td>
+                              <td className="px-4 py-3">
+                                {parseFloat(purchase.unit_price).toFixed(2)} ج.م
+                              </td>
+                              <td className="px-4 py-3 font-semibold text-purple-600">
+                                {parseFloat(purchase.total_amount).toFixed(2)} ج.م
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <p className="text-gray-600">لا توجد مشتريات في هذه الفترة</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Expenses Table */}
+                <div>
+                  <h4 className="text-lg font-bold mb-3 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-red-600" />
+                    المصروفات ({reportData.expenses?.length || 0})
+                  </h4>
+                  {reportData.expenses && reportData.expenses.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-red-700 text-white">
+                            <th className="px-4 py-3 text-right">التاريخ</th>
+                            <th className="px-4 py-3 text-right">الفئة</th>
+                            <th className="px-4 py-3 text-right">الوصف</th>
+                            <th className="px-4 py-3 text-right">المبلغ</th>
+                            <th className="px-4 py-3 text-right">ملاحظات</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportData.expenses.map((expense) => (
+                            <tr key={`expense-${expense.id}`} className="border-b hover:bg-gray-50">
+                              <td className="px-4 py-3">
+                                {new Date(expense.expense_date).toLocaleDateString('ar-EG')}
+                              </td>
+                              <td className="px-4 py-3">{expense.category || '-'}</td>
+                              <td className="px-4 py-3">{expense.description}</td>
+                              <td className="px-4 py-3 font-semibold text-red-600">
+                                {parseFloat(expense.amount).toFixed(2)} ج.م
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-600">
+                                {expense.notes || '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <p className="text-gray-600">لا توجد مصروفات في هذه الفترة</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

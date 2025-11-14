@@ -14,6 +14,7 @@ import Settings from './pages/Settings';
 import OnlineOrder from './pages/OnlineOrder';
 import TrackOrder from './pages/TrackOrder';
 import Offers from './pages/Offers';
+import DailyDiscounts from './pages/DailyDiscounts';
 import Expenses from './pages/Expenses';
 import Purchases from './pages/Purchases';
 import Reports from './pages/Reports';
@@ -37,6 +38,7 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/users" element={<Users />} />
             <Route path="/offers" element={<Offers />} />
+            <Route path="/daily-discounts" element={<DailyDiscounts />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/purchases" element={<Purchases />} />
             <Route path="/reports" element={<Reports />} />

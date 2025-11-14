@@ -112,3 +112,70 @@ export const exportProfitReportToExcel = (reportData, dateRange) => {
 
   exportToExcel(data, `تقرير_صافي_الربح${dateStr}`, 'صافي الربح');
 };
+
+export const exportPurchasesAndExpensesReportToExcel = (reportData, dateRange) => {
+  if (!reportData) return;
+
+  // Create a new workbook
+  const wb = XLSX.utils.book_new();
+
+  // Summary Sheet
+  const summaryData = [
+    { 'البند': 'إجمالي المشتريات', 'القيمة': parseFloat(reportData.summary?.totalPurchases || 0).toFixed(2) },
+    { 'البند': 'إجمالي المصروفات', 'القيمة': parseFloat(reportData.summary?.totalExpenses || 0).toFixed(2) },
+    { 'البند': 'المجموع الكلي', 'القيمة': parseFloat(reportData.summary?.grandTotal || 0).toFixed(2) },
+  ];
+  const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(wb, summaryWs, 'الملخص');
+
+  // Purchases Sheet
+  if (reportData.purchases && reportData.purchases.length > 0) {
+    const purchasesData = reportData.purchases.map((purchase) => ({
+      'التاريخ': new Date(purchase.purchase_date).toLocaleDateString('ar-EG'),
+      'المورد': purchase.supplier_name,
+      'الصنف': purchase.item_description,
+      'الكمية': purchase.quantity,
+      'سعر الوحدة': parseFloat(purchase.unit_price).toFixed(2),
+      'الإجمالي': parseFloat(purchase.total_amount).toFixed(2),
+      'ملاحظات': purchase.notes || '',
+    }));
+
+    // Add total row
+    purchasesData.push({});
+    purchasesData.push({
+      'التاريخ': 'الإجمالي',
+      'الإجمالي': parseFloat(reportData.summary?.totalPurchases || 0).toFixed(2),
+    });
+
+    const purchasesWs = XLSX.utils.json_to_sheet(purchasesData);
+    XLSX.utils.book_append_sheet(wb, purchasesWs, 'المشتريات');
+  }
+
+  // Expenses Sheet
+  if (reportData.expenses && reportData.expenses.length > 0) {
+    const expensesData = reportData.expenses.map((expense) => ({
+      'التاريخ': new Date(expense.expense_date).toLocaleDateString('ar-EG'),
+      'الفئة': expense.category || '-',
+      'الوصف': expense.description,
+      'المبلغ': parseFloat(expense.amount).toFixed(2),
+      'ملاحظات': expense.notes || '',
+    }));
+
+    // Add total row
+    expensesData.push({});
+    expensesData.push({
+      'التاريخ': 'الإجمالي',
+      'المبلغ': parseFloat(reportData.summary?.totalExpenses || 0).toFixed(2),
+    });
+
+    const expensesWs = XLSX.utils.json_to_sheet(expensesData);
+    XLSX.utils.book_append_sheet(wb, expensesWs, 'المصروفات');
+  }
+
+  const dateStr = dateRange.start_date && dateRange.end_date
+    ? `_${dateRange.start_date}_${dateRange.end_date}`
+    : '';
+
+  // Generate Excel file and trigger download
+  XLSX.writeFile(wb, `تقرير_المشتريات_والمصروفات${dateStr}.xlsx`);
+};

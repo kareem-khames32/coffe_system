@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   Users,
   Gift,
+  Calendar,
   DollarSign,
   ShoppingBasket,
   FileText,
@@ -59,6 +60,12 @@ const Sidebar = () => {
       name: 'العروض',
       path: '/offers',
       icon: Gift,
+      show: hasPermission('can_manage_offers'),
+    },
+    {
+      name: 'الخصومات اليومية',
+      path: '/daily-discounts',
+      icon: Calendar,
       show: hasPermission('can_manage_offers'),
     },
     {

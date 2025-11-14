@@ -61,6 +61,17 @@ export const offersAPI = {
   delete: (id) => axios.delete(`/offers/${id}`),
 };
 
+// Daily Discounts
+export const dailyDiscountsAPI = {
+  getAll: () => axios.get('/daily-discounts'),
+  getActive: () => axios.get('/daily-discounts/active'),
+  getForDate: (date) => axios.get('/daily-discounts/date', { params: { date } }),
+  getById: (id) => axios.get(`/daily-discounts/${id}`),
+  create: (data) => axios.post('/daily-discounts', data),
+  update: (id, data) => axios.put(`/daily-discounts/${id}`, data),
+  delete: (id) => axios.delete(`/daily-discounts/${id}`),
+};
+
 // Expenses
 export const expensesAPI = {
   getAll: (params) => axios.get('/expenses', { params }),
