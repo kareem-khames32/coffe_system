@@ -288,22 +288,36 @@ exports.getProfitReport = async (req, res) => {
         // Net profit
         const netProfit = grossProfit - expenses[0].total - purchases[0].total;
 
+        console.log('Profit report data:', {
+            revenue: revenue[0].total,
+            cost: cost[0].total,
+            grossProfit,
+            expenses: expenses[0].total,
+            purchases: purchases[0].total,
+            netProfit
+        });
+
         res.json({
             success: true,
             data: {
-                totalRevenue: revenue[0].total,
-                totalCost: cost[0].total,
-                grossProfit: grossProfit,
-                totalExpenses: expenses[0].total,
-                totalPurchases: purchases[0].total,
-                netProfit: netProfit
+                totalRevenue: parseFloat(revenue[0].total) || 0,
+                totalCost: parseFloat(cost[0].total) || 0,
+                grossProfit: parseFloat(grossProfit) || 0,
+                totalExpenses: parseFloat(expenses[0].total) || 0,
+                totalPurchases: parseFloat(purchases[0].total) || 0,
+                netProfit: parseFloat(netProfit) || 0
             }
         });
     } catch (error) {
         console.error('Get profit report error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            code: error.code,
+            sqlMessage: error.sqlMessage
+        });
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: `خطأ في تحميل التقرير: ${error.sqlMessage || error.message}`
         });
     }
 };

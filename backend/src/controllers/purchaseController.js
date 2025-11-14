@@ -72,10 +72,13 @@ exports.createPurchase = async (req, res) => {
     try {
         const { supplier_name, item_description, quantity, unit_price, total_amount, purchase_date, notes } = req.body;
 
+        console.log('Create purchase request:', req.body);
+
         if (!supplier_name || !item_description || !quantity || !unit_price || !total_amount || !purchase_date) {
+            console.log('Validation failed:', { supplier_name, item_description, quantity, unit_price, total_amount, purchase_date });
             return res.status(400).json({
                 success: false,
-                message: 'Supplier name, item description, quantity, unit price, total amount, and purchase date are required'
+                message: 'جميع الحقول مطلوبة: اسم المورد، الصنف، الكمية، سعر الوحدة، المبلغ الإجمالي، والتاريخ'
             });
         }
 
@@ -93,16 +96,24 @@ exports.createPurchase = async (req, res) => {
             ]
         );
 
+        console.log('Purchase created successfully:', result.insertId);
+
         res.status(201).json({
             success: true,
-            message: 'Purchase created successfully',
+            message: 'تم إضافة عملية الشراء بنجاح',
             data: { id: result.insertId }
         });
     } catch (error) {
         console.error('Create purchase error:', error);
+        console.error('Error details:', {
+            code: error.code,
+            errno: error.errno,
+            sqlMessage: error.sqlMessage,
+            sql: error.sql
+        });
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: `خطأ في الخادم: ${error.sqlMessage || error.message}`
         });
     }
 };
