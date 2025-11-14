@@ -15,4 +15,8 @@ router.put('/', isAdmin, settingsController.updateMultipleSettings);
 router.put('/:key', isAdmin, settingsController.updateSetting);
 router.delete('/:key', isAdmin, settingsController.deleteSetting);
 
+// Logo upload/delete (admin only)
+router.post('/logo', isAdmin, settingsController.uploadMiddleware, settingsController.uploadLogo);
+router.delete('/logo/delete', isAdmin, settingsController.deleteLogo);
+
 module.exports = router;

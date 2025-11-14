@@ -101,15 +101,15 @@ const TrackOrder = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-coffee-800 to-coffee-600 shadow-2xl border-b-4 border-amber-300">
+      <div className="bg-gradient-to-r from-amber-900 via-amber-800 to-orange-900 shadow-2xl border-b-4 border-amber-300">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full">
-              <Coffee className="w-10 h-10 text-amber-100" />
+              <div className="text-3xl">📦</div>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">تتبع طلبك</h1>
-              <p className="text-sm text-amber-100">تابع حالة طلبك بسهولة</p>
+              <h1 className="text-3xl font-bold text-white">تتبع طلبك 🔍</h1>
+              <p className="text-sm text-amber-100">تابع حالة طلبك بسهولة ✨</p>
             </div>
           </div>
         </div>

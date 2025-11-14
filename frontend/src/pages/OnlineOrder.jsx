@@ -115,21 +115,21 @@ const OnlineOrder = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-coffee-800 to-coffee-600 shadow-2xl border-b-4 border-amber-300">
+      <div className="bg-gradient-to-r from-amber-900 via-amber-800 to-orange-900 shadow-2xl border-b-4 border-amber-300">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full">
-                <Coffee className="w-10 h-10 text-amber-100" />
+                <div className="text-3xl">☕</div>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">مقهى الأحلام</h1>
-                <p className="text-sm text-amber-100">اطلب الآن واستمتع بأفضل المشروبات</p>
+                <h1 className="text-3xl font-bold text-white">مقهى الأحلام ☕</h1>
+                <p className="text-sm text-amber-100">اطلب الآن واستمتع بأفضل المشروبات 🎉</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-5 py-3 rounded-xl shadow-lg">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white px-5 py-3 rounded-xl shadow-lg font-bold">
               <ShoppingCart className="w-6 h-6" />
-              <span className="font-bold text-lg">{cart.length}</span>
+              <span className="text-lg">{cart.length}</span>
             </div>
           </div>
         </div>
@@ -173,25 +173,29 @@ const OnlineOrder = () => {
               {filteredProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-white p-4 rounded-xl shadow-xl border-2 border-amber-200 hover:shadow-2xl hover:border-coffee-400 transition-all"
+                  className="bg-white p-6 rounded-2xl shadow-xl border-2 border-amber-200 hover:shadow-2xl hover:scale-105 transition-all"
                 >
                   <div className="text-center">
-                    <div className="bg-gradient-to-br from-amber-100 to-orange-100 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-3 shadow-md">
-                      <Coffee className="w-10 h-10 text-coffee-700" />
-                    </div>
-                    <h3 className="font-bold text-amber-900 mb-2">{product.name}</h3>
+                    {/* Product Emoji */}
+                    <div className="text-6xl mb-4">☕</div>
+
+                    <h3 className="text-xl font-bold text-amber-900 mb-2">{product.name}</h3>
                     <p className="text-sm text-amber-700 mb-3 line-clamp-2">
                       {product.description}
                     </p>
-                    <div className="text-coffee-700 font-bold text-lg mb-3">
-                      {product.price} ج.م
+
+                    {/* Price Badge */}
+                    <div className="bg-gradient-to-r from-amber-100 to-orange-100 rounded-xl p-3 mb-4">
+                      <span className="text-2xl font-bold text-amber-900">{product.price}</span>
+                      <span className="text-sm text-amber-700 mr-1">ج.م</span>
                     </div>
+
                     <button
                       onClick={() => addToCart(product)}
-                      className="w-full bg-gradient-to-r from-coffee-600 to-coffee-500 hover:from-coffee-700 hover:to-coffee-600 text-white py-2 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
+                      className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white py-3 px-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 font-bold"
                     >
-                      <Plus className="w-4 h-4" />
-                      إضافة
+                      <Plus className="w-5 h-5" />
+                      إضافة للسلة
                     </button>
                   </div>
                 </div>

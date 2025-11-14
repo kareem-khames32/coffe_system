@@ -209,54 +209,41 @@ const POS = () => {
             <button
               key={product.id}
               onClick={() => addToCart(product)}
-              className={`relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 ${
+              className={`bg-white p-6 rounded-2xl shadow-xl border-2 border-amber-200 hover:shadow-2xl transition-all transform hover:scale-105 ${
                 product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
               }`}
               disabled={product.stock === 0}
             >
-              {/* Gradient Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-coffee-600 via-coffee-500 to-cream-400 opacity-90"></div>
-
-              {/* Content */}
-              <div className="relative p-5 text-white">
-                {/* Icon/Logo */}
-                <div className="flex justify-center mb-3">
-                  <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full">
-                    <Coffee className="w-8 h-8 text-white" />
-                  </div>
-                </div>
+              <div className="text-center">
+                {/* Product Icon/Emoji */}
+                <div className="text-6xl mb-4">☕</div>
 
                 {/* Product Name */}
-                <h3 className="font-bold text-lg text-center mb-2">
+                <h3 className="text-xl font-bold text-amber-900 mb-2">
                   {product.name}
                 </h3>
 
-                {/* Price */}
-                <div className="text-center">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 inline-block mb-2">
-                    <span className="text-2xl font-bold">{product.price}</span>
-                    <span className="text-sm mr-1">ج.م</span>
-                  </div>
+                {/* Price Badge */}
+                <div className="bg-gradient-to-r from-amber-100 to-orange-100 rounded-xl p-3 mb-4">
+                  <span className="text-2xl font-bold text-amber-900">{product.price}</span>
+                  <span className="text-sm text-amber-700 mr-1">ج.م</span>
                 </div>
 
                 {/* Stock Badge */}
                 <div className="text-center">
                   <span
-                    className={`text-xs px-3 py-1 rounded-full ${
+                    className={`text-xs px-3 py-1 rounded-full font-bold ${
                       product.stock === 0
-                        ? 'bg-red-500 text-white'
+                        ? 'bg-red-100 text-red-700 border-2 border-red-300'
                         : product.stock <= 10
-                        ? 'bg-yellow-400 text-gray-900'
-                        : 'bg-green-500 text-white'
+                        ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300'
+                        : 'bg-green-100 text-green-700 border-2 border-green-300'
                     }`}
                   >
-                    {product.stock === 0 ? 'نفذ المخزون' : `متوفر: ${product.stock}`}
+                    {product.stock === 0 ? '❌ نفذ المخزون' : `✅ متوفر: ${product.stock}`}
                   </span>
                 </div>
               </div>
-
-              {/* Shine Effect */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-0 transition-transform duration-1000"></div>
             </button>
           ))}
         </div>
