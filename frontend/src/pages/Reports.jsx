@@ -8,8 +8,15 @@ import {
   Calendar,
   Printer,
   ArrowLeft,
+  Download,
 } from 'lucide-react';
 import { reportsAPI, purchasesAPI } from '../api/services';
+import {
+  exportSalesReportToExcel,
+  exportProductsReportToExcel,
+  exportPurchasesReportToExcel,
+  exportProfitReportToExcel,
+} from '../utils/exportToExcel';
 
 const Reports = () => {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -94,6 +101,25 @@ const Reports = () => {
     window.print();
   };
 
+  const handleExport = () => {
+    if (!reportData) return;
+
+    switch (selectedReport) {
+      case 'sales':
+        exportSalesReportToExcel(reportData, dateRange);
+        break;
+      case 'products':
+        exportProductsReportToExcel(reportData, dateRange);
+        break;
+      case 'purchases':
+        exportPurchasesReportToExcel(reportData, dateRange);
+        break;
+      case 'profit':
+        exportProfitReportToExcel(reportData, dateRange);
+        break;
+    }
+  };
+
   const selectedReportData = reportTypes.find((r) => r.id === selectedReport);
 
   if (selectedReport && selectedReportData) {
@@ -114,13 +140,22 @@ const Reports = () => {
             </h1>
             <p className="text-gray-600 mt-1">{selectedReportData.description}</p>
           </div>
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-2 bg-coffee-600 hover:bg-coffee-700 text-white px-6 py-3 rounded-lg transition"
-          >
-            <Printer className="w-5 h-5" />
-            طباعة التقرير
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition"
+            >
+              <Download className="w-5 h-5" />
+              تصدير Excel
+            </button>
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-2 bg-coffee-600 hover:bg-coffee-700 text-white px-6 py-3 rounded-lg transition"
+            >
+              <Printer className="w-5 h-5" />
+              طباعة
+            </button>
+          </div>
         </div>
 
         {/* Date Range Filter - Hidden when printing */}

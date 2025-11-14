@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ordersAPI } from '../api/services';
-import { ShoppingBag, Eye, X, Package, User, Phone, MapPin, Calendar, DollarSign } from 'lucide-react';
+import { ShoppingBag, Eye, X, Package, User, Phone, MapPin, Calendar, DollarSign, Printer, XCircle } from 'lucide-react';
+import Invoice from '../components/Invoice';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,6 +50,16 @@ const Orders = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!confirm('هل أنت متأكد من إلغاء هذا الطلب؟')) return;
+    await updateOrderStatus(orderId, 'cancelled');
+  };
+
+  const handlePrintInvoice = () => {
+    setShowModal(false);
+    setShowInvoice(true);
   };
 
   const viewOrderDetails = async (order) => {
@@ -195,7 +207,7 @@ const Orders = () => {
                     })}
                   </td>
                   <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                    {parseFloat(order.total_amount).toFixed(2)} ج.م
+                    {parseFloat(order.total || 0).toFixed(2)} ج.م
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
@@ -270,7 +282,7 @@ const Orders = () => {
                     <div>
                       <div className="text-sm text-gray-500">المبلغ الإجمالي</div>
                       <div className="font-semibold text-lg text-green-600">
-                        {parseFloat(selectedOrder.total_amount).toFixed(2)} ج.م
+                        {parseFloat(selectedOrder.total || 0).toFixed(2)} ج.م
                       </div>
                     </div>
                   </div>
@@ -343,7 +355,7 @@ const Orders = () => {
                           المجموع الكلي
                         </td>
                         <td className="px-4 py-3 font-bold text-green-600">
-                          {parseFloat(selectedOrder.total_amount).toFixed(2)} ج.م
+                          {parseFloat(selectedOrder.total || 0).toFixed(2)} ج.م
                         </td>
                       </tr>
                     </tfoot>
@@ -351,10 +363,32 @@ const Orders = () => {
                 </div>
               </div>
 
+              {/* Action Buttons */}
+              <div className="flex gap-3 flex-wrap">
+                <button
+                  onClick={handlePrintInvoice}
+                  className="flex items-center gap-2 px-6 py-3 bg-coffee-600 hover:bg-coffee-700 text-white rounded-lg transition font-semibold"
+                >
+                  <Printer className="w-5 h-5" />
+                  طباعة الفاتورة
+                </button>
+
+                {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'completed' && (
+                  <button
+                    onClick={() => handleCancelOrder(selectedOrder.id)}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold disabled:opacity-50"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    إلغاء الطلب
+                  </button>
+                )}
+              </div>
+
               {/* Status Update */}
               {getNextStatuses(selectedOrder.status, selectedOrder.order_type).length > 0 && (
                 <div>
-                  <h3 className="text-lg font-bold mb-3">تحديث الحالة</h3>
+                  <h3 className="text-lg font-bold mb-3">تحديث حالة الطلب</h3>
                   <div className="flex gap-2 flex-wrap">
                     {getNextStatuses(selectedOrder.status, selectedOrder.order_type).map((status) => (
                       <button
@@ -376,6 +410,11 @@ const Orders = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Invoice Modal */}
+      {showInvoice && selectedOrder && (
+        <Invoice orderData={selectedOrder} onClose={() => setShowInvoice(false)} />
       )}
     </div>
   );
