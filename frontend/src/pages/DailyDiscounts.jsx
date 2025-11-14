@@ -87,7 +87,11 @@ const DailyDiscounts = () => {
   const toggleStatus = async (discount) => {
     try {
       await dailyDiscountsAPI.update(discount.id, {
-        ...discount,
+        name: discount.name,
+        description: discount.description,
+        discount_type: discount.discount_type,
+        discount_value: discount.discount_value,
+        target_date: discount.target_date.split('T')[0],
         is_active: !discount.is_active,
       });
       fetchDiscounts();
