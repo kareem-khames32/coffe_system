@@ -141,6 +141,9 @@ const OnlineOrder = () => {
       const orderData = {
         items: cart,
         ...customerInfo,
+        // إرسال بيانات الخصم اليومي إن وجدت
+        discount_type: dailyDiscount ? dailyDiscount.discount_type : 'none',
+        discount_value: dailyDiscount ? dailyDiscount.discount_value : 0,
       };
 
       const response = await ordersAPI.createOnline(orderData);

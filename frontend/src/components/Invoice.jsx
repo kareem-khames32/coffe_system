@@ -12,8 +12,8 @@ const Invoice = ({ orderData, onClose }) => {
   const total = subtotal - discount;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 invoice-modal">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto invoice-container">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Print Area */}
         <div id="invoice-print-area" className="p-4">
           {/* Header */}
@@ -140,72 +140,31 @@ const Invoice = ({ orderData, onClose }) => {
       </div>
 
       {/* Print Styles */}
-      <style jsx global>{`
+      <style>{`
         @media print {
           @page {
-            size: A5;
-            margin: 0.5cm;
+            size: 80mm auto;
+            margin: 5mm;
           }
 
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
+          body * {
+            visibility: hidden;
           }
 
-          body {
-            margin: 0;
-            padding: 0;
-          }
-
-          /* إخفاء كل المحتوى إلا الفاتورة */
-          body > *:not(.invoice-modal) {
-            display: none !important;
-          }
-
-          /* إخفاء الخلفية والأزرار */
-          .fixed.inset-0.bg-black {
-            display: block !important;
-            background: white !important;
-            position: static !important;
+          #invoice-print-area,
+          #invoice-print-area * {
+            visibility: visible;
           }
 
           #invoice-print-area {
-            position: static !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            padding: 0.5cm !important;
-            margin: 0 !important;
-            page-break-after: auto !important;
-            page-break-inside: avoid !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
           }
 
-          /* إخفاء الأزرار */
           .print\\:hidden {
             display: none !important;
-          }
-
-          /* تنسيق النصوص للطباعة */
-          #invoice-print-area h1 {
-            font-size: 16pt !important;
-            margin: 0.5em 0 !important;
-          }
-
-          #invoice-print-area table {
-            font-size: 9pt !important;
-            page-break-inside: avoid !important;
-          }
-
-          #invoice-print-area .text-xs {
-            font-size: 8pt !important;
-          }
-
-          #invoice-print-area .text-sm {
-            font-size: 9pt !important;
-          }
-
-          /* منع التكرار */
-          body {
-            overflow: hidden !important;
           }
         }
       `}</style>
