@@ -233,7 +233,7 @@ exports.createOnlineOrder = async (req, res) => {
         }
 
         // Calculate discount amount
-        const discountAmount = calculateDiscount(subtotal, finalDiscountType, finalDiscountValue);
+        discountAmount = calculateDiscount(subtotal, finalDiscountType, finalDiscountValue);
 
         const total = subtotal - discountAmount;
         const profit = total - totalCost;
