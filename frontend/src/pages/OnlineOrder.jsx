@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { productsAPI, categoriesAPI, ordersAPI, offersAPI } from '../api/services';
-import { ShoppingCart, Plus, Minus, Trash2, Coffee, Check, Gift } from 'lucide-react';
+import { productsAPI, categoriesAPI, ordersAPI, offersAPI, dailyDiscountsAPI } from '../api/services';
+import { ShoppingCart, Plus, Minus, Trash2, Coffee, Check, Gift, Tag } from 'lucide-react';
 
 const OnlineOrder = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [offers, setOffers] = useState([]);
+  const [dailyDiscount, setDailyDiscount] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,7 @@ const OnlineOrder = () => {
 
   useEffect(() => {
     fetchData();
+    fetchDailyDiscount();
   }, []);
 
   const fetchData = async () => {
@@ -33,6 +35,19 @@ const OnlineOrder = () => {
       setOffers(offersRes.data.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
+    }
+  };
+
+  const fetchDailyDiscount = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const response = await dailyDiscountsAPI.getForDate(today);
+
+      if (response.data.data) {
+        setDailyDiscount(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching daily discount:', error);
     }
   };
 
@@ -83,7 +98,34 @@ const OnlineOrder = () => {
   };
 
   const calculateTotal = () => {
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    // تطبيق الخصم اليومي إن وجد
+    if (dailyDiscount) {
+      if (dailyDiscount.discount_type === 'percentage') {
+        return subtotal - (subtotal * dailyDiscount.discount_value / 100);
+      } else if (dailyDiscount.discount_type === 'fixed') {
+        return Math.max(0, subtotal - dailyDiscount.discount_value);
+      }
+    }
+
+    return subtotal;
+  };
+
+  const calculateSubtotal = () => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  };
+
+  const calculateDiscount = () => {
+    if (!dailyDiscount) return 0;
+
+    const subtotal = calculateSubtotal();
+    if (dailyDiscount.discount_type === 'percentage') {
+      return subtotal * dailyDiscount.discount_value / 100;
+    } else if (dailyDiscount.discount_type === 'fixed') {
+      return Math.min(dailyDiscount.discount_value, subtotal);
+    }
+    return 0;
   };
 
   const handleSubmit = async (e) => {
@@ -291,7 +333,37 @@ const OnlineOrder = () => {
                     ))}
                   </div>
 
-                  <div className="border-t pt-3 mb-4">
+                  {/* Daily Discount Alert */}
+                  {dailyDiscount && (
+                    <div className="mb-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-3">
+                      <div className="flex items-start gap-2">
+                        <Tag className="w-5 h-5 text-green-600 mt-0.5" />
+                        <div className="flex-1">
+                          <h4 className="font-bold text-green-800 text-sm mb-1">
+                            🎉 خصم اليوم مفعل!
+                          </h4>
+                          <p className="text-xs text-green-700">
+                            {dailyDiscount.name} - {dailyDiscount.discount_value}
+                            {dailyDiscount.discount_type === 'percentage' ? '%' : ' ج.م'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="border-t pt-3 mb-4 space-y-2">
+                    {dailyDiscount && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span>المجموع الفرعي:</span>
+                          <span className="font-semibold">{calculateSubtotal().toFixed(2)} ج.م</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-green-600">
+                          <span>الخصم اليومي:</span>
+                          <span className="font-semibold">- {calculateDiscount().toFixed(2)} ج.م</span>
+                        </div>
+                      </>
+                    )}
                     <div className="flex justify-between text-lg font-bold">
                       <span>الإجمالي:</span>
                       <span className="text-green-600">{calculateTotal().toFixed(2)} ج.م</span>
