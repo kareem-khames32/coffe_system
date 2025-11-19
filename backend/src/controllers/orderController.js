@@ -169,6 +169,8 @@ exports.createOnlineOrder = async (req, res) => {
             customer_name,
             customer_phone,
             customer_address,
+            discount_type,
+            discount_value,
             offer_id
         } = req.body;
 
@@ -211,11 +213,12 @@ exports.createOnlineOrder = async (req, res) => {
             totalCost += products[0].cost_price * item.quantity;
         }
 
-        // Apply offer if provided
-        let discount_type = 'none';
-        let discount_value = 0;
+        // Apply discount (from daily discount or manual discount)
+        let finalDiscountType = discount_type || 'none';
+        let finalDiscountValue = discount_value || 0;
 
-        if (offer_id) {
+        // If no discount provided, check for offer
+        if ((!discount_type || discount_type === 'none') && offer_id) {
             const [offers] = await connection.query(
                 `SELECT * FROM offers WHERE id = ? AND is_active = TRUE
                  AND start_date <= CURDATE() AND end_date >= CURDATE()`,
@@ -224,11 +227,13 @@ exports.createOnlineOrder = async (req, res) => {
 
             if (offers.length > 0) {
                 const offer = offers[0];
-                discount_type = offer.offer_type === 'buy_x_get_y' ? 'percentage' : offer.offer_type;
-                discount_value = offer.discount_value;
-                discountAmount = calculateDiscount(subtotal, discount_type, discount_value);
+                finalDiscountType = offer.offer_type === 'buy_x_get_y' ? 'percentage' : offer.offer_type;
+                finalDiscountValue = offer.discount_value;
             }
         }
+
+        // Calculate discount amount
+        const discountAmount = calculateDiscount(subtotal, finalDiscountType, finalDiscountValue);
 
         const total = subtotal - discountAmount;
         const profit = total - totalCost;
@@ -248,8 +253,8 @@ exports.createOnlineOrder = async (req, res) => {
                 customer_phone,
                 customer_address,
                 subtotal,
-                discount_type,
-                discount_value,
+                finalDiscountType,
+                finalDiscountValue,
                 discountAmount,
                 total,
                 totalCost,
