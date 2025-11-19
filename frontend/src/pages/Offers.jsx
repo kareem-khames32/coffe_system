@@ -90,7 +90,12 @@ const Offers = () => {
   const toggleStatus = async (offer) => {
     try {
       await offersAPI.update(offer.id, {
-        ...offer,
+        name: offer.name,
+        description: offer.description,
+        offer_type: offer.offer_type,
+        discount_value: offer.discount_value,
+        start_date: offer.start_date.split('T')[0],
+        end_date: offer.end_date.split('T')[0],
         is_active: !offer.is_active,
       });
       fetchOffers();

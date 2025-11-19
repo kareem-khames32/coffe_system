@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { productsAPI, categoriesAPI, ordersAPI } from '../api/services';
-import { ShoppingCart, Plus, Minus, Trash2, Coffee, Check } from 'lucide-react';
+import { productsAPI, categoriesAPI, ordersAPI, offersAPI } from '../api/services';
+import { ShoppingCart, Plus, Minus, Trash2, Coffee, Check, Gift } from 'lucide-react';
 
 const OnlineOrder = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,12 +23,14 @@ const OnlineOrder = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
+      const [productsRes, categoriesRes, offersRes] = await Promise.all([
         productsAPI.getAll(),
         categoriesAPI.getAll(),
+        offersAPI.getActive(),
       ]);
       setProducts(productsRes.data.data.filter(p => p.is_active));
       setCategories(categoriesRes.data.data);
+      setOffers(offersRes.data.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -136,6 +139,41 @@ const OnlineOrder = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Active Offers Section */}
+        {offers.length > 0 && (
+          <div className="mb-6">
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-xl shadow-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Gift className="w-8 h-8" />
+                <h2 className="text-2xl font-bold">العروض المتاحة الآن!</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {offers.map((offer) => (
+                  <div
+                    key={offer.id}
+                    className="bg-white/20 backdrop-blur-sm p-4 rounded-lg border-2 border-white/30 hover:bg-white/30 transition"
+                  >
+                    <h3 className="font-bold text-lg mb-2">{offer.name}</h3>
+                    {offer.description && (
+                      <p className="text-sm text-white/90 mb-3">{offer.description}</p>
+                    )}
+                    <div className="flex items-center justify-center bg-white/30 rounded-lg p-3">
+                      <span className="text-3xl font-bold">
+                        {offer.discount_value}
+                        {offer.offer_type === 'percentage' ? '%' : ' ج.م'}
+                      </span>
+                      <span className="text-sm mr-2">خصم</span>
+                    </div>
+                    <div className="mt-3 text-xs text-white/80 text-center">
+                      ينتهي في: {new Date(offer.end_date).toLocaleDateString('ar-EG')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Products Section */}
           <div className="lg:col-span-2 space-y-4">

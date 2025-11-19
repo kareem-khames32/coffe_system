@@ -7,7 +7,7 @@ exports.getAllUsers = async (req, res) => {
         const [users] = await db.query(
             `SELECT id, username, full_name, role, can_make_sales, can_view_inventory,
              can_edit_inventory, can_view_order_details, can_cancel_orders, can_edit_orders,
-             can_view_reports, can_add_expenses, can_manage_offers, is_active, created_at
+             can_view_reports, can_add_expenses, can_manage_offers, can_apply_discounts, is_active, created_at
              FROM users ORDER BY created_at DESC`
         );
 
@@ -30,7 +30,7 @@ exports.getUserById = async (req, res) => {
         const [users] = await db.query(
             `SELECT id, username, full_name, role, can_make_sales, can_view_inventory,
              can_edit_inventory, can_view_order_details, can_cancel_orders, can_edit_orders,
-             can_view_reports, can_add_expenses, can_manage_offers, is_active, created_at
+             can_view_reports, can_add_expenses, can_manage_offers, can_apply_discounts, is_active, created_at
              FROM users WHERE id = ?`,
             [req.params.id]
         );
@@ -71,7 +71,8 @@ exports.createUser = async (req, res) => {
             can_edit_orders,
             can_view_reports,
             can_add_expenses,
-            can_manage_offers
+            can_manage_offers,
+            can_apply_discounts
         } = req.body;
 
         // Validate required fields
@@ -102,8 +103,8 @@ exports.createUser = async (req, res) => {
         const [result] = await db.query(
             `INSERT INTO users (username, password, full_name, role, can_make_sales,
              can_view_inventory, can_edit_inventory, can_view_order_details, can_cancel_orders,
-             can_edit_orders, can_view_reports, can_add_expenses, can_manage_offers)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             can_edit_orders, can_view_reports, can_add_expenses, can_manage_offers, can_apply_discounts)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 username,
                 hashedPassword,
@@ -117,7 +118,8 @@ exports.createUser = async (req, res) => {
                 can_edit_orders || false,
                 can_view_reports || false,
                 can_add_expenses || false,
-                can_manage_offers || false
+                can_manage_offers || false,
+                can_apply_discounts || false
             ]
         );
 
@@ -152,6 +154,7 @@ exports.updateUser = async (req, res) => {
             can_view_reports,
             can_add_expenses,
             can_manage_offers,
+            can_apply_discounts,
             is_active
         } = req.body;
 
@@ -244,6 +247,11 @@ exports.updateUser = async (req, res) => {
         if (can_manage_offers !== undefined) {
             updateQuery += 'can_manage_offers = ?, ';
             updateValues.push(can_manage_offers);
+        }
+
+        if (can_apply_discounts !== undefined) {
+            updateQuery += 'can_apply_discounts = ?, ';
+            updateValues.push(can_apply_discounts);
         }
 
         if (is_active !== undefined) {

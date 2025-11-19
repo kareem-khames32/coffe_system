@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { productsAPI, categoriesAPI, ordersAPI } from '../api/services';
-import { Plus, Minus, Trash2, ShoppingCart, X, Printer, Coffee } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingCart, X, Printer, Coffee, Lock } from 'lucide-react';
 import Invoice from '../components/Invoice';
+import { useAuth } from '../context/AuthContext';
 
 const POS = () => {
+  const { hasPermission } = useAuth();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -333,17 +335,29 @@ const POS = () => {
 
           {/* Discount */}
           <div className="space-y-2 mb-4">
-            <h3 className="font-bold text-sm text-amber-900">الخصم</h3>
+            <h3 className="font-bold text-sm text-amber-900 flex items-center gap-2">
+              الخصم
+              {!hasPermission('can_apply_discounts') && (
+                <Lock className="w-4 h-4 text-red-500" title="ليس لديك صلاحية تطبيق الخصومات" />
+              )}
+            </h3>
             <select
               value={discountType}
               onChange={(e) => setDiscountType(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none"
+              disabled={!hasPermission('can_apply_discounts')}
+              className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
-              <option value="none">بدون خصم</option>
-              <option value="percentage">نسبة مئوية %</option>
-              <option value="fixed">مبلغ ثابت</option>
+              <option value="none">
+                {hasPermission('can_apply_discounts') ? 'بدون خصم' : 'غير مصرح - اتصل بالمدير'}
+              </option>
+              {hasPermission('can_apply_discounts') && (
+                <>
+                  <option value="percentage">نسبة مئوية %</option>
+                  <option value="fixed">مبلغ ثابت</option>
+                </>
+              )}
             </select>
-            {discountType !== 'none' && (
+            {discountType !== 'none' && hasPermission('can_apply_discounts') && (
               <input
                 type="number"
                 value={discountValue}
