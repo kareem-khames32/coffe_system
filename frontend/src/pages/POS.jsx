@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { productsAPI, categoriesAPI, ordersAPI } from '../api/services';
-import { Plus, Minus, Trash2, ShoppingCart, X, Printer, Coffee, Lock } from 'lucide-react';
+import { productsAPI, categoriesAPI, ordersAPI, dailyDiscountsAPI } from '../api/services';
+import { Plus, Minus, Trash2, ShoppingCart, X, Printer, Coffee, Lock, Tag } from 'lucide-react';
 import Invoice from '../components/Invoice';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,10 +20,12 @@ const POS = () => {
   });
   const [discountType, setDiscountType] = useState('none');
   const [discountValue, setDiscountValue] = useState(0);
+  const [dailyDiscount, setDailyDiscount] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchDailyDiscount();
   }, []);
 
   const fetchData = async () => {
@@ -36,6 +38,24 @@ const POS = () => {
       setCategories(categoriesRes.data.data);
     } catch (error) {
       console.error('Error fetching data:', error);
+    }
+  };
+
+  const fetchDailyDiscount = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const response = await dailyDiscountsAPI.getForDate(today);
+
+      if (response.data.data) {
+        const discount = response.data.data;
+        setDailyDiscount(discount);
+
+        // تطبيق الخصم اليومي تلقائياً
+        setDiscountType(discount.discount_type);
+        setDiscountValue(discount.discount_value);
+      }
+    } catch (error) {
+      console.error('Error fetching daily discount:', error);
     }
   };
 
@@ -333,38 +353,65 @@ const POS = () => {
             />
           </div>
 
+          {/* Daily Discount Alert */}
+          {dailyDiscount && (
+            <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-3">
+              <div className="flex items-start gap-2">
+                <Tag className="w-5 h-5 text-green-600 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-bold text-green-800 text-sm mb-1">
+                    خصم اليوم مفعل! 🎉
+                  </h4>
+                  <p className="text-xs text-green-700">
+                    {dailyDiscount.name} - {dailyDiscount.discount_value}
+                    {dailyDiscount.discount_type === 'percentage' ? '%' : ' ج.م'}
+                  </p>
+                  {dailyDiscount.description && (
+                    <p className="text-xs text-green-600 mt-1">{dailyDiscount.description}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Discount */}
           <div className="space-y-2 mb-4">
             <h3 className="font-bold text-sm text-amber-900 flex items-center gap-2">
-              الخصم
-              {!hasPermission('can_apply_discounts') && (
+              {dailyDiscount ? 'تعديل الخصم' : 'الخصم'}
+              {!hasPermission('can_apply_discounts') && !dailyDiscount && (
                 <Lock className="w-4 h-4 text-red-500" title="ليس لديك صلاحية تطبيق الخصومات" />
               )}
             </h3>
             <select
               value={discountType}
               onChange={(e) => setDiscountType(e.target.value)}
-              disabled={!hasPermission('can_apply_discounts')}
+              disabled={!hasPermission('can_apply_discounts') && !dailyDiscount}
               className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="none">
-                {hasPermission('can_apply_discounts') ? 'بدون خصم' : 'غير مصرح - اتصل بالمدير'}
+                {hasPermission('can_apply_discounts') || dailyDiscount ? 'بدون خصم' : 'غير مصرح - اتصل بالمدير'}
               </option>
-              {hasPermission('can_apply_discounts') && (
+              {(hasPermission('can_apply_discounts') || dailyDiscount) && (
                 <>
                   <option value="percentage">نسبة مئوية %</option>
                   <option value="fixed">مبلغ ثابت</option>
                 </>
               )}
             </select>
-            {discountType !== 'none' && hasPermission('can_apply_discounts') && (
+            {discountType !== 'none' && (hasPermission('can_apply_discounts') || dailyDiscount) && (
               <input
                 type="number"
                 value={discountValue}
                 onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none"
+                disabled={dailyDiscount && !hasPermission('can_apply_discounts')}
+                className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder={discountType === 'percentage' ? 'النسبة' : 'المبلغ'}
               />
+            )}
+            {dailyDiscount && hasPermission('can_apply_discounts') && (
+              <p className="text-xs text-amber-600">
+                💡 يمكنك تعديل أو إلغاء الخصم اليومي
+              </p>
             )}
           </div>
 
