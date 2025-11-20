@@ -1,13 +1,35 @@
 import { Coffee, X, Printer } from 'lucide-react';
-
-// إعدادات الكافيه - يمكنك تعديلها هنا بسهولة
-const CAFE_SETTINGS = {
-  name: 'مقهى الأحلام',
-  address: 'القاهرة، مصر',
-  phone: '01234567890',
-};
+import { useState, useEffect } from 'react';
+import { settingsAPI } from '../api/services';
 
 const Invoice = ({ orderData, onClose }) => {
+  const [settings, setSettings] = useState({
+    cafe_name: 'مقهى الأحلام',
+    cafe_address: 'القاهرة، مصر',
+    cafe_phone: '01234567890',
+  });
+
+  useEffect(() => {
+    // جلب إعدادات الكافيه من قاعدة البيانات
+    const fetchSettings = async () => {
+      try {
+        const response = await settingsAPI.getAll();
+        if (response.data.success) {
+          setSettings({
+            cafe_name: response.data.data.cafe_name || 'مقهى الأحلام',
+            cafe_address: response.data.data.cafe_address || 'القاهرة، مصر',
+            cafe_phone: response.data.data.cafe_phone || '01234567890',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+        // استخدام القيم الافتراضية في حالة الخطأ
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
   const handlePrint = () => {
     // إنشاء محتوى HTML للفاتورة
     const printContent = `
@@ -144,8 +166,8 @@ const Invoice = ({ orderData, onClose }) => {
         <div class="invoice">
           <!-- Header -->
           <div class="header">
-            <h1>${CAFE_SETTINGS.name}</h1>
-            <p>${CAFE_SETTINGS.address} • ${CAFE_SETTINGS.phone}</p>
+            <h1>${settings.cafe_name}</h1>
+            <p>${settings.cafe_address} • ${settings.cafe_phone}</p>
           </div>
 
           <!-- Invoice Info -->
@@ -285,10 +307,10 @@ const Invoice = ({ orderData, onClose }) => {
                 </div>
               </div>
               <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#6F4E37', margin: '0 0 8px 0' }}>
-                {CAFE_SETTINGS.name}
+                {settings.cafe_name}
               </h1>
               <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
-                {CAFE_SETTINGS.address} • {CAFE_SETTINGS.phone}
+                {settings.cafe_address} • {settings.cafe_phone}
               </p>
             </div>
 
