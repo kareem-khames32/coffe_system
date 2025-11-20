@@ -22,16 +22,33 @@ const Invoice = ({ orderData, onClose }) => {
     <>
       {/* Background Overlay */}
       <div
-        className="invoice-overlay"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+        }}
         onClick={onClose}
       >
         {/* Invoice Container */}
         <div
-          className="invoice-container"
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
+            width: '100%',
+            maxWidth: '600px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Invoice Content */}
-          <div className="invoice-content">
+          <div id="invoice-print-section" style={{ padding: '30px' }}>
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #6F4E37', paddingBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
@@ -140,7 +157,7 @@ const Invoice = ({ orderData, onClose }) => {
           </div>
 
           {/* Action Buttons */}
-          <div className="invoice-buttons">
+          <div id="invoice-buttons" style={{ display: 'flex', gap: '15px', padding: '20px 30px', borderTop: '1px solid #e0e0e0' }}>
             <button
               onClick={handlePrint}
               style={{
@@ -187,81 +204,24 @@ const Invoice = ({ orderData, onClose }) => {
         </div>
       </div>
 
-      {/* Styles */}
+      {/* Print Styles - بسيطة جداً */}
       <style>{`
-        .invoice-overlay {
-          position: fixed;
-          inset: 0;
-          background-color: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 9999;
-          padding: 20px;
-        }
-
-        .invoice-container {
-          background-color: white;
-          border-radius: 12px;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-          width: 100%;
-          max-width: 600px;
-          max-height: 90vh;
-          overflow-y: auto;
-        }
-
-        .invoice-content {
-          padding: 30px;
-        }
-
-        .invoice-buttons {
-          display: flex;
-          gap: 15px;
-          padding: 20px 30px;
-          border-top: 1px solid #e0e0e0;
-        }
-
         @media print {
-          body * {
-            visibility: hidden;
-          }
-
-          .invoice-overlay {
-            position: static;
-            background: none;
-            padding: 0;
-          }
-
-          .invoice-container {
-            position: static;
-            box-shadow: none;
-            max-height: none;
-            overflow: visible;
-          }
-
-          .invoice-content,
-          .invoice-content * {
-            visibility: visible;
-          }
-
-          .invoice-buttons {
-            display: none !important;
-          }
-
-          .invoice-overlay {
-            visibility: visible;
-          }
-
-          .invoice-container {
-            visibility: visible;
-          }
-
           @page {
             size: 80mm auto;
             margin: 5mm;
           }
 
-          .invoice-content {
+          body {
+            margin: 0;
+            padding: 0;
+          }
+
+          #invoice-buttons {
+            display: none !important;
+          }
+
+          #invoice-print-section {
             width: 80mm;
             padding: 5mm;
           }
