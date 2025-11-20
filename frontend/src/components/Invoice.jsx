@@ -20,11 +20,11 @@ const Invoice = ({ orderData, onClose }) => {
 
   return (
     <>
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 no-print">
+      {/* Modal Overlay */}
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 print-hide">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
           {/* Print Area */}
-          <div id="invoice-print-area" className="p-6">
+          <div id="invoice-content" className="p-6">
             {/* Header */}
             <div className="text-center mb-4 border-b-2 border-coffee-600 pb-4">
               <div className="flex justify-center mb-3">
@@ -76,7 +76,7 @@ const Invoice = ({ orderData, onClose }) => {
 
             {/* Items Table */}
             <div className="mb-4">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-coffee-700 text-white">
                     <th className="px-3 py-2 text-right">المنتج</th>
@@ -132,8 +132,8 @@ const Invoice = ({ orderData, onClose }) => {
             </div>
           </div>
 
-          {/* Action Buttons - Hidden when printing */}
-          <div className="flex gap-4 p-6 border-t no-print">
+          {/* Action Buttons */}
+          <div className="flex gap-4 p-6 border-t print-hide">
             <button
               onClick={handlePrint}
               className="flex-1 bg-coffee-600 hover:bg-coffee-700 text-white py-3 rounded-lg font-semibold transition"
@@ -152,60 +152,25 @@ const Invoice = ({ orderData, onClose }) => {
 
       {/* Print Styles */}
       <style>{`
+        @page {
+          size: 80mm auto;
+          margin: 0;
+        }
+
         @media print {
-          /* إخفاء كل شيء */
-          body > *:not(#root) {
-            display: none !important;
-          }
-
-          /* إخفاء العناصر التي تحتوي على no-print */
-          .no-print {
-            display: none !important;
-          }
-
-          /* إعدادات الصفحة */
-          @page {
-            size: 80mm auto;
-            margin: 0;
-          }
-
           body {
             margin: 0;
             padding: 0;
           }
 
-          /* عرض منطقة الطباعة فقط */
-          #invoice-print-area {
-            display: block !important;
-            width: 80mm !important;
-            margin: 0 !important;
-            padding: 5mm !important;
-            background: white !important;
+          .print-hide {
+            display: none !important;
           }
 
-          /* إخفاء كل شيء ما عدا منطقة الطباعة */
-          body * {
-            visibility: hidden;
-          }
-
-          #invoice-print-area,
-          #invoice-print-area * {
-            visibility: visible;
-          }
-
-          /* جعل منطقة الطباعة في أعلى اليسار */
-          #invoice-print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-          }
-        }
-
-        /* للتأكد من عدم تكرار الطباعة */
-        @media print {
-          html, body {
-            height: auto;
-            overflow: visible;
+          #invoice-content {
+            width: 80mm;
+            padding: 5mm;
+            margin: 0;
           }
         }
       `}</style>
