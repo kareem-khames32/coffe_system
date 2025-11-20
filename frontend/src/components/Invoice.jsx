@@ -1,4 +1,4 @@
-import { Coffee } from 'lucide-react';
+import { Coffee, X, Printer } from 'lucide-react';
 
 // إعدادات الكافيه - يمكنك تعديلها هنا بسهولة
 const CAFE_SETTINGS = {
@@ -19,158 +19,255 @@ const Invoice = ({ orderData, onClose }) => {
   const total = subtotal - discount;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        {/* Print Area */}
-        <div id="invoice-content" className="p-6">
-          {/* Header */}
-          <div className="text-center mb-4 border-b-2 border-coffee-600 pb-4">
-            <div className="flex justify-center mb-3">
-              <div className="bg-coffee-600 p-3 rounded-full">
-                <Coffee className="w-8 h-8 text-white" />
-              </div>
-            </div>
-            <h1 className="text-2xl font-bold text-coffee-800 mb-1">{CAFE_SETTINGS.name}</h1>
-            <p className="text-sm text-gray-600">{CAFE_SETTINGS.address} • {CAFE_SETTINGS.phone}</p>
-          </div>
-
-          {/* Invoice Details */}
-          <div className="mb-4 bg-gray-50 p-3 rounded-lg">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-gray-600">رقم الفاتورة: </span>
-                <span className="font-bold text-coffee-800">{orderData.order_number}</span>
-              </div>
-              <div className="text-left">
-                <span className="text-gray-600">التاريخ: </span>
-                <span className="font-bold text-coffee-800">
-                  {new Date(orderData.created_at).toLocaleDateString('ar-EG', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Customer Info */}
-          {orderData.customer_name && (
-            <div className="mb-4 border-t border-gray-200 pt-3">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="text-gray-600">العميل: </span>
-                  <span className="font-semibold text-coffee-800">{orderData.customer_name}</span>
+    <>
+      {/* Background Overlay */}
+      <div
+        className="invoice-overlay"
+        onClick={onClose}
+      >
+        {/* Invoice Container */}
+        <div
+          className="invoice-container"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Invoice Content */}
+          <div className="invoice-content">
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #6F4E37', paddingBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+                <div style={{ backgroundColor: '#6F4E37', padding: '12px', borderRadius: '50%' }}>
+                  <Coffee style={{ width: '32px', height: '32px', color: 'white' }} />
                 </div>
-                {orderData.customer_phone && (
-                  <div className="text-left">
-                    <span className="text-gray-600">هاتف: </span>
-                    <span className="font-semibold text-coffee-800">{orderData.customer_phone}</span>
-                  </div>
-                )}
+              </div>
+              <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#6F4E37', margin: '0 0 8px 0' }}>
+                {CAFE_SETTINGS.name}
+              </h1>
+              <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+                {CAFE_SETTINGS.address} • {CAFE_SETTINGS.phone}
+              </p>
+            </div>
+
+            {/* Invoice Details */}
+            <div style={{ marginBottom: '20px', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '14px' }}>
+                <div>
+                  <span style={{ color: '#666' }}>رقم الفاتورة: </span>
+                  <span style={{ fontWeight: 'bold', color: '#6F4E37' }}>{orderData.order_number}</span>
+                </div>
+                <div style={{ textAlign: 'left' }}>
+                  <span style={{ color: '#666' }}>التاريخ: </span>
+                  <span style={{ fontWeight: 'bold', color: '#6F4E37' }}>
+                    {new Date(orderData.created_at).toLocaleDateString('ar-EG', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Items Table */}
-          <div className="mb-4">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-coffee-700 text-white">
-                  <th className="px-3 py-2 text-right">المنتج</th>
-                  <th className="px-3 py-2 text-center w-16">الكمية</th>
-                  <th className="px-3 py-2 text-right w-20">السعر</th>
-                  <th className="px-3 py-2 text-right w-24">الإجمالي</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orderData.items?.map((item, index) => (
-                  <tr key={index} className="border-b border-gray-200">
-                    <td className="px-3 py-2 font-medium">{item.product_name}</td>
-                    <td className="px-3 py-2 text-center font-semibold">{item.quantity}</td>
-                    <td className="px-3 py-2">{parseFloat(item.price).toFixed(2)}</td>
-                    <td className="px-3 py-2 font-bold text-coffee-800">
-                      {(parseFloat(item.price) * item.quantity).toFixed(2)}
-                    </td>
+            {/* Customer Info */}
+            {orderData.customer_name && (
+              <div style={{ marginBottom: '20px', borderTop: '1px solid #e0e0e0', paddingTop: '15px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '14px' }}>
+                  <div>
+                    <span style={{ color: '#666' }}>العميل: </span>
+                    <span style={{ fontWeight: '600', color: '#6F4E37' }}>{orderData.customer_name}</span>
+                  </div>
+                  {orderData.customer_phone && (
+                    <div style={{ textAlign: 'left' }}>
+                      <span style={{ color: '#666' }}>هاتف: </span>
+                      <span style={{ fontWeight: '600', color: '#6F4E37' }}>{orderData.customer_phone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Items Table */}
+            <div style={{ marginBottom: '20px' }}>
+              <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#6F4E37', color: 'white' }}>
+                    <th style={{ padding: '10px', textAlign: 'right' }}>المنتج</th>
+                    <th style={{ padding: '10px', textAlign: 'center', width: '60px' }}>الكمية</th>
+                    <th style={{ padding: '10px', textAlign: 'right', width: '80px' }}>السعر</th>
+                    <th style={{ padding: '10px', textAlign: 'right', width: '100px' }}>الإجمالي</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {orderData.items?.map((item, index) => (
+                    <tr key={index} style={{ borderBottom: '1px solid #e0e0e0' }}>
+                      <td style={{ padding: '10px', fontWeight: '500' }}>{item.product_name}</td>
+                      <td style={{ padding: '10px', textAlign: 'center', fontWeight: '600' }}>{item.quantity}</td>
+                      <td style={{ padding: '10px' }}>{parseFloat(item.price).toFixed(2)}</td>
+                      <td style={{ padding: '10px', fontWeight: 'bold', color: '#6F4E37' }}>
+                        {(parseFloat(item.price) * item.quantity).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Totals */}
-          <div className="border-t-2 border-gray-300 pt-3">
-            <div className="space-y-2">
+            {/* Totals */}
+            <div style={{ borderTop: '2px solid #ccc', paddingTop: '15px' }}>
               {discount > 0 && (
                 <>
-                  <div className="flex justify-between text-base">
-                    <span className="text-gray-700 font-medium">المجموع الفرعي:</span>
-                    <span className="font-semibold">{subtotal.toFixed(2)} ج.م</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '16px' }}>
+                    <span style={{ color: '#666', fontWeight: '500' }}>المجموع الفرعي:</span>
+                    <span style={{ fontWeight: '600' }}>{subtotal.toFixed(2)} ج.م</span>
                   </div>
-                  <div className="flex justify-between text-base text-red-600">
-                    <span className="font-medium">الخصم:</span>
-                    <span className="font-semibold">- {discount.toFixed(2)} ج.م</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '16px', color: '#dc2626' }}>
+                    <span style={{ fontWeight: '500' }}>الخصم:</span>
+                    <span style={{ fontWeight: '600' }}>- {discount.toFixed(2)} ج.م</span>
                   </div>
                 </>
               )}
-              <div className="flex justify-between text-xl font-bold text-coffee-800 pt-2 border-t-2 border-gray-300">
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '24px', fontWeight: 'bold', color: '#6F4E37', paddingTop: '10px', borderTop: '2px solid #ccc' }}>
                 <span>الإجمالي:</span>
                 <span>{total.toFixed(2)} ج.م</span>
               </div>
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className="mt-6 text-center border-t-2 border-coffee-600 pt-3">
-            <p className="text-base text-coffee-700 font-bold">شكراً لزيارتكم!</p>
-            <p className="text-xs text-gray-500 mt-2">نتمنى لكم يوماً سعيداً</p>
-            <div className="mt-3 text-[11px] text-gray-400">
-              <p>تم التطوير بواسطة Kareem Khames</p>
+            {/* Footer */}
+            <div style={{ marginTop: '30px', textAlign: 'center', borderTop: '2px solid #6F4E37', paddingTop: '15px' }}>
+              <p style={{ fontSize: '16px', color: '#6F4E37', fontWeight: 'bold', margin: '0 0 8px 0' }}>شكراً لزيارتكم!</p>
+              <p style={{ fontSize: '12px', color: '#999', margin: '0 0 15px 0' }}>نتمنى لكم يوماً سعيداً</p>
+              <p style={{ fontSize: '11px', color: '#ccc', margin: 0 }}>تم التطوير بواسطة Kareem Khames</p>
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 p-6 border-t print:hidden">
-          <button
-            onClick={handlePrint}
-            className="flex-1 bg-coffee-600 hover:bg-coffee-700 text-white py-3 rounded-lg font-semibold transition"
-          >
-            طباعة الفاتورة
-          </button>
-          <button
-            onClick={onClose}
-            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition"
-          >
-            إغلاق
-          </button>
+          {/* Action Buttons */}
+          <div className="invoice-buttons">
+            <button
+              onClick={handlePrint}
+              style={{
+                flex: 1,
+                backgroundColor: '#6F4E37',
+                color: 'white',
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <Printer size={20} />
+              طباعة الفاتورة
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                flex: 1,
+                backgroundColor: '#e5e5e5',
+                color: '#333',
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <X size={20} />
+              إغلاق
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Print Styles */}
+      {/* Styles */}
       <style>{`
+        .invoice-overlay {
+          position: fixed;
+          inset: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          padding: 20px;
+        }
+
+        .invoice-container {
+          background-color: white;
+          border-radius: 12px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+          width: 100%;
+          max-width: 600px;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .invoice-content {
+          padding: 30px;
+        }
+
+        .invoice-buttons {
+          display: flex;
+          gap: 15px;
+          padding: 20px 30px;
+          border-top: 1px solid #e0e0e0;
+        }
+
         @media print {
-          @page {
-            size: 80mm auto;
-            margin: 0;
+          body * {
+            visibility: hidden;
           }
 
-          body {
-            margin: 0;
+          .invoice-overlay {
+            position: static;
+            background: none;
             padding: 0;
           }
 
-          .print\\:hidden {
+          .invoice-container {
+            position: static;
+            box-shadow: none;
+            max-height: none;
+            overflow: visible;
+          }
+
+          .invoice-content,
+          .invoice-content * {
+            visibility: visible;
+          }
+
+          .invoice-buttons {
             display: none !important;
           }
 
-          #invoice-content {
+          .invoice-overlay {
+            visibility: visible;
+          }
+
+          .invoice-container {
+            visibility: visible;
+          }
+
+          @page {
+            size: 80mm auto;
+            margin: 5mm;
+          }
+
+          .invoice-content {
             width: 80mm;
             padding: 5mm;
           }
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
