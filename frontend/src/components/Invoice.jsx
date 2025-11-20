@@ -26,41 +26,41 @@ const Invoice = ({ orderData, onClose }) => {
 
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
+            padding: 40px;
             background: white;
           }
 
           .invoice {
-            max-width: 80mm;
+            max-width: 100%;
             margin: 0 auto;
             background: white;
           }
 
           .header {
             text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #6F4E37;
-            padding-bottom: 20px;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #6F4E37;
+            padding-bottom: 25px;
           }
 
           .header h1 {
-            font-size: 28px;
+            font-size: 42px;
             font-weight: bold;
             color: #6F4E37;
-            margin: 10px 0;
+            margin: 15px 0;
           }
 
           .header p {
-            font-size: 14px;
+            font-size: 20px;
             color: #666;
           }
 
           .info-box {
             background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-size: 18px;
           }
 
           .info-row {
@@ -81,61 +81,61 @@ const Invoice = ({ orderData, onClose }) => {
           .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-            font-size: 14px;
+            margin-bottom: 30px;
+            font-size: 18px;
           }
 
           .items-table th {
             background: #6F4E37;
             color: white;
-            padding: 10px;
+            padding: 15px;
             text-align: right;
           }
 
           .items-table td {
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 15px;
+            border-bottom: 2px solid #e0e0e0;
           }
 
           .totals {
-            border-top: 2px solid #ccc;
-            padding-top: 15px;
-            font-size: 16px;
+            border-top: 3px solid #ccc;
+            padding-top: 20px;
+            font-size: 22px;
           }
 
           .total-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
           }
 
           .total-final {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: #6F4E37;
-            border-top: 2px solid #ccc;
-            padding-top: 10px;
-            margin-top: 10px;
+            border-top: 3px solid #ccc;
+            padding-top: 15px;
+            margin-top: 15px;
           }
 
           .footer {
             text-align: center;
-            margin-top: 30px;
-            border-top: 2px solid #6F4E37;
-            padding-top: 15px;
+            margin-top: 40px;
+            border-top: 3px solid #6F4E37;
+            padding-top: 20px;
           }
 
           .footer p {
-            margin: 5px 0;
+            margin: 8px 0;
           }
 
           @media print {
             body {
-              padding: 0;
+              padding: 10mm;
             }
             @page {
-              size: 80mm auto;
-              margin: 5mm;
+              size: A4;
+              margin: 10mm;
             }
           }
         </style>
@@ -218,9 +218,9 @@ const Invoice = ({ orderData, onClose }) => {
 
           <!-- Footer -->
           <div class="footer">
-            <p style="font-size: 16px; color: #6F4E37; font-weight: bold;">شكراً لزيارتكم!</p>
-            <p style="font-size: 12px; color: #999;">نتمنى لكم يوماً سعيداً</p>
-            <p style="font-size: 11px; color: #ccc; margin-top: 10px;">تم التطوير بواسطة Kareem Khames</p>
+            <p style="font-size: 24px; color: #6F4E37; font-weight: bold;">شكراً لزيارتكم!</p>
+            <p style="font-size: 18px; color: #999;">نتمنى لكم يوماً سعيداً</p>
+            <p style="font-size: 16px; color: #ccc; margin-top: 15px;">تم التطوير بواسطة Kareem Khames</p>
           </div>
         </div>
 
@@ -234,8 +234,8 @@ const Invoice = ({ orderData, onClose }) => {
       </html>
     `;
 
-    // فتح نافذة جديدة
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    // فتح نافذة جديدة بحجم كبير
+    const printWindow = window.open('', '_blank', 'width=1000,height=800');
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
