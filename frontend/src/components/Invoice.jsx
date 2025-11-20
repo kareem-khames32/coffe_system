@@ -196,6 +196,12 @@ const Invoice = ({ orderData, onClose }) => {
               <span class="info-value">${orderData.customer_phone}</span>
             </div>
             ` : ''}
+            ${orderData.customer_address ? `
+            <div class="info-row">
+              <span class="info-label">العنوان:</span>
+              <span class="info-value">${orderData.customer_address}</span>
+            </div>
+            ` : ''}
           </div>
 
           <!-- Items Table -->
@@ -349,6 +355,12 @@ const Invoice = ({ orderData, onClose }) => {
                     </div>
                   )}
                 </div>
+                {orderData.customer_address && (
+                  <div style={{ marginTop: '10px', fontSize: '14px' }}>
+                    <span style={{ color: '#666' }}>العنوان: </span>
+                    <span style={{ fontWeight: '600', color: '#6F4E37' }}>{orderData.customer_address}</span>
+                  </div>
+                )}
               </div>
             )}
 
