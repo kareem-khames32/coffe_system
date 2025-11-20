@@ -9,7 +9,235 @@ const CAFE_SETTINGS = {
 
 const Invoice = ({ orderData, onClose }) => {
   const handlePrint = () => {
-    window.print();
+    // إنشاء محتوى HTML للفاتورة
+    const printContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>فاتورة ${orderData.order_number}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: white;
+          }
+
+          .invoice {
+            max-width: 80mm;
+            margin: 0 auto;
+            background: white;
+          }
+
+          .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #6F4E37;
+            padding-bottom: 20px;
+          }
+
+          .header h1 {
+            font-size: 28px;
+            font-weight: bold;
+            color: #6F4E37;
+            margin: 10px 0;
+          }
+
+          .header p {
+            font-size: 14px;
+            color: #666;
+          }
+
+          .info-box {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+          }
+
+          .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+          }
+
+          .info-label {
+            color: #666;
+          }
+
+          .info-value {
+            font-weight: bold;
+            color: #6F4E37;
+          }
+
+          .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 14px;
+          }
+
+          .items-table th {
+            background: #6F4E37;
+            color: white;
+            padding: 10px;
+            text-align: right;
+          }
+
+          .items-table td {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+          }
+
+          .totals {
+            border-top: 2px solid #ccc;
+            padding-top: 15px;
+            font-size: 16px;
+          }
+
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+          }
+
+          .total-final {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6F4E37;
+            border-top: 2px solid #ccc;
+            padding-top: 10px;
+            margin-top: 10px;
+          }
+
+          .footer {
+            text-align: center;
+            margin-top: 30px;
+            border-top: 2px solid #6F4E37;
+            padding-top: 15px;
+          }
+
+          .footer p {
+            margin: 5px 0;
+          }
+
+          @media print {
+            body {
+              padding: 0;
+            }
+            @page {
+              size: 80mm auto;
+              margin: 5mm;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice">
+          <!-- Header -->
+          <div class="header">
+            <h1>${CAFE_SETTINGS.name}</h1>
+            <p>${CAFE_SETTINGS.address} • ${CAFE_SETTINGS.phone}</p>
+          </div>
+
+          <!-- Invoice Info -->
+          <div class="info-box">
+            <div class="info-row">
+              <span class="info-label">رقم الفاتورة:</span>
+              <span class="info-value">${orderData.order_number}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">التاريخ:</span>
+              <span class="info-value">${new Date(orderData.created_at).toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })}</span>
+            </div>
+            ${orderData.customer_name ? `
+            <div class="info-row">
+              <span class="info-label">العميل:</span>
+              <span class="info-value">${orderData.customer_name}</span>
+            </div>
+            ` : ''}
+            ${orderData.customer_phone ? `
+            <div class="info-row">
+              <span class="info-label">هاتف:</span>
+              <span class="info-value">${orderData.customer_phone}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <!-- Items Table -->
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th style="width: 60px; text-align: center;">الكمية</th>
+                <th style="width: 80px;">السعر</th>
+                <th style="width: 100px;">الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orderData.items?.map(item => `
+                <tr>
+                  <td style="font-weight: 500;">${item.product_name}</td>
+                  <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
+                  <td>${parseFloat(item.price).toFixed(2)}</td>
+                  <td style="font-weight: bold; color: #6F4E37;">${(parseFloat(item.price) * item.quantity).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <!-- Totals -->
+          <div class="totals">
+            ${parseFloat(orderData.discount_amount) > 0 ? `
+              <div class="total-row">
+                <span style="color: #666;">المجموع الفرعي:</span>
+                <span style="font-weight: 600;">${(orderData.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0).toFixed(2)} ج.م</span>
+              </div>
+              <div class="total-row" style="color: #dc2626;">
+                <span style="font-weight: 500;">الخصم:</span>
+                <span style="font-weight: 600;">- ${parseFloat(orderData.discount_amount).toFixed(2)} ج.م</span>
+              </div>
+            ` : ''}
+            <div class="total-row total-final">
+              <span>الإجمالي:</span>
+              <span>${((orderData.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0) - parseFloat(orderData.discount_amount || 0)).toFixed(2)} ج.م</span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="footer">
+            <p style="font-size: 16px; color: #6F4E37; font-weight: bold;">شكراً لزيارتكم!</p>
+            <p style="font-size: 12px; color: #999;">نتمنى لكم يوماً سعيداً</p>
+            <p style="font-size: 11px; color: #ccc; margin-top: 10px;">تم التطوير بواسطة Kareem Khames</p>
+          </div>
+        </div>
+
+        <script>
+          // طباعة تلقائية عند فتح النافذة
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    // فتح نافذة جديدة
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
   };
 
   if (!orderData) return null;
@@ -48,7 +276,7 @@ const Invoice = ({ orderData, onClose }) => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Invoice Content */}
-          <div id="invoice-print-section" style={{ padding: '30px' }}>
+          <div style={{ padding: '30px' }}>
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #6F4E37', paddingBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
@@ -157,7 +385,7 @@ const Invoice = ({ orderData, onClose }) => {
           </div>
 
           {/* Action Buttons */}
-          <div id="invoice-buttons" style={{ display: 'flex', gap: '15px', padding: '20px 30px', borderTop: '1px solid #e0e0e0' }}>
+          <div style={{ display: 'flex', gap: '15px', padding: '20px 30px', borderTop: '1px solid #e0e0e0' }}>
             <button
               onClick={handlePrint}
               style={{
@@ -203,30 +431,6 @@ const Invoice = ({ orderData, onClose }) => {
           </div>
         </div>
       </div>
-
-      {/* Print Styles - بسيطة جداً */}
-      <style>{`
-        @media print {
-          @page {
-            size: 80mm auto;
-            margin: 5mm;
-          }
-
-          body {
-            margin: 0;
-            padding: 0;
-          }
-
-          #invoice-buttons {
-            display: none !important;
-          }
-
-          #invoice-print-section {
-            width: 80mm;
-            padding: 5mm;
-          }
-        }
-      `}</style>
     </>
   );
 };
