@@ -134,6 +134,13 @@
 
 ## 🚀 كيفية التشغيل
 
+### 📘 دليل النشر على السيرفر
+
+**للنشر السريع على سيرفر محلي، راجع:**
+- 🇦🇪 **[دليل النشر العربي الشامل](./DEPLOYMENT-GUIDE-AR.md)** - دليل مفصل خطوة بخطوة
+- 🇬🇧 **[Linux Deployment Guide](./DEPLOYMENT.md)** - English Linux deployment
+- 💻 **[Windows Deployment Guide](./DEPLOYMENT-WINDOWS.md)** - Windows deployment
+
 ### المتطلبات
 ```bash
 - Node.js v18+
@@ -815,23 +822,50 @@ curl -X POST http://localhost:5000/api/orders/online \
 
 ## 🚀 Deployment (للإنتاج)
 
-### Backend
+### النشر على سيرفر محلي (موصى به)
+
+**للحصول على دليل مفصل خطوة بخطوة:**
+- 📖 **[دليل النشر العربي الشامل](./DEPLOYMENT-GUIDE-AR.md)** - يشمل كل شيء من التثبيت للتشغيل
+- 📖 **[Linux Deployment](./DEPLOYMENT.md)** - English guide
+- 📖 **[Windows Deployment](./DEPLOYMENT-WINDOWS.md)** - For Windows servers
+
+**نشر سريع (4 أوامر):**
+```bash
+chmod +x *.sh
+sudo ./install.sh           # تثبيت Node.js, MySQL, PM2
+sudo ./setup-database.sh    # إعداد قاعدة البيانات
+./setup-system.sh           # إعداد النظام
+./start.sh                  # تشغيل النظام
+```
+
+### Backend (Production)
 ```bash
 # استخدم PM2 للـ process management
 npm install -g pm2
 pm2 start server.js --name cafe-backend
 ```
 
-### Frontend
+### Frontend (Production)
 ```bash
 npm run build
-# رفع مجلد dist/ إلى hosting (Vercel, Netlify, etc.)
+# Frontend مدمج في Backend (static files)
 ```
 
 ### Database
 - استخدم MySQL في production (AWS RDS, DigitalOcean, etc.)
 - فعّل backups تلقائية
 - استخدم SSL connections
+
+### 🗑️ تنظيف البيانات
+
+لمسح البيانات مع الاحتفاظ بالمستخدمين:
+```bash
+# الطريقة الأولى: Node.js
+cd backend && node scripts/clean-system.js
+
+# الطريقة الثانية: SQL
+mysql -u cafe_user -p cafe_db < backend/database/clean_system.sql
+```
 
 ---
 

@@ -124,18 +124,6 @@ const Login = () => {
             {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
           </button>
         </form>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 shadow-md">
-          <p className="text-sm text-amber-900 text-center mb-2 font-bold">
-            بيانات تجريبية:
-          </p>
-          <p className="text-xs text-amber-700 text-center">
-            اسم المستخدم: <span className="font-mono font-bold bg-white px-2 py-1 rounded">admin</span>
-            <br />
-            كلمة المرور: <span className="font-mono font-bold bg-white px-2 py-1 rounded">admin123</span>
-          </p>
-        </div>
       </div>
     </div>
   );
