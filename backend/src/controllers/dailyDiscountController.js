@@ -130,6 +130,9 @@ exports.createDailyDiscount = async (req, res) => {
             });
         }
 
+        // Convert ISO string date to DATE format (YYYY-MM-DD)
+        const targetDateOnly = new Date(target_date).toISOString().split('T')[0];
+
         const [result] = await db.query(
             `INSERT INTO daily_discounts (name, description, discount_type, discount_value, target_date, is_active)
              VALUES (?, ?, ?, ?, ?, ?)`,
@@ -138,7 +141,7 @@ exports.createDailyDiscount = async (req, res) => {
                 description || null,
                 discount_type || 'percentage',
                 discount_value,
-                target_date,
+                targetDateOnly,
                 is_active !== undefined ? is_active : true
             ]
         );
@@ -217,7 +220,9 @@ exports.updateDailyDiscount = async (req, res) => {
 
         if (target_date !== undefined) {
             updateQuery += 'target_date = ?, ';
-            updateValues.push(target_date);
+            // Convert ISO string date to DATE format (YYYY-MM-DD)
+            const targetDateOnly = new Date(target_date).toISOString().split('T')[0];
+            updateValues.push(targetDateOnly);
         }
 
         if (is_active !== undefined) {
