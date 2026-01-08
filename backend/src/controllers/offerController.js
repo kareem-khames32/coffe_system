@@ -94,6 +94,10 @@ exports.createOffer = async (req, res) => {
             });
         }
 
+        // Convert ISO string dates to DATE format (YYYY-MM-DD)
+        const startDateOnly = new Date(start_date).toISOString().split('T')[0];
+        const endDateOnly = new Date(end_date).toISOString().split('T')[0];
+
         const [result] = await db.query(
             `INSERT INTO offers (name, description, offer_type, discount_value, buy_quantity,
              get_quantity, image, start_date, end_date)
@@ -106,8 +110,8 @@ exports.createOffer = async (req, res) => {
                 buy_quantity || null,
                 get_quantity || null,
                 image || null,
-                start_date,
-                end_date
+                startDateOnly,
+                endDateOnly
             ]
         );
 
@@ -191,12 +195,16 @@ exports.updateOffer = async (req, res) => {
 
         if (start_date) {
             updateQuery += 'start_date = ?, ';
-            updateValues.push(start_date);
+            // Convert ISO string to DATE format (YYYY-MM-DD)
+            const dateOnly = new Date(start_date).toISOString().split('T')[0];
+            updateValues.push(dateOnly);
         }
 
         if (end_date) {
             updateQuery += 'end_date = ?, ';
-            updateValues.push(end_date);
+            // Convert ISO string to DATE format (YYYY-MM-DD)
+            const dateOnly = new Date(end_date).toISOString().split('T')[0];
+            updateValues.push(dateOnly);
         }
 
         if (is_active !== undefined) {
