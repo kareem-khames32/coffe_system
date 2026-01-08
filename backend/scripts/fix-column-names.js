@@ -96,6 +96,53 @@ async function fixColumnNames() {
       }
     }
 
+    // Add edited_by as alias for user_id in order_edit_history
+    try {
+      console.log('Adding edited_by column to order_edit_history...');
+      await connection.query('ALTER TABLE order_edit_history ADD COLUMN edited_by INT AFTER order_id');
+      // Copy existing user_id values
+      await connection.query('UPDATE order_edit_history SET edited_by = user_id WHERE edited_by IS NULL');
+      // Add foreign key
+      await connection.query('ALTER TABLE order_edit_history ADD FOREIGN KEY (edited_by) REFERENCES users(id) ON DELETE SET NULL');
+      console.log('✅ edited_by column added to order_edit_history\n');
+    } catch (e) {
+      if (e.code === 'ER_DUP_FIELDNAME') {
+        console.log('⚠️  edited_by column already exists in order_edit_history\n');
+      } else {
+        console.log('⚠️  Could not add edited_by column:', e.message, '\n');
+      }
+    }
+
+    // Add changes as alias for action in order_edit_history
+    try {
+      console.log('Adding changes column to order_edit_history...');
+      await connection.query('ALTER TABLE order_edit_history ADD COLUMN changes TEXT AFTER edited_by');
+      // Copy existing action values
+      await connection.query('UPDATE order_edit_history SET changes = action WHERE changes IS NULL');
+      console.log('✅ changes column added to order_edit_history\n');
+    } catch (e) {
+      if (e.code === 'ER_DUP_FIELDNAME') {
+        console.log('⚠️  changes column already exists in order_edit_history\n');
+      } else {
+        console.log('⚠️  Could not add changes column:', e.message, '\n');
+      }
+    }
+
+    // Add edited_at as alias for created_at in order_edit_history
+    try {
+      console.log('Adding edited_at column to order_edit_history...');
+      await connection.query('ALTER TABLE order_edit_history ADD COLUMN edited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER changes');
+      // Copy existing created_at values
+      await connection.query('UPDATE order_edit_history SET edited_at = created_at WHERE edited_at IS NULL OR edited_at = 0');
+      console.log('✅ edited_at column added to order_edit_history\n');
+    } catch (e) {
+      if (e.code === 'ER_DUP_FIELDNAME') {
+        console.log('⚠️  edited_at column already exists in order_edit_history\n');
+      } else {
+        console.log('⚠️  Could not add edited_at column:', e.message, '\n');
+      }
+    }
+
     // Show orders table structure
     const [ordersColumns] = await connection.query('SHOW COLUMNS FROM orders');
     console.log('📋 Orders table structure:');
@@ -104,6 +151,10 @@ async function fixColumnNames() {
     console.log('\n📋 Order_items table structure:');
     const [itemsColumns] = await connection.query('SHOW COLUMNS FROM order_items');
     console.table(itemsColumns.map(col => ({ Field: col.Field, Type: col.Type })));
+
+    console.log('\n📋 Order_edit_history table structure:');
+    const [historyColumns] = await connection.query('SHOW COLUMNS FROM order_edit_history');
+    console.table(historyColumns.map(col => ({ Field: col.Field, Type: col.Type })));
 
     console.log('\n🎉 Success! Column names fixed.');
     console.log('\nNow restart Backend (type "rs")');

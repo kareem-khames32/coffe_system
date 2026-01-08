@@ -66,6 +66,34 @@ CREATE TABLE order_items (
 
 ---
 
+### 3. جدول Order Edit History | Order Edit History Table
+
+#### ما يتوقعه الكود | What Backend Code Expects:
+```sql
+INSERT INTO order_edit_history (order_id, edited_by, changes) ...
+SELECT ..., edited_at FROM order_edit_history
+ORDER BY edited_at DESC
+```
+
+#### ما هو موجود فعلياً في قاعدة البيانات | What Actually Exists in Database:
+```sql
+CREATE TABLE order_edit_history (
+  ...
+  user_id INT,           -- Backend expects: edited_by
+  action VARCHAR(100),   -- Backend expects: changes
+  created_at TIMESTAMP   -- Backend expects: edited_at
+)
+```
+
+#### النتيجة | Result:
+```
+❌ Error: Unknown column 'edited_by' in 'field list'
+❌ Error: Unknown column 'changes' in 'field list'
+❌ Error: Unknown column 'h.edited_at' in 'order clause'
+```
+
+---
+
 ## الحل | Solution
 
 تم إنشاء سكريبت **fix-column-names.js** لإضافة الأعمدة المفقودة:
@@ -93,6 +121,16 @@ A script **fix-column-names.js** was created to add the missing columns:
 1. Add column `price` (new regular column)
 2. Add column `cost_price` (new regular column)
 3. Add column `profit` (new regular column)
+
+#### في جدول Order_edit_history:
+1. إضافة عمود `edited_by` (نسخة من `user_id`)
+2. إضافة عمود `changes` (نسخة من `action`)
+3. إضافة عمود `edited_at` (نسخة من `created_at`)
+
+#### In Order_edit_history Table:
+1. Add column `edited_by` (copy of `user_id`)
+2. Add column `changes` (copy of `action`)
+3. Add column `edited_at` (copy of `created_at`)
 
 ---
 
@@ -188,6 +226,12 @@ UPDATE orders SET total = total_amount, cost = total_cost;
 ALTER TABLE order_items ADD COLUMN price DECIMAL(10,2) DEFAULT 0 AFTER product_name;
 ALTER TABLE order_items ADD COLUMN cost_price DECIMAL(10,2) DEFAULT 0 AFTER price;
 ALTER TABLE order_items ADD COLUMN profit DECIMAL(10,2) DEFAULT 0 AFTER subtotal;
+
+-- في جدول order_edit_history
+ALTER TABLE order_edit_history ADD COLUMN edited_by INT AFTER order_id;
+ALTER TABLE order_edit_history ADD COLUMN changes TEXT AFTER edited_by;
+ALTER TABLE order_edit_history ADD COLUMN edited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER changes;
+UPDATE order_edit_history SET edited_by = user_id, changes = action, edited_at = created_at;
 ```
 
 ---
@@ -201,6 +245,9 @@ ALTER TABLE order_items ADD COLUMN profit DECIMAL(10,2) DEFAULT 0 AFTER subtotal
 | عمود price مفقود | Missing 'price' column | إضافة عمود price | Add price column | ✅ تم | Fixed |
 | عمود cost_price مفقود | Missing 'cost_price' | إضافة عمود cost_price | Add cost_price column | ✅ تم | Fixed |
 | عمود profit مفقود | Missing 'profit' in items | إضافة عمود profit | Add profit column | ✅ تم | Fixed |
+| عمود edited_by مفقود | Missing 'edited_by' | إضافة عمود edited_by | Add edited_by column | ✅ تم | Fixed |
+| عمود changes مفقود | Missing 'changes' | إضافة عمود changes | Add changes column | ✅ تم | Fixed |
+| عمود edited_at مفقود | Missing 'edited_at' | إضافة عمود edited_at | Add edited_at column | ✅ تم | Fixed |
 
 ---
 
