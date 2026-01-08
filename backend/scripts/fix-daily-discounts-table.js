@@ -35,7 +35,7 @@ async function fixDailyDiscountsTable() {
 
     // Add target_date column
     try {
-      await connection.query('ALTER TABLE daily_discounts ADD COLUMN target_date DATE NOT NULL DEFAULT CURDATE() AFTER discount_value');
+      await connection.query('ALTER TABLE daily_discounts ADD COLUMN target_date DATE');
       console.log('✅ Added target_date column');
     } catch (e) {
       if (e.code === 'ER_DUP_FIELDNAME') {
