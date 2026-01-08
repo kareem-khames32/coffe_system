@@ -172,6 +172,88 @@ const POS = () => {
           <p className="text-amber-700">اختر المنتجات لإضافتها للطلب</p>
         </div>
 
+        {/* Offers Banner */}
+        {offers.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {offers.map((offer) => (
+              <div
+                key={offer.id}
+                onClick={() => setSelectedOffer(offer.id)}
+                className={`relative overflow-hidden rounded-2xl shadow-xl cursor-pointer transform transition-all hover:scale-105 ${
+                  selectedOffer === offer.id
+                    ? 'ring-4 ring-green-500'
+                    : ''
+                }`}
+                style={{
+                  background: offer.offer_type === 'percentage'
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : offer.offer_type === 'fixed'
+                    ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                    : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                }}
+              >
+                <div className="p-6 text-white">
+                  {/* Offer Icon */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="bg-white bg-opacity-20 p-3 rounded-xl">
+                      <Tag className="w-8 h-8" />
+                    </div>
+                    {selectedOffer === offer.id && (
+                      <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                        ✓ محدد
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Offer Name */}
+                  <h3 className="text-2xl font-bold mb-2">{offer.name}</h3>
+
+                  {/* Offer Description */}
+                  {offer.description && (
+                    <p className="text-sm opacity-90 mb-4">{offer.description}</p>
+                  )}
+
+                  {/* Offer Value */}
+                  <div className="bg-white bg-opacity-20 rounded-xl p-4 mb-3">
+                    <div className="text-center">
+                      {offer.offer_type === 'percentage' && (
+                        <>
+                          <div className="text-sm opacity-90">خصم</div>
+                          <div className="text-4xl font-bold">{offer.discount_value}%</div>
+                        </>
+                      )}
+                      {offer.offer_type === 'fixed' && (
+                        <>
+                          <div className="text-sm opacity-90">خصم</div>
+                          <div className="text-4xl font-bold">{offer.discount_value} ج.م</div>
+                        </>
+                      )}
+                      {offer.offer_type === 'buy_x_get_y' && (
+                        <>
+                          <div className="text-sm opacity-90">اشتري</div>
+                          <div className="text-4xl font-bold">{offer.buy_quantity}</div>
+                          <div className="text-sm opacity-90">واحصل على {offer.get_quantity} مجاناً</div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Offer Dates */}
+                  <div className="flex justify-between text-xs opacity-75">
+                    <span>يبدأ: {new Date(offer.start_date).toLocaleDateString('ar-EG')}</span>
+                    <span>ينتهي: {new Date(offer.end_date).toLocaleDateString('ar-EG')}</span>
+                  </div>
+                </div>
+
+                {/* Corner Ribbon */}
+                <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 px-4 py-1 rounded-bl-xl font-bold text-sm shadow-lg">
+                  🎉 عرض خاص
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Filters */}
         <div className="bg-white p-4 rounded-xl shadow-xl border-2 border-amber-200 space-y-4">
           <input
@@ -336,28 +418,6 @@ const POS = () => {
               className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none"
             />
           </div>
-
-          {/* Offers */}
-          {offers.length > 0 && (
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-green-600" />
-                <h3 className="font-bold text-sm text-amber-900">العروض المتاحة</h3>
-              </div>
-              <select
-                value={selectedOffer || ''}
-                onChange={(e) => setSelectedOffer(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full px-3 py-2 border-2 border-green-300 rounded-xl text-sm focus:ring-2 focus:ring-green-500 outline-none bg-green-50"
-              >
-                <option value="">لا يوجد عرض</option>
-                {offers.map((offer) => (
-                  <option key={offer.id} value={offer.id}>
-                    {offer.name} - {offer.offer_type === 'percentage' ? `خصم ${offer.discount_value}%` : offer.offer_type === 'fixed' ? `خصم ${offer.discount_value} ج.م` : `اشتري ${offer.buy_quantity} واحصل على ${offer.get_quantity}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {/* Discount */}
           <div className="space-y-2 mb-4">
