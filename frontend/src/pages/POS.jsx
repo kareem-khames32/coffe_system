@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { productsAPI, categoriesAPI, ordersAPI } from '../api/services';
-import { Plus, Minus, Trash2, ShoppingCart, X, Printer, Coffee } from 'lucide-react';
+import { productsAPI, categoriesAPI, ordersAPI, offersAPI } from '../api/services';
+import { Plus, Minus, Trash2, ShoppingCart, X, Printer, Coffee, Tag } from 'lucide-react';
 import Invoice from '../components/Invoice';
 
 const POS = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState([]);
@@ -18,6 +19,7 @@ const POS = () => {
   });
   const [discountType, setDiscountType] = useState('none');
   const [discountValue, setDiscountValue] = useState(0);
+  const [selectedOffer, setSelectedOffer] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,12 +28,14 @@ const POS = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
+      const [productsRes, categoriesRes, offersRes] = await Promise.all([
         productsAPI.getAll(),
         categoriesAPI.getAll(),
+        offersAPI.getActive(),
       ]);
       setProducts(productsRes.data.data);
       setCategories(categoriesRes.data.data);
+      setOffers(offersRes.data.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -133,6 +137,7 @@ const POS = () => {
         ...customerInfo,
         discount_type: discountType,
         discount_value: discountValue,
+        offer_id: selectedOffer,
       };
 
       const response = await ordersAPI.createInStore(orderData);
@@ -150,6 +155,7 @@ const POS = () => {
       });
       setDiscountType('none');
       setDiscountValue(0);
+      setSelectedOffer(null);
     } catch (error) {
       alert('حدث خطأ: ' + (error.response?.data?.message || 'خطأ في الخادم'));
     } finally {
@@ -330,6 +336,28 @@ const POS = () => {
               className="w-full px-3 py-2 border-2 border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-coffee-500 outline-none"
             />
           </div>
+
+          {/* Offers */}
+          {offers.length > 0 && (
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-green-600" />
+                <h3 className="font-bold text-sm text-amber-900">العروض المتاحة</h3>
+              </div>
+              <select
+                value={selectedOffer || ''}
+                onChange={(e) => setSelectedOffer(e.target.value ? parseInt(e.target.value) : null)}
+                className="w-full px-3 py-2 border-2 border-green-300 rounded-xl text-sm focus:ring-2 focus:ring-green-500 outline-none bg-green-50"
+              >
+                <option value="">لا يوجد عرض</option>
+                {offers.map((offer) => (
+                  <option key={offer.id} value={offer.id}>
+                    {offer.name} - {offer.offer_type === 'percentage' ? `خصم ${offer.discount_value}%` : offer.offer_type === 'fixed' ? `خصم ${offer.discount_value} ج.م` : `اشتري ${offer.buy_quantity} واحصل على ${offer.get_quantity}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Discount */}
           <div className="space-y-2 mb-4">
