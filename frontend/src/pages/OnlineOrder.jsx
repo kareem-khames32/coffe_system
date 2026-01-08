@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { productsAPI, categoriesAPI, ordersAPI, offersAPI } from '../api/services';
+import { productsAPI, categoriesAPI, ordersAPI, offersAPI, dailyDiscountsAPI } from '../api/services';
 import { ShoppingCart, Plus, Minus, Trash2, Coffee, Check, Tag } from 'lucide-react';
 
 const OnlineOrder = () => {
@@ -8,6 +8,7 @@ const OnlineOrder = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [offers, setOffers] = useState([]);
+  const [dailyDiscount, setDailyDiscount] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cart, setCart] = useState([]);
   const [selectedOffer, setSelectedOffer] = useState(null);
@@ -24,14 +25,21 @@ const OnlineOrder = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes, offersRes] = await Promise.all([
+      const today = new Date().toISOString().split('T')[0];
+      const [productsRes, categoriesRes, offersRes, dailyDiscountRes] = await Promise.all([
         productsAPI.getAll(),
         categoriesAPI.getAll(),
         offersAPI.getActive(),
+        dailyDiscountsAPI.getForDate(today),
       ]);
       setProducts(productsRes.data.data.filter(p => p.is_active));
       setCategories(categoriesRes.data.data);
       setOffers(offersRes.data.data);
+
+      // Set daily discount if exists
+      if (dailyDiscountRes.data.data) {
+        setDailyDiscount(dailyDiscountRes.data.data);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -141,6 +149,34 @@ const OnlineOrder = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Daily Discount Banner */}
+        {dailyDiscount && (
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-2xl shadow-2xl border-4 border-green-400 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-white bg-opacity-20 p-4 rounded-full">
+                  <Tag className="w-10 h-10" />
+                </div>
+                <div>
+                  <div className="text-sm opacity-90 font-semibold">🎉 خصم اليوم - متطبق تلقائياً</div>
+                  <h2 className="text-3xl font-bold">{dailyDiscount.name}</h2>
+                  {dailyDiscount.description && (
+                    <p className="text-sm opacity-90 mt-1">{dailyDiscount.description}</p>
+                  )}
+                </div>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-2xl p-6 text-center">
+                <div className="text-sm opacity-90">خصم</div>
+                <div className="text-5xl font-bold">
+                  {dailyDiscount.discount_type === 'percentage'
+                    ? `${dailyDiscount.discount_value}%`
+                    : `${dailyDiscount.discount_value} ج.م`}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Offers Banner */}
         {offers.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { productsAPI, categoriesAPI, ordersAPI, offersAPI } from '../api/services';
+import { productsAPI, categoriesAPI, ordersAPI, offersAPI, dailyDiscountsAPI } from '../api/services';
 import { Plus, Minus, Trash2, ShoppingCart, X, Printer, Coffee, Tag } from 'lucide-react';
 import Invoice from '../components/Invoice';
 
@@ -7,6 +7,7 @@ const POS = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [offers, setOffers] = useState([]);
+  const [dailyDiscount, setDailyDiscount] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState([]);
@@ -28,14 +29,24 @@ const POS = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes, offersRes] = await Promise.all([
+      const today = new Date().toISOString().split('T')[0];
+      const [productsRes, categoriesRes, offersRes, dailyDiscountRes] = await Promise.all([
         productsAPI.getAll(),
         categoriesAPI.getAll(),
         offersAPI.getActive(),
+        dailyDiscountsAPI.getForDate(today),
       ]);
       setProducts(productsRes.data.data);
       setCategories(categoriesRes.data.data);
       setOffers(offersRes.data.data);
+
+      // Apply daily discount automatically if exists
+      if (dailyDiscountRes.data.data) {
+        const discount = dailyDiscountRes.data.data;
+        setDailyDiscount(discount);
+        setDiscountType(discount.discount_type);
+        setDiscountValue(discount.discount_value);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -171,6 +182,34 @@ const POS = () => {
           <h1 className="text-3xl font-bold text-amber-900">نقطة البيع</h1>
           <p className="text-amber-700">اختر المنتجات لإضافتها للطلب</p>
         </div>
+
+        {/* Daily Discount Banner */}
+        {dailyDiscount && (
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-2xl shadow-2xl border-4 border-green-400">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-white bg-opacity-20 p-4 rounded-full">
+                  <Tag className="w-10 h-10" />
+                </div>
+                <div>
+                  <div className="text-sm opacity-90 font-semibold">🎉 خصم اليوم - متطبق تلقائياً</div>
+                  <h2 className="text-3xl font-bold">{dailyDiscount.name}</h2>
+                  {dailyDiscount.description && (
+                    <p className="text-sm opacity-90 mt-1">{dailyDiscount.description}</p>
+                  )}
+                </div>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-2xl p-6 text-center">
+                <div className="text-sm opacity-90">خصم</div>
+                <div className="text-5xl font-bold">
+                  {dailyDiscount.discount_type === 'percentage'
+                    ? `${dailyDiscount.discount_value}%`
+                    : `${dailyDiscount.discount_value} ج.م`}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Offers Banner */}
         {offers.length > 0 && (
