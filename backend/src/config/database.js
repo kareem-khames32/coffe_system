@@ -21,7 +21,16 @@ const promisePool = pool.promise();
 // Test connection
 pool.getConnection((err, connection) => {
     if (err) {
-        console.error('❌ Database connection failed:', err.message);
+        console.error('❌ Database connection failed:');
+        console.error('Error Code:', err.code);
+        console.error('Error Message:', err.message);
+        console.error('SQL State:', err.sqlState);
+        console.error('\n📋 Current Configuration:');
+        console.error('Host:', process.env.DB_HOST || 'localhost');
+        console.error('User:', process.env.DB_USER || 'root');
+        console.error('Password:', process.env.DB_PASSWORD ? '***SET***' : '***EMPTY***');
+        console.error('Database:', process.env.DB_NAME || 'cafe_management');
+        console.error('Port:', process.env.DB_PORT || 3306);
         return;
     }
     console.log('✅ Database connected successfully');
