@@ -1,6 +1,41 @@
+import { useEffect, useState } from 'react';
 import { Coffee } from 'lucide-react';
+import { settingsAPI } from '../api/services';
 
 const Invoice = ({ orderData, onClose }) => {
+  const [settings, setSettings] = useState({
+    cafe_name: 'مقهى الأحلام',
+    cafe_address: 'القاهرة، مصر',
+    cafe_phone: '01234567890',
+    cafe_logo: null,
+  });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await settingsAPI.getAll();
+      const settingsData = response.data.data;
+
+      // Convert settings array to object
+      const settingsObj = {};
+      settingsData.forEach(setting => {
+        settingsObj[setting.setting_key] = setting.setting_value;
+      });
+
+      setSettings({
+        cafe_name: settingsObj.cafe_name || 'مقهى الأحلام',
+        cafe_address: settingsObj.cafe_address || 'القاهرة، مصر',
+        cafe_phone: settingsObj.cafe_phone || '01234567890',
+        cafe_logo: settingsObj.cafe_logo || null,
+      });
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -19,12 +54,20 @@ const Invoice = ({ orderData, onClose }) => {
           {/* Header */}
           <div className="text-center mb-3 border-b border-coffee-600 pb-3">
             <div className="flex justify-center mb-2">
-              <div className="bg-coffee-600 p-2 rounded-full">
-                <Coffee className="w-6 h-6 text-white" />
-              </div>
+              {settings.cafe_logo ? (
+                <img
+                  src={`http://localhost:5000${settings.cafe_logo}`}
+                  alt="Logo"
+                  className="h-12 w-12 object-contain"
+                />
+              ) : (
+                <div className="bg-coffee-600 p-2 rounded-full">
+                  <Coffee className="w-6 h-6 text-white" />
+                </div>
+              )}
             </div>
-            <h1 className="text-xl font-bold text-coffee-800">مقهى الأحلام</h1>
-            <p className="text-xs text-gray-600 mt-1">القاهرة، مصر • 01234567890</p>
+            <h1 className="text-xl font-bold text-coffee-800">{settings.cafe_name}</h1>
+            <p className="text-xs text-gray-600 mt-1">{settings.cafe_address} • {settings.cafe_phone}</p>
           </div>
 
           {/* Invoice Details */}
