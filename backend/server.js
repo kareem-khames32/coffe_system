@@ -91,28 +91,49 @@ async function setupInventoryTables() {
             .filter(stmt => stmt.length > 0 && !stmt.startsWith('--') && !stmt.startsWith('/*'));
 
         const db = require('./src/config/database');
-        console.log('🔧 Setting up inventory tables...');
 
+        // Test database connection first
+        try {
+            await db.query('SELECT 1');
+        } catch (error) {
+            console.error('⚠️  Database not ready yet, skipping setup');
+            return;
+        }
+
+        console.log('🔧 Setting up inventory tables...');
+        console.log(`   Found ${statements.length} SQL statements`);
+
+        let tablesCreated = 0;
         for (const statement of statements) {
             try {
                 if (statement.toLowerCase().includes('create table')) {
                     await db.query(statement);
                     const match = statement.match(/create table (?:if not exists )?`?(\w+)`?/i);
                     if (match) {
-                        console.log(`✅ Table '${match[1]}' ready`);
+                        console.log(`   ✅ Table '${match[1]}' ready`);
+                        tablesCreated++;
                     }
                 }
             } catch (error) {
                 if (error.code === 'ER_TABLE_EXISTS_ERROR') {
-                    // Table already exists, skip silently
+                    const match = statement.match(/create table (?:if not exists )?`?(\w+)`?/i);
+                    if (match) {
+                        console.log(`   ⚠️  Table '${match[1]}' already exists`);
+                    }
                 } else {
-                    console.error('Setup error:', error.message);
+                    console.error(`   ❌ Setup error: ${error.message}`);
                 }
             }
         }
-        console.log('✅ Inventory system ready!\n');
+
+        if (tablesCreated > 0) {
+            console.log(`\n✅ Inventory system ready! (${tablesCreated} tables created)\n`);
+        } else {
+            console.log('\n✅ Inventory system already set up!\n');
+        }
     } catch (error) {
         console.error('⚠️  Could not setup inventory tables:', error.message);
+        console.error('   Full error:', error);
     }
 }
 
