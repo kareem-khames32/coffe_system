@@ -22,14 +22,40 @@ async function fixOrdersTable() {
 
     console.log('🔧 Adding missing columns to orders table...\n');
 
-    // Add cashier_id
+    // Add total column
     try {
-      console.log('Adding cashier_id column...');
-      await connection.query('ALTER TABLE orders ADD COLUMN cashier_id INT AFTER user_id');
-      console.log('✅ cashier_id added\n');
+      console.log('Adding total column...');
+      await connection.query('ALTER TABLE orders ADD COLUMN total DECIMAL(10,2) DEFAULT 0 AFTER discount_amount');
+      console.log('✅ total added\n');
     } catch (error) {
       if (error.code === 'ER_DUP_FIELDNAME') {
-        console.log('⚠️  cashier_id already exists\n');
+        console.log('⚠️  total already exists\n');
+      } else {
+        throw error;
+      }
+    }
+
+    // Add cost column
+    try {
+      console.log('Adding cost column...');
+      await connection.query('ALTER TABLE orders ADD COLUMN cost DECIMAL(10,2) DEFAULT 0 AFTER total');
+      console.log('✅ cost added\n');
+    } catch (error) {
+      if (error.code === 'ER_DUP_FIELDNAME') {
+        console.log('⚠️  cost already exists\n');
+      } else {
+        throw error;
+      }
+    }
+
+    // Add profit column
+    try {
+      console.log('Adding profit column...');
+      await connection.query('ALTER TABLE orders ADD COLUMN profit DECIMAL(10,2) DEFAULT 0 AFTER cost');
+      console.log('✅ profit added\n');
+    } catch (error) {
+      if (error.code === 'ER_DUP_FIELDNAME') {
+        console.log('⚠️  profit already exists\n');
       } else {
         throw error;
       }
@@ -43,6 +69,19 @@ async function fixOrdersTable() {
     } catch (error) {
       if (error.code === 'ER_DUP_FIELDNAME') {
         console.log('⚠️  offer_id already exists\n');
+      } else {
+        throw error;
+      }
+    }
+
+    // Add cashier_id
+    try {
+      console.log('Adding cashier_id column...');
+      await connection.query('ALTER TABLE orders ADD COLUMN cashier_id INT AFTER offer_id');
+      console.log('✅ cashier_id added\n');
+    } catch (error) {
+      if (error.code === 'ER_DUP_FIELDNAME') {
+        console.log('⚠️  cashier_id already exists\n');
       } else {
         throw error;
       }
