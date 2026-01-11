@@ -115,3 +115,40 @@ export const reportsAPI = {
   getCustomers: (params) => axios.get('/reports/customers', { params }),
   getPurchasesAndExpenses: (params) => axios.get('/reports/purchases-expenses', { params }),
 };
+
+// Suppliers
+export const suppliersAPI = {
+  getAll: () => axios.get('/suppliers'),
+  getActive: () => axios.get('/suppliers/active'),
+  getById: (id) => axios.get(`/suppliers/${id}`),
+  create: (data) => axios.post('/suppliers', data),
+  update: (id, data) => axios.put(`/suppliers/${id}`, data),
+  delete: (id) => axios.delete(`/suppliers/${id}`),
+};
+
+// Raw Materials
+export const rawMaterialsAPI = {
+  getAll: () => axios.get('/raw-materials'),
+  getActive: () => axios.get('/raw-materials/active'),
+  getLowStock: () => axios.get('/raw-materials/low-stock'),
+  getById: (id) => axios.get(`/raw-materials/${id}`),
+  create: (data) => axios.post('/raw-materials', data),
+  update: (id, data) => axios.put(`/raw-materials/${id}`, data),
+  adjustStock: (id, data) => axios.patch(`/raw-materials/${id}/adjust`, data),
+  delete: (id) => axios.delete(`/raw-materials/${id}`),
+};
+
+// Inventory Purchases
+export const inventoryPurchasesAPI = {
+  getAll: () => axios.get('/inventory-purchases'),
+  getById: (id) => axios.get(`/inventory-purchases/${id}`),
+  create: (data) => axios.post('/inventory-purchases', data),
+  delete: (id) => axios.delete(`/inventory-purchases/${id}`),
+};
+
+// Product Recipes
+export const recipesAPI = {
+  getProductRecipe: (productId) => axios.get(`/recipes/product/${productId}`),
+  updateProductRecipe: (productId, recipe) => axios.put(`/recipes/product/${productId}`, { recipe }),
+  checkStockAvailability: (items) => axios.post('/recipes/check-stock', { items }),
+};
