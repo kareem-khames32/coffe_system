@@ -105,37 +105,8 @@ CREATE TABLE IF NOT EXISTS inventory_transactions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='جدول سجل حركة المخزن';
 
 -- ═══════════════════════════════════════════════════════════════════
--- Triggers for automatic stock updates
+-- Note: Triggers will be created separately after table creation
 -- ═══════════════════════════════════════════════════════════════════
-
--- Trigger: Update raw material stock after purchase
-DELIMITER $$
-
-DROP TRIGGER IF EXISTS after_purchase_item_insert$$
-CREATE TRIGGER after_purchase_item_insert
-AFTER INSERT ON inventory_purchase_items
-FOR EACH ROW
-BEGIN
-    -- Update current stock
-    UPDATE raw_materials
-    SET current_stock = current_stock + NEW.quantity,
-        unit_cost = NEW.unit_price
-    WHERE id = NEW.raw_material_id;
-
-    -- Log transaction
-    INSERT INTO inventory_transactions (
-        raw_material_id, transaction_type, quantity, unit_cost,
-        reference_type, reference_id, created_at
-    ) VALUES (
-        NEW.raw_material_id, 'purchase', NEW.quantity, NEW.unit_price,
-        'purchase', NEW.purchase_id, NOW()
-    );
-END$$
-
--- Trigger: Deduct stock when order is created/completed
--- This will be implemented in the order creation logic
-
-DELIMITER ;
 
 -- ═══════════════════════════════════════════════════════════════════
 -- Success Message
