@@ -130,7 +130,7 @@ exports.deductStockForOrder = async (orderId, items) => {
         await connection.query(
           `INSERT INTO inventory_transactions (raw_material_id, transaction_type, quantity, reference_type, reference_id)
            VALUES (?, 'sale', ?, 'order', ?)`,
-          [-totalQuantity, recipeItem.raw_material_id, orderId]
+          [recipeItem.raw_material_id, 'sale', -totalQuantity, 'order', orderId]
         );
       }
     }
@@ -140,6 +140,54 @@ exports.deductStockForOrder = async (orderId, items) => {
   } catch (error) {
     await connection.rollback();
     console.error('Deduct stock error:', error);
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+// Restore stock for an order (called when order is cancelled or edited)
+exports.restoreStockForOrder = async (orderId, items) => {
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    for (const item of items) {
+      const { product_id, quantity } = item;
+
+      // Get product recipe
+      const [recipe] = await connection.query(
+        'SELECT * FROM product_recipes WHERE product_id = ?',
+        [product_id]
+      );
+
+      // Restore each material
+      for (const recipeItem of recipe) {
+        const totalQuantity = parseFloat(recipeItem.quantity_needed) * parseFloat(quantity);
+
+        // Update stock (add back)
+        await connection.query(
+          `UPDATE raw_materials
+           SET current_stock = current_stock + ?
+           WHERE id = ?`,
+          [totalQuantity, recipeItem.raw_material_id]
+        );
+
+        // Log transaction
+        await connection.query(
+          `INSERT INTO inventory_transactions (raw_material_id, transaction_type, quantity, reference_type, reference_id)
+           VALUES (?, 'return', ?, 'order_cancel', ?)`,
+          [recipeItem.raw_material_id, 'return', totalQuantity, 'order_cancel', orderId]
+        );
+      }
+    }
+
+    await connection.commit();
+    return { success: true };
+  } catch (error) {
+    await connection.rollback();
+    console.error('Restore stock error:', error);
     throw error;
   } finally {
     connection.release();

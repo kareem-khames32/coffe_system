@@ -1,5 +1,6 @@
 const db = require('../config/database');
 const { generateOrderNumber, calculateDiscount } = require('../utils/helpers');
+const { deductStockForOrder, restoreStockForOrder } = require('./productRecipeController');
 
 // Create In-Store Order
 exports.createInStoreOrder = async (req, res) => {
@@ -119,6 +120,14 @@ exports.createInStoreOrder = async (req, res) => {
                 'UPDATE products SET stock = stock - ? WHERE id = ?',
                 [item.quantity, item.product_id]
             );
+        }
+
+        // Deduct raw materials from inventory based on product recipes
+        try {
+            await deductStockForOrder(orderId, items);
+        } catch (error) {
+            console.error('Error deducting raw material stock:', error);
+            // Continue even if recipe deduction fails (product might not have recipe)
         }
 
         await connection.commit();
@@ -291,6 +300,18 @@ exports.createOnlineOrder = async (req, res) => {
                 'UPDATE products SET stock = stock - ? WHERE id = ?',
                 [item.quantity, item.product_id]
             );
+        }
+
+        // Deduct raw materials from inventory based on product recipes
+        try {
+            const formattedItems = items.map(item => ({
+                product_id: item.product_id,
+                quantity: item.quantity
+            }));
+            await deductStockForOrder(orderId, formattedItems);
+        } catch (error) {
+            console.error('Error deducting raw material stock:', error);
+            // Continue even if recipe deduction fails (product might not have recipe)
         }
 
         await connection.commit();
@@ -508,6 +529,13 @@ exports.updateOrderStatus = async (req, res) => {
                     [item.quantity, item.product_id]
                 );
             }
+
+            // Restore raw materials to inventory
+            try {
+                await restoreStockForOrder(req.params.id, items);
+            } catch (error) {
+                console.error('Error restoring raw material stock:', error);
+            }
         }
 
         await db.query('UPDATE orders SET status = ? WHERE id = ?', [status, req.params.id]);
@@ -576,6 +604,13 @@ exports.editOrder = async (req, res) => {
                 'UPDATE products SET stock = stock + ? WHERE id = ?',
                 [oldItem.quantity, oldItem.product_id]
             );
+        }
+
+        // Restore raw materials for old items
+        try {
+            await restoreStockForOrder(req.params.id, oldItems);
+        } catch (error) {
+            console.error('Error restoring raw material stock:', error);
         }
 
         // 2. Delete old items
@@ -664,6 +699,17 @@ exports.editOrder = async (req, res) => {
                 'UPDATE products SET stock = stock - ? WHERE id = ?',
                 [item.quantity, item.product_id]
             );
+        }
+
+        // Deduct raw materials for new items
+        try {
+            const formattedItems = items.map(item => ({
+                product_id: item.product_id,
+                quantity: item.quantity
+            }));
+            await deductStockForOrder(req.params.id, formattedItems);
+        } catch (error) {
+            console.error('Error deducting raw material stock:', error);
         }
 
         // 6. Log the edit
@@ -758,6 +804,13 @@ exports.cancelOrder = async (req, res) => {
                 'UPDATE products SET stock = stock + ? WHERE id = ?',
                 [item.quantity, item.product_id]
             );
+        }
+
+        // Restore raw materials to inventory
+        try {
+            await restoreStockForOrder(req.params.id, items);
+        } catch (error) {
+            console.error('Error restoring raw material stock:', error);
         }
 
         // Update order status
