@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { productsAPI, categoriesAPI } from '../api/services';
-import { Plus, Edit, Trash2, X, Package, Search, Filter } from 'lucide-react';
+import { productsAPI, categoriesAPI, rawMaterialsAPI, recipesAPI } from '../api/services';
+import { Plus, Edit, Trash2, X, Package, Search, Filter, ChefHat } from 'lucide-react';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [rawMaterials, setRawMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -20,6 +21,11 @@ const Products = () => {
     description: '',
     is_active: true,
   });
+  const [recipe, setRecipe] = useState([]);
+  const [newRecipeItem, setNewRecipeItem] = useState({
+    raw_material_id: '',
+    quantity_needed: '',
+  });
 
   useEffect(() => {
     fetchData();
@@ -27,12 +33,14 @@ const Products = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
+      const [productsRes, categoriesRes, rawMaterialsRes] = await Promise.all([
         productsAPI.getAll(),
         categoriesAPI.getAll(),
+        rawMaterialsAPI.getActive(),
       ]);
       setProducts(productsRes.data.data);
       setCategories(categoriesRes.data.data);
+      setRawMaterials(rawMaterialsRes.data.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -51,6 +59,17 @@ const Products = () => {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  // Calculate total cost from recipe
+  const calculateRecipeCost = () => {
+    return recipe.reduce((total, item) => {
+      const material = rawMaterials.find((m) => m.id === item.raw_material_id);
+      if (material) {
+        return total + parseFloat(material.unit_cost) * parseFloat(item.quantity_needed);
+      }
+      return total;
+    }, 0);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -64,13 +83,22 @@ const Products = () => {
         category_id: parseInt(formData.category_id),
       };
 
+      let productId;
       if (editingProduct) {
         await productsAPI.update(editingProduct.id, data);
+        productId = editingProduct.id;
         alert('تم تحديث المنتج بنجاح');
       } else {
-        await productsAPI.create(data);
+        const result = await productsAPI.create(data);
+        productId = result.data.data.id;
         alert('تم إضافة المنتج بنجاح');
       }
+
+      // Save recipe if any items added
+      if (recipe.length > 0) {
+        await recipesAPI.updateProductRecipe(productId, recipe);
+      }
+
       fetchData();
       closeModal();
     } catch (error) {
@@ -80,7 +108,7 @@ const Products = () => {
     }
   };
 
-  const handleEdit = (product) => {
+  const handleEdit = async (product) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
@@ -91,6 +119,20 @@ const Products = () => {
       description: product.description || '',
       is_active: product.is_active,
     });
+
+    // Fetch product recipe
+    try {
+      const recipeRes = await recipesAPI.getProductRecipe(product.id);
+      if (recipeRes.data.success && recipeRes.data.data.length > 0) {
+        setRecipe(recipeRes.data.data);
+      } else {
+        setRecipe([]);
+      }
+    } catch (error) {
+      console.error('Error fetching recipe:', error);
+      setRecipe([]);
+    }
+
     setShowModal(true);
   };
 
@@ -129,12 +171,47 @@ const Products = () => {
       description: '',
       is_active: true,
     });
+    setRecipe([]);
+    setNewRecipeItem({ raw_material_id: '', quantity_needed: '' });
     setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
     setEditingProduct(null);
+    setRecipe([]);
+    setNewRecipeItem({ raw_material_id: '', quantity_needed: '' });
+  };
+
+  // Recipe management functions
+  const addRecipeItem = () => {
+    if (!newRecipeItem.raw_material_id || !newRecipeItem.quantity_needed) {
+      alert('يرجى اختيار المادة الخام وإدخال الكمية');
+      return;
+    }
+
+    // Check if material already in recipe
+    if (recipe.find((item) => item.raw_material_id === parseInt(newRecipeItem.raw_material_id))) {
+      alert('هذه المادة موجودة بالفعل في الوصفة');
+      return;
+    }
+
+    setRecipe([
+      ...recipe,
+      {
+        raw_material_id: parseInt(newRecipeItem.raw_material_id),
+        quantity_needed: parseFloat(newRecipeItem.quantity_needed),
+      },
+    ]);
+    setNewRecipeItem({ raw_material_id: '', quantity_needed: '' });
+  };
+
+  const removeRecipeItem = (materialId) => {
+    setRecipe(recipe.filter((item) => item.raw_material_id !== materialId));
+  };
+
+  const getMaterialInfo = (materialId) => {
+    return rawMaterials.find((m) => m.id === materialId);
   };
 
   const getProfit = (price, cost) => {
@@ -453,6 +530,130 @@ const Products = () => {
                     disabled={loading}
                   />
                 </div>
+              </div>
+
+              {/* Recipe Section */}
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <ChefHat className="w-5 h-5 text-coffee-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">وصفة المنتج (المكونات)</h3>
+                </div>
+
+                {/* Add Recipe Item */}
+                <div className="bg-cream-50 p-4 rounded-lg mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        المادة الخام
+                      </label>
+                      <select
+                        value={newRecipeItem.raw_material_id}
+                        onChange={(e) =>
+                          setNewRecipeItem({ ...newRecipeItem, raw_material_id: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none text-sm"
+                        disabled={loading}
+                      >
+                        <option value="">اختر المادة</option>
+                        {rawMaterials.map((material) => (
+                          <option key={material.id} value={material.id}>
+                            {material.name} ({material.unit_cost} ج.م/{material.unit})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        الكمية المطلوبة
+                      </label>
+                      <input
+                        type="number"
+                        step="0.001"
+                        value={newRecipeItem.quantity_needed}
+                        onChange={(e) =>
+                          setNewRecipeItem({ ...newRecipeItem, quantity_needed: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none text-sm"
+                        placeholder="الكمية"
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <div className="flex items-end">
+                      <button
+                        type="button"
+                        onClick={addRecipeItem}
+                        disabled={loading}
+                        className="w-full bg-coffee-600 hover:bg-coffee-700 text-white px-4 py-2 rounded-lg transition disabled:opacity-50 text-sm"
+                      >
+                        إضافة مكون
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recipe Items Table */}
+                {recipe.length > 0 && (
+                  <div className="overflow-x-auto border border-gray-200 rounded-lg mb-4">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-right font-semibold text-gray-700">المادة الخام</th>
+                          <th className="px-4 py-2 text-right font-semibold text-gray-700">الكمية</th>
+                          <th className="px-4 py-2 text-right font-semibold text-gray-700">الوحدة</th>
+                          <th className="px-4 py-2 text-right font-semibold text-gray-700">سعر الوحدة</th>
+                          <th className="px-4 py-2 text-right font-semibold text-gray-700">التكلفة</th>
+                          <th className="px-4 py-2 text-right font-semibold text-gray-700">إجراء</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {recipe.map((item) => {
+                          const material = getMaterialInfo(item.raw_material_id);
+                          const itemCost = material
+                            ? (parseFloat(material.unit_cost) * parseFloat(item.quantity_needed)).toFixed(2)
+                            : '0.00';
+                          return (
+                            <tr key={item.raw_material_id} className="hover:bg-gray-50">
+                              <td className="px-4 py-2">{material?.name || 'غير معروف'}</td>
+                              <td className="px-4 py-2">{item.quantity_needed}</td>
+                              <td className="px-4 py-2">{material?.unit || '-'}</td>
+                              <td className="px-4 py-2">{material?.unit_cost || '0'} ج.م</td>
+                              <td className="px-4 py-2 font-semibold text-coffee-600">{itemCost} ج.م</td>
+                              <td className="px-4 py-2">
+                                <button
+                                  type="button"
+                                  onClick={() => removeRecipeItem(item.raw_material_id)}
+                                  disabled={loading}
+                                  className="text-red-600 hover:bg-red-50 p-1 rounded transition"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-coffee-50">
+                        <tr>
+                          <td colSpan="4" className="px-4 py-2 text-right font-semibold text-gray-900">
+                            إجمالي التكلفة:
+                          </td>
+                          <td className="px-4 py-2 font-bold text-coffee-700 text-base">
+                            {calculateRecipeCost().toFixed(2)} ج.م
+                          </td>
+                          <td></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+
+                {recipe.length === 0 && (
+                  <div className="text-center py-6 text-gray-500 text-sm bg-gray-50 rounded-lg">
+                    لم يتم إضافة أي مكونات للوصفة بعد
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">
