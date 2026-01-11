@@ -78,6 +78,44 @@ app.use((error, req, res, next) => {
     });
 });
 
+// Auto-setup inventory tables on server start
+const fs = require('fs');
+async function setupInventoryTables() {
+    try {
+        const sqlFilePath = path.join(__dirname, 'database', 'create_inventory_system.sql');
+        const sql = fs.readFileSync(sqlFilePath, 'utf8');
+
+        const statements = sql
+            .split(';')
+            .map(stmt => stmt.trim())
+            .filter(stmt => stmt.length > 0 && !stmt.startsWith('--') && !stmt.startsWith('/*'));
+
+        const db = require('./src/config/database');
+        console.log('🔧 Setting up inventory tables...');
+
+        for (const statement of statements) {
+            try {
+                if (statement.toLowerCase().includes('create table')) {
+                    await db.query(statement);
+                    const match = statement.match(/create table (?:if not exists )?`?(\w+)`?/i);
+                    if (match) {
+                        console.log(`✅ Table '${match[1]}' ready`);
+                    }
+                }
+            } catch (error) {
+                if (error.code === 'ER_TABLE_EXISTS_ERROR') {
+                    // Table already exists, skip silently
+                } else {
+                    console.error('Setup error:', error.message);
+                }
+            }
+        }
+        console.log('✅ Inventory system ready!\n');
+    } catch (error) {
+        console.error('⚠️  Could not setup inventory tables:', error.message);
+    }
+}
+
 // Start server
 const PORT = process.env.PORT || 5000;
 
@@ -88,6 +126,9 @@ app.listen(PORT, () => {
     console.log(`║   Server running on port: ${PORT}        ║`);
     console.log(`║   Environment: ${process.env.NODE_ENV || 'development'}        ║`);
     console.log('╚════════════════════════════════════════╝');
+
+    // Run setup after a short delay to ensure DB is connected
+    setTimeout(setupInventoryTables, 2000);
 });
 
 module.exports = app;
