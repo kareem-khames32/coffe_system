@@ -83,12 +83,35 @@ const fs = require('fs');
 async function setupInventoryTables() {
     try {
         const sqlFilePath = path.join(__dirname, 'database', 'create_inventory_system.sql');
+
+        console.log('🔧 Setting up inventory tables...');
+        console.log(`   Reading SQL file: ${sqlFilePath}`);
+
         const sql = fs.readFileSync(sqlFilePath, 'utf8');
 
-        const statements = sql
+        // Remove comments and split by semicolon
+        const lines = sql.split('\n');
+        let cleanSQL = '';
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            // Skip comment-only lines
+            if (trimmedLine.startsWith('--') || trimmedLine.startsWith('/*') || trimmedLine.startsWith('*') || trimmedLine.length === 0) {
+                continue;
+            }
+            // Remove inline comments
+            const commentIndex = trimmedLine.indexOf('COMMENT');
+            if (commentIndex > -1) {
+                // Keep COMMENT clauses but clean the line
+                cleanSQL += ' ' + trimmedLine;
+            } else {
+                cleanSQL += ' ' + trimmedLine;
+            }
+        }
+
+        const statements = cleanSQL
             .split(';')
             .map(stmt => stmt.trim())
-            .filter(stmt => stmt.length > 0 && !stmt.startsWith('--') && !stmt.startsWith('/*'));
+            .filter(stmt => stmt.length > 0 && stmt.toLowerCase().includes('create table'));
 
         const db = require('./src/config/database');
 
@@ -100,28 +123,26 @@ async function setupInventoryTables() {
             return;
         }
 
-        console.log('🔧 Setting up inventory tables...');
-        console.log(`   Found ${statements.length} SQL statements`);
+        console.log(`   Found ${statements.length} CREATE TABLE statements`);
 
         let tablesCreated = 0;
         for (const statement of statements) {
             try {
-                if (statement.toLowerCase().includes('create table')) {
-                    await db.query(statement);
-                    const match = statement.match(/create table (?:if not exists )?`?(\w+)`?/i);
-                    if (match) {
-                        console.log(`   ✅ Table '${match[1]}' ready`);
-                        tablesCreated++;
-                    }
+                await db.query(statement);
+                const match = statement.match(/create table (?:if not exists )?`?(\w+)`?/i);
+                if (match) {
+                    console.log(`   ✅ Table '${match[1]}' created`);
+                    tablesCreated++;
                 }
             } catch (error) {
                 if (error.code === 'ER_TABLE_EXISTS_ERROR') {
                     const match = statement.match(/create table (?:if not exists )?`?(\w+)`?/i);
                     if (match) {
-                        console.log(`   ⚠️  Table '${match[1]}' already exists`);
+                        console.log(`   ⏭️  Table '${match[1]}' already exists`);
                     }
                 } else {
                     console.error(`   ❌ Setup error: ${error.message}`);
+                    console.error(`   Statement: ${statement.substring(0, 100)}...`);
                 }
             }
         }
@@ -129,7 +150,7 @@ async function setupInventoryTables() {
         if (tablesCreated > 0) {
             console.log(`\n✅ Inventory system ready! (${tablesCreated} tables created)\n`);
         } else {
-            console.log('\n✅ Inventory system already set up!\n');
+            console.log('\n✅ All inventory tables already exist!\n');
         }
     } catch (error) {
         console.error('⚠️  Could not setup inventory tables:', error.message);
