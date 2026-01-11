@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const supplierController = require('../controllers/supplierController');
-const { protect } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 
-router.use(protect);
+router.use(verifyToken);
 
 router.get('/', supplierController.getAllSuppliers);
 router.get('/active', supplierController.getActiveSuppliers);

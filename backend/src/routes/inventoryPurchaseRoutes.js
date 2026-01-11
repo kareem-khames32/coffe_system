@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const inventoryPurchaseController = require('../controllers/inventoryPurchaseController');
-const { protect } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 
-router.use(protect);
+router.use(verifyToken);
 
 router.get('/', inventoryPurchaseController.getAllPurchases);
 router.get('/:id', inventoryPurchaseController.getPurchaseById);

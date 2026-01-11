@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const rawMaterialController = require('../controllers/rawMaterialController');
-const { protect } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 
-router.use(protect);
+router.use(verifyToken);
 
 router.get('/', rawMaterialController.getAllRawMaterials);
 router.get('/active', rawMaterialController.getActiveRawMaterials);

@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const productRecipeController = require('../controllers/productRecipeController');
-const { protect } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 
-router.use(protect);
+router.use(verifyToken);
 
 router.get('/product/:productId', productRecipeController.getProductRecipe);
 router.put('/product/:productId', productRecipeController.updateProductRecipe);
