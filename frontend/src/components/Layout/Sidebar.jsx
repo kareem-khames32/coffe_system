@@ -15,7 +15,9 @@ import {
   ShoppingBasket,
   FileText,
   Settings,
-  Coffee
+  Coffee,
+  Truck,
+  Layers
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -58,6 +60,18 @@ const Sidebar = () => {
       name: 'الفئات',
       path: '/categories',
       icon: FolderOpen,
+      show: hasPermission('can_view_inventory'),
+    },
+    {
+      name: 'الموردين',
+      path: '/suppliers',
+      icon: Truck,
+      show: hasPermission('can_view_inventory'),
+    },
+    {
+      name: 'المواد الخام',
+      path: '/raw-materials',
+      icon: Layers,
       show: hasPermission('can_view_inventory'),
     },
     {

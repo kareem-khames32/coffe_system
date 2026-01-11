@@ -18,6 +18,8 @@ import DailyDiscounts from './pages/DailyDiscounts';
 import Expenses from './pages/Expenses';
 import Purchases from './pages/Purchases';
 import Reports from './pages/Reports';
+import Suppliers from './pages/Suppliers';
+import RawMaterials from './pages/RawMaterials';
 
 function App() {
   return (
@@ -42,6 +44,8 @@ function App() {
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/purchases" element={<Purchases />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/raw-materials" element={<RawMaterials />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
 
