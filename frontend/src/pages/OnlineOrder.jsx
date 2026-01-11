@@ -91,8 +91,23 @@ const OnlineOrder = () => {
     setCart(cart.filter((item) => item.product_id !== productId));
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  };
+
+  const calculateDiscount = () => {
+    if (!dailyDiscount) return 0;
+    const subtotal = calculateSubtotal();
+    if (dailyDiscount.discount_type === 'percentage') {
+      return (subtotal * dailyDiscount.discount_value) / 100;
+    } else if (dailyDiscount.discount_type === 'fixed') {
+      return Math.min(dailyDiscount.discount_value, subtotal);
+    }
+    return 0;
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() - calculateDiscount();
   };
 
   const handleSubmit = async (e) => {
@@ -109,6 +124,11 @@ const OnlineOrder = () => {
         items: cart,
         ...customerInfo,
         offer_id: selectedOffer,
+        // إضافة بيانات الخصم اليومي إذا كان موجود
+        ...(dailyDiscount && {
+          discount_type: dailyDiscount.discount_type,
+          discount_value: dailyDiscount.discount_value,
+        }),
       };
 
       const response = await ordersAPI.createOnline(orderData);
@@ -376,10 +396,20 @@ const OnlineOrder = () => {
                     ))}
                   </div>
 
-                  <div className="border-t pt-3 mb-4">
-                    <div className="flex justify-between text-lg font-bold">
+                  <div className="border-t pt-3 mb-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span>المجموع الفرعي:</span>
+                      <span className="font-bold">{calculateSubtotal().toFixed(2)} ج.م</span>
+                    </div>
+                    {dailyDiscount && (
+                      <div className="flex justify-between text-red-600">
+                        <span>الخصم (خصم اليوم):</span>
+                        <span className="font-bold">- {calculateDiscount().toFixed(2)} ج.م</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-lg font-bold text-green-600">
                       <span>الإجمالي:</span>
-                      <span className="text-green-600">{calculateTotal().toFixed(2)} ج.م</span>
+                      <span>{calculateTotal().toFixed(2)} ج.م</span>
                     </div>
                   </div>
 
