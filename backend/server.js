@@ -26,6 +26,11 @@ const purchaseRoutes = require('./src/routes/purchaseRoutes');
 const settingsRoutes = require('./src/routes/settingsRoutes');
 const reportRoutes = require('./src/routes/reportRoutes');
 const dailyDiscountRoutes = require('./src/routes/dailyDiscountRoutes');
+// Inventory Management Routes
+const supplierRoutes = require('./src/routes/supplierRoutes');
+const rawMaterialRoutes = require('./src/routes/rawMaterialRoutes');
+const inventoryPurchaseRoutes = require('./src/routes/inventoryPurchaseRoutes');
+const productRecipeRoutes = require('./src/routes/productRecipeRoutes');
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -39,6 +44,11 @@ app.use('/api/purchases', purchaseRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/daily-discounts', dailyDiscountRoutes);
+// Inventory Management Routes
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/raw-materials', rawMaterialRoutes);
+app.use('/api/inventory-purchases', inventoryPurchaseRoutes);
+app.use('/api/recipes', productRecipeRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
