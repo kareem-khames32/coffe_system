@@ -13,6 +13,7 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterAvailability, setFilterAvailability] = useState('all');
   const [formData, setFormData] = useState({
     name: '',
     category_id: '',
@@ -57,7 +58,11 @@ const Products = () => {
       filterStatus === 'all' ||
       (filterStatus === 'active' && product.is_active) ||
       (filterStatus === 'inactive' && !product.is_active);
-    return matchesSearch && matchesCategory && matchesStatus;
+    const matchesAvailability =
+      filterAvailability === 'all' ||
+      (filterAvailability === 'available' && product.materials_available) ||
+      (filterAvailability === 'unavailable' && !product.materials_available);
+    return matchesSearch && matchesCategory && matchesStatus && matchesAvailability;
   });
 
   // Calculate total cost from recipe with unit conversion
@@ -270,7 +275,7 @@ const Products = () => {
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -304,6 +309,16 @@ const Products = () => {
             <option value="active">نشط</option>
             <option value="inactive">غير نشط</option>
           </select>
+
+          <select
+            value={filterAvailability}
+            onChange={(e) => setFilterAvailability(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
+          >
+            <option value="all">كل المنتجات</option>
+            <option value="available">المواد متوفرة</option>
+            <option value="unavailable">المواد غير متوفرة</option>
+          </select>
         </div>
       </div>
 
@@ -331,8 +346,15 @@ const Products = () => {
                       <div className="bg-cream-100 p-2 rounded">
                         <Package className="w-5 h-5 text-coffee-600" />
                       </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">{product.name}</div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="font-semibold text-gray-900">{product.name}</div>
+                          {!product.materials_available && (
+                            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                              مواد غير متوفرة
+                            </span>
+                          )}
+                        </div>
                         <div className="text-sm text-gray-500">{product.description}</div>
                       </div>
                     </div>
@@ -407,7 +429,7 @@ const Products = () => {
                 لا توجد منتجات
               </h3>
               <p className="text-gray-500">
-                {searchTerm || filterCategory !== 'all' || filterStatus !== 'all'
+                {searchTerm || filterCategory !== 'all' || filterStatus !== 'all' || filterAvailability !== 'all'
                   ? 'لا توجد نتائج مطابقة لبحثك'
                   : 'قم بإضافة أول منتج'}
               </p>

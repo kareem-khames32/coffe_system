@@ -1,6 +1,7 @@
 const db = require('../config/database');
+const { convertUnits } = require('../utils/unitConversion');
 
-// Get all products
+// Get all products with raw material availability check
 exports.getAllProducts = async (req, res) => {
     try {
         const [products] = await db.query(
@@ -9,6 +10,13 @@ exports.getAllProducts = async (req, res) => {
              LEFT JOIN categories c ON p.category_id = c.id
              ORDER BY p.created_at DESC`
         );
+
+        // Check raw material availability for each product
+        for (const product of products) {
+            const availability = await checkProductAvailability(product.id);
+            product.materials_available = availability.available;
+            product.unavailable_materials = availability.unavailable_materials;
+        }
 
         res.json({
             success: true,
@@ -22,6 +30,60 @@ exports.getAllProducts = async (req, res) => {
         });
     }
 };
+
+// Helper function to check if product can be made based on raw materials
+async function checkProductAvailability(productId) {
+    try {
+        // Get product recipe
+        const [recipe] = await db.query(
+            `SELECT pr.raw_material_id, pr.quantity_needed, pr.unit,
+                    rm.name as material_name, rm.current_stock, rm.unit as material_unit
+             FROM product_recipes pr
+             JOIN raw_materials rm ON pr.raw_material_id = rm.id
+             WHERE pr.product_id = ?`,
+            [productId]
+        );
+
+        // If no recipe, consider available
+        if (recipe.length === 0) {
+            return { available: true, unavailable_materials: [] };
+        }
+
+        const unavailable_materials = [];
+
+        // Check each material
+        for (const item of recipe) {
+            const recipeUnit = item.unit || item.material_unit;
+
+            // Convert recipe quantity to material's base unit
+            const convertedQuantity = convertUnits(
+                parseFloat(item.quantity_needed),
+                recipeUnit,
+                item.material_unit
+            );
+
+            const currentStock = parseFloat(item.current_stock);
+
+            // Check if enough stock
+            if (convertedQuantity > currentStock) {
+                unavailable_materials.push({
+                    name: item.material_name,
+                    required: convertedQuantity,
+                    available: currentStock,
+                    unit: item.material_unit
+                });
+            }
+        }
+
+        return {
+            available: unavailable_materials.length === 0,
+            unavailable_materials
+        };
+    } catch (error) {
+        console.error('Check product availability error:', error);
+        return { available: false, unavailable_materials: [] };
+    }
+}
 
 // Get available products (stock > 0) - for online orders
 exports.getAvailableProducts = async (req, res) => {
