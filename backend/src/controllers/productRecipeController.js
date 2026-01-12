@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const { convertUnits } = require('../utils/unitConversion');
 
 // Get recipe for a product
 exports.getProductRecipe = async (req, res) => {
@@ -54,14 +55,24 @@ exports.updateProductRecipe = async (req, res) => {
         [productId, raw_material_id, quantity_needed, unit || null]
       );
 
-      // Calculate cost
+      // Calculate cost with unit conversion
       const [material] = await connection.query(
-        'SELECT unit_cost FROM raw_materials WHERE id = ?',
+        'SELECT unit_cost, unit FROM raw_materials WHERE id = ?',
         [raw_material_id]
       );
 
       if (material.length > 0) {
-        totalCost += parseFloat(material[0].unit_cost) * parseFloat(quantity_needed);
+        const materialUnit = material[0].unit;
+        const recipeUnit = unit || materialUnit;
+
+        // Convert recipe quantity to material's base unit
+        const convertedQuantity = convertUnits(
+          parseFloat(quantity_needed),
+          recipeUnit,
+          materialUnit
+        );
+
+        totalCost += parseFloat(material[0].unit_cost) * convertedQuantity;
       }
     }
 
