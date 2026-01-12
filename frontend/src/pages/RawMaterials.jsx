@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { rawMaterialsAPI, suppliersAPI } from '../api/services';
+import { rawMaterialsAPI, suppliersAPI, warehousesAPI } from '../api/services';
 import { Plus, Edit, Trash2, X, Package, Search, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import MEASUREMENT_UNITS from '../constants/units';
 
 const RawMaterials = () => {
   const [materials, setMaterials] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
@@ -20,6 +22,7 @@ const RawMaterials = () => {
     min_stock: 0,
     unit_cost: 0,
     supplier_id: '',
+    warehouse_id: '',
     is_active: true,
   });
   const [adjustData, setAdjustData] = useState({
@@ -34,12 +37,14 @@ const RawMaterials = () => {
 
   const fetchData = async () => {
     try {
-      const [materialsRes, suppliersRes] = await Promise.all([
+      const [materialsRes, suppliersRes, warehousesRes] = await Promise.all([
         rawMaterialsAPI.getAll(),
         suppliersAPI.getActive(),
+        warehousesAPI.getActive(),
       ]);
       setMaterials(materialsRes.data.data);
       setSuppliers(suppliersRes.data.data);
+      setWarehouses(warehousesRes.data.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -66,6 +71,7 @@ const RawMaterials = () => {
         min_stock: parseFloat(formData.min_stock),
         unit_cost: parseFloat(formData.unit_cost),
         supplier_id: formData.supplier_id || null,
+        warehouse_id: formData.warehouse_id || null,
       };
 
       if (editingMaterial) {
@@ -110,6 +116,7 @@ const RawMaterials = () => {
       min_stock: material.min_stock,
       unit_cost: material.unit_cost,
       supplier_id: material.supplier_id || '',
+      warehouse_id: material.warehouse_id || '',
       is_active: material.is_active,
     });
     setShowModal(true);
@@ -147,6 +154,7 @@ const RawMaterials = () => {
       min_stock: 0,
       unit_cost: 0,
       supplier_id: '',
+      warehouse_id: '',
       is_active: true,
     });
     setShowModal(true);
@@ -349,17 +357,22 @@ const RawMaterials = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    الوحدة *
+                    وحدة القياس *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.unit}
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
-                    placeholder="كجم، لتر، قطعة..."
                     required
                     disabled={loading}
-                  />
+                  >
+                    <option value="">اختر وحدة القياس</option>
+                    {MEASUREMENT_UNITS.map((unit) => (
+                      <option key={unit.value} value={unit.value}>
+                        {unit.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -376,6 +389,25 @@ const RawMaterials = () => {
                     {suppliers.map((supplier) => (
                       <option key={supplier.id} value={supplier.id}>
                         {supplier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    المستودع
+                  </label>
+                  <select
+                    value={formData.warehouse_id}
+                    onChange={(e) => setFormData({ ...formData, warehouse_id: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
+                    disabled={loading}
+                  >
+                    <option value="">بدون مستودع</option>
+                    {warehouses.map((warehouse) => (
+                      <option key={warehouse.id} value={warehouse.id}>
+                        {warehouse.name} {warehouse.location ? `- ${warehouse.location}` : ''}
                       </option>
                     ))}
                   </select>

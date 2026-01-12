@@ -4,9 +4,10 @@ const db = require('../config/database');
 exports.getAllRawMaterials = async (req, res) => {
   try {
     const [materials] = await db.query(
-      `SELECT rm.*, s.name as supplier_name
+      `SELECT rm.*, s.name as supplier_name, w.name as warehouse_name, w.location as warehouse_location
        FROM raw_materials rm
        LEFT JOIN suppliers s ON rm.supplier_id = s.id
+       LEFT JOIN warehouses w ON rm.warehouse_id = w.id
        ORDER BY rm.name ASC`
     );
     res.json({ success: true, data: materials });
@@ -20,9 +21,10 @@ exports.getAllRawMaterials = async (req, res) => {
 exports.getActiveRawMaterials = async (req, res) => {
   try {
     const [materials] = await db.query(
-      `SELECT rm.*, s.name as supplier_name
+      `SELECT rm.*, s.name as supplier_name, w.name as warehouse_name, w.location as warehouse_location
        FROM raw_materials rm
        LEFT JOIN suppliers s ON rm.supplier_id = s.id
+       LEFT JOIN warehouses w ON rm.warehouse_id = w.id
        WHERE rm.is_active = 1
        ORDER BY rm.name ASC`
     );
@@ -37,9 +39,10 @@ exports.getActiveRawMaterials = async (req, res) => {
 exports.getLowStockMaterials = async (req, res) => {
   try {
     const [materials] = await db.query(
-      `SELECT rm.*, s.name as supplier_name
+      `SELECT rm.*, s.name as supplier_name, w.name as warehouse_name, w.location as warehouse_location
        FROM raw_materials rm
        LEFT JOIN suppliers s ON rm.supplier_id = s.id
+       LEFT JOIN warehouses w ON rm.warehouse_id = w.id
        WHERE rm.is_active = 1 AND rm.current_stock <= rm.min_stock
        ORDER BY rm.current_stock ASC`
     );
@@ -54,9 +57,10 @@ exports.getLowStockMaterials = async (req, res) => {
 exports.getRawMaterialById = async (req, res) => {
   try {
     const [materials] = await db.query(
-      `SELECT rm.*, s.name as supplier_name
+      `SELECT rm.*, s.name as supplier_name, w.name as warehouse_name, w.location as warehouse_location
        FROM raw_materials rm
        LEFT JOIN suppliers s ON rm.supplier_id = s.id
+       LEFT JOIN warehouses w ON rm.warehouse_id = w.id
        WHERE rm.id = ?`,
       [req.params.id]
     );
@@ -75,15 +79,15 @@ exports.getRawMaterialById = async (req, res) => {
 // Create raw material
 exports.createRawMaterial = async (req, res) => {
   try {
-    const { name, description, unit, current_stock, min_stock, unit_cost, supplier_id, is_active } = req.body;
+    const { name, description, unit, current_stock, min_stock, unit_cost, supplier_id, warehouse_id, is_active } = req.body;
 
     if (!name || !unit) {
       return res.status(400).json({ success: false, message: 'الاسم ووحدة القياس مطلوبان' });
     }
 
     const [result] = await db.query(
-      `INSERT INTO raw_materials (name, description, unit, current_stock, min_stock, unit_cost, supplier_id, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO raw_materials (name, description, unit, current_stock, min_stock, unit_cost, supplier_id, warehouse_id, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         name,
         description,
@@ -92,14 +96,16 @@ exports.createRawMaterial = async (req, res) => {
         min_stock || 0,
         unit_cost || 0,
         supplier_id || null,
+        warehouse_id || null,
         is_active !== undefined ? is_active : 1
       ]
     );
 
     const [newMaterial] = await db.query(
-      `SELECT rm.*, s.name as supplier_name
+      `SELECT rm.*, s.name as supplier_name, w.name as warehouse_name, w.location as warehouse_location
        FROM raw_materials rm
        LEFT JOIN suppliers s ON rm.supplier_id = s.id
+       LEFT JOIN warehouses w ON rm.warehouse_id = w.id
        WHERE rm.id = ?`,
       [result.insertId]
     );
@@ -118,7 +124,7 @@ exports.createRawMaterial = async (req, res) => {
 // Update raw material
 exports.updateRawMaterial = async (req, res) => {
   try {
-    const { name, description, unit, current_stock, min_stock, unit_cost, supplier_id, is_active } = req.body;
+    const { name, description, unit, current_stock, min_stock, unit_cost, supplier_id, warehouse_id, is_active } = req.body;
     const { id } = req.params;
 
     const [existing] = await db.query('SELECT * FROM raw_materials WHERE id = ?', [id]);
@@ -129,15 +135,16 @@ exports.updateRawMaterial = async (req, res) => {
     await db.query(
       `UPDATE raw_materials
        SET name = ?, description = ?, unit = ?, current_stock = ?, min_stock = ?,
-           unit_cost = ?, supplier_id = ?, is_active = ?
+           unit_cost = ?, supplier_id = ?, warehouse_id = ?, is_active = ?
        WHERE id = ?`,
-      [name, description, unit, current_stock, min_stock, unit_cost, supplier_id, is_active, id]
+      [name, description, unit, current_stock, min_stock, unit_cost, supplier_id, warehouse_id, is_active, id]
     );
 
     const [updated] = await db.query(
-      `SELECT rm.*, s.name as supplier_name
+      `SELECT rm.*, s.name as supplier_name, w.name as warehouse_name, w.location as warehouse_location
        FROM raw_materials rm
        LEFT JOIN suppliers s ON rm.supplier_id = s.id
+       LEFT JOIN warehouses w ON rm.warehouse_id = w.id
        WHERE rm.id = ?`,
       [id]
     );
