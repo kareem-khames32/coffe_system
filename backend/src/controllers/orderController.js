@@ -31,20 +31,6 @@ exports.createInStoreOrder = async (req, res) => {
         let totalCost = 0;
 
         for (const item of items) {
-            // Check stock availability
-            const [products] = await connection.query(
-                'SELECT stock FROM products WHERE id = ?',
-                [item.product_id]
-            );
-
-            if (products.length === 0 || products[0].stock < item.quantity) {
-                await connection.rollback();
-                return res.status(400).json({
-                    success: false,
-                    message: `Insufficient stock for product ID ${item.product_id}`
-                });
-            }
-
             subtotal += item.price * item.quantity;
             totalCost += item.cost_price * item.quantity;
         }
@@ -113,12 +99,6 @@ exports.createInStoreOrder = async (req, res) => {
                     itemSubtotal,
                     itemProfit
                 ]
-            );
-
-            // Update stock
-            await connection.query(
-                'UPDATE products SET stock = stock - ? WHERE id = ?',
-                [item.quantity, item.product_id]
             );
         }
 
@@ -202,17 +182,17 @@ exports.createOnlineOrder = async (req, res) => {
         let discountAmount = 0;
 
         for (const item of items) {
-            // Check stock availability
+            // Get product info
             const [products] = await connection.query(
-                'SELECT stock, price, cost_price FROM products WHERE id = ? AND is_active = TRUE',
+                'SELECT price, cost_price FROM products WHERE id = ? AND is_active = TRUE',
                 [item.product_id]
             );
 
-            if (products.length === 0 || products[0].stock < item.quantity) {
+            if (products.length === 0) {
                 await connection.rollback();
                 return res.status(400).json({
                     success: false,
-                    message: `Product not available or insufficient stock`
+                    message: `Product not available`
                 });
             }
 
@@ -293,12 +273,6 @@ exports.createOnlineOrder = async (req, res) => {
                     itemSubtotal,
                     itemProfit
                 ]
-            );
-
-            // Update stock
-            await connection.query(
-                'UPDATE products SET stock = stock - ? WHERE id = ?',
-                [item.quantity, item.product_id]
             );
         }
 
@@ -523,13 +497,6 @@ exports.updateOrderStatus = async (req, res) => {
                 [req.params.id]
             );
 
-            for (const item of items) {
-                await db.query(
-                    'UPDATE products SET stock = stock + ? WHERE id = ?',
-                    [item.quantity, item.product_id]
-                );
-            }
-
             // Restore raw materials to inventory
             try {
                 await restoreStockForOrder(req.params.id, items);
@@ -598,15 +565,7 @@ exports.editOrder = async (req, res) => {
         );
 
         // Smart inventory recalculation
-        // 1. Return all old items to stock
-        for (const oldItem of oldItems) {
-            await connection.query(
-                'UPDATE products SET stock = stock + ? WHERE id = ?',
-                [oldItem.quantity, oldItem.product_id]
-            );
-        }
-
-        // Restore raw materials for old items
+        // 1. Restore raw materials for old items
         try {
             await restoreStockForOrder(req.params.id, oldItems);
         } catch (error) {
@@ -622,15 +581,15 @@ exports.editOrder = async (req, res) => {
 
         for (const item of items) {
             const [products] = await connection.query(
-                'SELECT stock, price, cost_price FROM products WHERE id = ?',
+                'SELECT price, cost_price FROM products WHERE id = ?',
                 [item.product_id]
             );
 
-            if (products.length === 0 || products[0].stock < item.quantity) {
+            if (products.length === 0) {
                 await connection.rollback();
                 return res.status(400).json({
                     success: false,
-                    message: `Insufficient stock for product ID ${item.product_id}`
+                    message: `Product ID ${item.product_id} not found`
                 });
             }
 
@@ -693,11 +652,6 @@ exports.editOrder = async (req, res) => {
                     itemSubtotal,
                     itemProfit
                 ]
-            );
-
-            await connection.query(
-                'UPDATE products SET stock = stock - ? WHERE id = ?',
-                [item.quantity, item.product_id]
             );
         }
 
@@ -798,13 +752,6 @@ exports.cancelOrder = async (req, res) => {
             'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
             [req.params.id]
         );
-
-        for (const item of items) {
-            await connection.query(
-                'UPDATE products SET stock = stock + ? WHERE id = ?',
-                [item.quantity, item.product_id]
-            );
-        }
 
         // Restore raw materials to inventory
         try {
