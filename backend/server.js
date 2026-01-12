@@ -154,9 +154,62 @@ async function setupInventoryTables() {
         } else {
             console.log('\n✅ All inventory tables already exist!\n');
         }
+
+        // Run migration to add warehouse_id if needed
+        await migrateWarehouseColumn();
     } catch (error) {
         console.error('⚠️  Could not setup inventory tables:', error.message);
         console.error('   Full error:', error);
+    }
+}
+
+// Migration: Add warehouse_id to existing raw_materials table
+async function migrateWarehouseColumn() {
+    try {
+        const db = require('./src/config/database');
+
+        // Check if warehouse_id column exists
+        const [columns] = await db.query(`
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'raw_materials'
+            AND COLUMN_NAME = 'warehouse_id'
+        `);
+
+        if (columns.length === 0) {
+            console.log('🔄 Migrating raw_materials table...');
+
+            // Add warehouse_id column
+            await db.query(`
+                ALTER TABLE raw_materials
+                ADD COLUMN warehouse_id INT NULL COMMENT 'المستودع' AFTER supplier_id
+            `);
+            console.log('   ✅ Added warehouse_id column');
+
+            // Add foreign key
+            await db.query(`
+                ALTER TABLE raw_materials
+                ADD CONSTRAINT fk_raw_materials_warehouse
+                FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON DELETE SET NULL
+            `);
+            console.log('   ✅ Added foreign key constraint');
+
+            // Add index
+            await db.query(`
+                ALTER TABLE raw_materials
+                ADD INDEX idx_warehouse (warehouse_id)
+            `);
+            console.log('   ✅ Added warehouse index');
+            console.log('✅ Migration completed!\n');
+        }
+    } catch (error) {
+        // Column might already exist, that's ok
+        if (error.code === 'ER_DUP_FIELDNAME' || error.code === 'ER_DUP_KEYNAME') {
+            console.log('   ⏭️  warehouse_id column already exists\n');
+        } else {
+            console.error('⚠️  Migration warning:', error.message);
+        }
     }
 }
 

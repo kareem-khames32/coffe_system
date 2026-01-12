@@ -17,7 +17,8 @@ import {
   Settings,
   Coffee,
   Truck,
-  Layers
+  Layers,
+  Warehouse
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -66,6 +67,12 @@ const Sidebar = () => {
       name: 'الموردين',
       path: '/suppliers',
       icon: Truck,
+      show: hasPermission('can_view_inventory'),
+    },
+    {
+      name: 'المستودعات',
+      path: '/warehouses',
+      icon: Warehouse,
       show: hasPermission('can_view_inventory'),
     },
     {

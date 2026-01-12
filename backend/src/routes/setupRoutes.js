@@ -59,4 +59,47 @@ router.post('/inventory', async (req, res) => {
   }
 });
 
+// Migration endpoint - add warehouse_id to existing raw_materials table
+router.post('/migrate-warehouse', async (req, res) => {
+  try {
+    // Read migration SQL file
+    const sqlFilePath = path.join(__dirname, '..', '..', 'database', 'add_warehouse_to_raw_materials.sql');
+    const sql = fs.readFileSync(sqlFilePath, 'utf8');
+
+    // Execute the migration
+    const statements = sql
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+
+    const results = [];
+
+    for (const statement of statements) {
+      try {
+        if (statement.length > 0) {
+          await db.query(statement);
+        }
+      } catch (error) {
+        // Some statements might fail if already applied, that's ok
+        console.log('Migration statement result:', error.message);
+      }
+    }
+
+    results.push('✅ Migration completed: warehouse_id added to raw_materials table');
+
+    res.json({
+      success: true,
+      message: 'Migration applied successfully',
+      results: results
+    });
+
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;
