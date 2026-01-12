@@ -18,12 +18,15 @@ import {
   Coffee,
   Truck,
   Layers,
-  Warehouse
+  Warehouse,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 
 const Sidebar = () => {
   const { user, hasPermission } = useAuth();
   const [settings, setSettings] = useState({ cafe_name: 'إدارة المقهى', logo_path: null });
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -61,24 +64,6 @@ const Sidebar = () => {
       name: 'الفئات',
       path: '/categories',
       icon: FolderOpen,
-      show: hasPermission('can_view_inventory'),
-    },
-    {
-      name: 'الموردين',
-      path: '/suppliers',
-      icon: Truck,
-      show: hasPermission('can_view_inventory'),
-    },
-    {
-      name: 'المستودعات',
-      path: '/warehouses',
-      icon: Warehouse,
-      show: hasPermission('can_view_inventory'),
-    },
-    {
-      name: 'المواد الخام',
-      path: '/raw-materials',
-      icon: Layers,
       show: hasPermission('can_view_inventory'),
     },
     {
@@ -131,6 +116,25 @@ const Sidebar = () => {
     },
   ];
 
+  // Inventory sub-items
+  const inventoryItems = [
+    {
+      name: 'الموردين',
+      path: '/suppliers',
+      icon: Truck,
+    },
+    {
+      name: 'المستودعات',
+      path: '/warehouses',
+      icon: Warehouse,
+    },
+    {
+      name: 'المواد الخام',
+      path: '/raw-materials',
+      icon: Layers,
+    },
+  ];
+
   return (
     <div className="bg-gradient-to-b from-coffee-900 via-coffee-800 to-coffee-900 text-white w-64 min-h-screen p-4 flex flex-col shadow-2xl">
       {/* Logo */}
@@ -154,22 +158,85 @@ const Sidebar = () => {
       <nav className="flex-1 space-y-1">
         {navItems
           .filter((item) => item.show)
-          .map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? 'bg-gradient-to-r from-coffee-600 to-coffee-500 text-white shadow-lg transform scale-105'
-                    : 'text-amber-100 hover:bg-coffee-800/50 hover:translate-x-1'
-                }`
-              }
-            >
-              <item.icon className="w-5 h-5" />
-              <span>{item.name}</span>
-            </NavLink>
-          ))}
+          .map((item) => {
+            // Insert Inventory section after Categories
+            if (item.path === '/categories' && hasPermission('can_view_inventory')) {
+              return (
+                <div key="categories-and-inventory">
+                  {/* Categories item */}
+                  <NavLink
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-coffee-600 to-coffee-500 text-white shadow-lg transform scale-105'
+                          : 'text-amber-100 hover:bg-coffee-800/50 hover:translate-x-1'
+                      }`
+                    }
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.name}</span>
+                  </NavLink>
+
+                  {/* Inventory Parent Item */}
+                  <button
+                    onClick={() => setIsInventoryOpen(!isInventoryOpen)}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-amber-100 hover:bg-coffee-800/50 hover:translate-x-1"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Package className="w-5 h-5" />
+                      <span>المخزن</span>
+                    </div>
+                    {isInventoryOpen ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
+                  </button>
+
+                  {/* Inventory Sub Items */}
+                  {isInventoryOpen && (
+                    <div className="mr-4 space-y-1 mt-1">
+                      {inventoryItems.map((subItem) => (
+                        <NavLink
+                          key={subItem.path}
+                          to={subItem.path}
+                          className={({ isActive }) =>
+                            `flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 text-sm ${
+                              isActive
+                                ? 'bg-coffee-700 text-white shadow-md'
+                                : 'text-amber-100 hover:bg-coffee-800/30'
+                            }`
+                          }
+                        >
+                          <subItem.icon className="w-4 h-4" />
+                          <span>{subItem.name}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Regular items
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-coffee-600 to-coffee-500 text-white shadow-lg transform scale-105'
+                      : 'text-amber-100 hover:bg-coffee-800/50 hover:translate-x-1'
+                  }`
+                }
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.name}</span>
+              </NavLink>
+            );
+          })}
       </nav>
 
       {/* User Info */}
