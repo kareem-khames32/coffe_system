@@ -64,47 +64,34 @@ const POS = () => {
   const addToCart = (product) => {
     const existing = cart.find((item) => item.product_id === product.id);
     if (existing) {
-      if (existing.quantity < product.stock) {
-        setCart(
-          cart.map((item) =>
-            item.product_id === product.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          )
-        );
-      } else {
-        alert('لا يوجد مخزون كافٍ');
-      }
+      setCart(
+        cart.map((item) =>
+          item.product_id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
     } else {
-      if (product.stock > 0) {
-        setCart([
-          ...cart,
-          {
-            product_id: product.id,
-            product_name: product.name,
-            quantity: 1,
-            price: product.price,
-            cost_price: product.cost_price,
-          },
-        ]);
-      } else {
-        alert('المنتج غير متوفر');
-      }
+      setCart([
+        ...cart,
+        {
+          product_id: product.id,
+          product_name: product.name,
+          quantity: 1,
+          price: product.price,
+          cost_price: product.cost_price,
+        },
+      ]);
     }
   };
 
   const updateQuantity = (productId, delta) => {
-    const product = products.find((p) => p.id === productId);
     setCart(
       cart
         .map((item) => {
           if (item.product_id === productId) {
             const newQuantity = item.quantity + delta;
             if (newQuantity <= 0) return null;
-            if (newQuantity > product.stock) {
-              alert('لا يوجد مخزون كافٍ');
-              return item;
-            }
             return { ...item, quantity: newQuantity };
           }
           return item;
@@ -336,10 +323,7 @@ const POS = () => {
             <button
               key={product.id}
               onClick={() => addToCart(product)}
-              className={`bg-white p-6 rounded-2xl shadow-xl border-2 border-amber-200 hover:shadow-2xl transition-all transform hover:scale-105 ${
-                product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              disabled={product.stock === 0}
+              className="bg-white p-6 rounded-2xl shadow-xl border-2 border-amber-200 hover:shadow-2xl transition-all transform hover:scale-105"
             >
               <div className="text-center">
                 {/* Product Icon/Emoji */}
@@ -356,20 +340,14 @@ const POS = () => {
                   <span className="text-sm text-amber-700 mr-1">ج.م</span>
                 </div>
 
-                {/* Stock Badge */}
-                <div className="text-center">
-                  <span
-                    className={`text-xs px-3 py-1 rounded-full font-bold ${
-                      product.stock === 0
-                        ? 'bg-red-100 text-red-700 border-2 border-red-300'
-                        : product.stock <= 10
-                        ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300'
-                        : 'bg-green-100 text-green-700 border-2 border-green-300'
-                    }`}
-                  >
-                    {product.stock === 0 ? '❌ نفذ المخزون' : `✅ متوفر: ${product.stock}`}
-                  </span>
-                </div>
+                {/* Materials Availability Indicator (optional, subtle) */}
+                {product.materials_available === false && (
+                  <div className="text-center">
+                    <span className="text-xs px-3 py-1 rounded-full font-bold bg-orange-100 text-orange-700 border-2 border-orange-300">
+                      ⚠️ مواد ناقصة
+                    </span>
+                  </div>
+                )}
               </div>
             </button>
           ))}
