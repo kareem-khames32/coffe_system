@@ -138,6 +138,16 @@ export const rawMaterialsAPI = {
   delete: (id) => axios.delete(`/raw-materials/${id}`),
 };
 
+// Warehouses
+export const warehousesAPI = {
+  getAll: () => axios.get('/warehouses'),
+  getActive: () => axios.get('/warehouses/active'),
+  getById: (id) => axios.get(`/warehouses/${id}`),
+  create: (data) => axios.post('/warehouses', data),
+  update: (id, data) => axios.put(`/warehouses/${id}`, data),
+  delete: (id) => axios.delete(`/warehouses/${id}`),
+};
+
 // Inventory Purchases
 export const inventoryPurchasesAPI = {
   getAll: () => axios.get('/inventory-purchases'),

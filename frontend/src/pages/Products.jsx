@@ -16,8 +16,6 @@ const Products = () => {
     name: '',
     category_id: '',
     price: '',
-    cost_price: '',
-    stock: '',
     description: '',
     is_active: true,
   });
@@ -75,11 +73,14 @@ const Products = () => {
     setLoading(true);
 
     try {
+      // Calculate cost_price from recipe automatically
+      const calculatedCostPrice = calculateRecipeCost();
+
       const data = {
         ...formData,
         price: parseFloat(formData.price),
-        cost_price: parseFloat(formData.cost_price),
-        stock: parseInt(formData.stock),
+        cost_price: calculatedCostPrice,
+        stock: 0, // Products don't have stock, only raw materials do
         category_id: parseInt(formData.category_id),
       };
 
@@ -114,8 +115,6 @@ const Products = () => {
       name: product.name,
       category_id: product.category_id,
       price: product.price,
-      cost_price: product.cost_price,
-      stock: product.stock,
       description: product.description || '',
       is_active: product.is_active,
     });
@@ -166,8 +165,6 @@ const Products = () => {
       name: '',
       category_id: '',
       price: '',
-      cost_price: '',
-      stock: '',
       description: '',
       is_active: true,
     });
@@ -462,7 +459,7 @@ const Products = () => {
                   </select>
                 </div>
 
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     سعر البيع (ج.م) *
                   </label>
@@ -475,41 +472,6 @@ const Products = () => {
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
                     placeholder="35.00"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    سعر التكلفة (ج.م) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.cost_price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, cost_price: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
-                    placeholder="15.00"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    الكمية في المخزون *
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.stock}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stock: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
-                    placeholder="100"
                     required
                     disabled={loading}
                   />

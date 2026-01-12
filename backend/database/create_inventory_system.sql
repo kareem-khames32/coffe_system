@@ -18,7 +18,20 @@ CREATE TABLE IF NOT EXISTS suppliers (
     INDEX idx_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='جدول الموردين';
 
--- 2. Raw Materials Table (المواد الخام/المكونات)
+-- 2. Warehouses Table (المستودعات)
+CREATE TABLE IF NOT EXISTS warehouses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL COMMENT 'اسم المستودع',
+    location VARCHAR(255) NULL COMMENT 'الموقع/الفرع',
+    description TEXT NULL COMMENT 'وصف المستودع',
+    is_active TINYINT(1) DEFAULT 1 COMMENT 'نشط/غير نشط',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_name (name(100)),
+    INDEX idx_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='جدول المستودعات';
+
+-- 3. Raw Materials Table (المواد الخام/المكونات)
 CREATE TABLE IF NOT EXISTS raw_materials (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL COMMENT 'اسم المادة الخام',
@@ -28,16 +41,19 @@ CREATE TABLE IF NOT EXISTS raw_materials (
     min_stock DECIMAL(10, 3) DEFAULT 0 COMMENT 'الحد الأدنى للمخزون (تحذير)',
     unit_cost DECIMAL(10, 2) DEFAULT 0 COMMENT 'تكلفة الوحدة الواحدة',
     supplier_id INT NULL COMMENT 'المورد الأساسي',
+    warehouse_id INT NULL COMMENT 'المستودع',
     is_active TINYINT(1) DEFAULT 1 COMMENT 'نشط/غير نشط',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL,
+    FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON DELETE SET NULL,
     INDEX idx_name (name(100)),
     INDEX idx_active (is_active),
+    INDEX idx_warehouse (warehouse_id),
     INDEX idx_low_stock (current_stock, min_stock)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='جدول المواد الخام';
 
--- 3. Inventory Purchases Table (مشتريات المخزن)
+-- 4. Inventory Purchases Table (مشتريات المخزن)
 CREATE TABLE IF NOT EXISTS inventory_purchases (
     id INT AUTO_INCREMENT PRIMARY KEY,
     supplier_id INT NULL COMMENT 'المورد',
@@ -54,7 +70,7 @@ CREATE TABLE IF NOT EXISTS inventory_purchases (
     INDEX idx_supplier (supplier_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='جدول مشتريات المخزن';
 
--- 4. Inventory Purchase Items Table (تفاصيل المشتريات)
+-- 5. Inventory Purchase Items Table (تفاصيل المشتريات)
 CREATE TABLE IF NOT EXISTS inventory_purchase_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     purchase_id INT NOT NULL COMMENT 'رقم المشتريات',
@@ -69,7 +85,7 @@ CREATE TABLE IF NOT EXISTS inventory_purchase_items (
     INDEX idx_material (raw_material_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='جدول تفاصيل المشتريات';
 
--- 5. Product Recipes Table (وصفات المنتجات)
+-- 6. Product Recipes Table (وصفات المنتجات)
 CREATE TABLE IF NOT EXISTS product_recipes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     product_id INT NOT NULL COMMENT 'المنتج',
@@ -84,7 +100,7 @@ CREATE TABLE IF NOT EXISTS product_recipes (
     INDEX idx_material (raw_material_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='جدول وصفات المنتجات';
 
--- 6. Inventory Transactions Table (سجل حركة المخزن)
+-- 7. Inventory Transactions Table (سجل حركة المخزن)
 CREATE TABLE IF NOT EXISTS inventory_transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     raw_material_id INT NOT NULL COMMENT 'المادة الخام',
