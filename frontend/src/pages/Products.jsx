@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { productsAPI, categoriesAPI, rawMaterialsAPI, recipesAPI } from '../api/services';
 import { Plus, Edit, Trash2, X, Package, Search, Filter, ChefHat } from 'lucide-react';
+import { convertUnits, getCompatibleUnits } from '../utils/unitConversion';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -23,7 +24,9 @@ const Products = () => {
   const [newRecipeItem, setNewRecipeItem] = useState({
     raw_material_id: '',
     quantity_needed: '',
+    unit: '', // Unit for this recipe item (can be different from material's base unit)
   });
+  const [compatibleUnits, setCompatibleUnits] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -57,12 +60,19 @@ const Products = () => {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  // Calculate total cost from recipe
+  // Calculate total cost from recipe with unit conversion
   const calculateRecipeCost = () => {
     return recipe.reduce((total, item) => {
       const material = rawMaterials.find((m) => m.id === item.raw_material_id);
       if (material) {
-        return total + parseFloat(material.unit_cost) * parseFloat(item.quantity_needed);
+        // Convert recipe quantity to material's base unit
+        const recipeUnit = item.unit || material.unit;
+        const convertedQuantity = convertUnits(
+          parseFloat(item.quantity_needed),
+          recipeUnit,
+          material.unit
+        );
+        return total + parseFloat(material.unit_cost) * convertedQuantity;
       }
       return total;
     }, 0);
@@ -169,7 +179,8 @@ const Products = () => {
       is_active: true,
     });
     setRecipe([]);
-    setNewRecipeItem({ raw_material_id: '', quantity_needed: '' });
+    setNewRecipeItem({ raw_material_id: '', quantity_needed: '', unit: '' });
+    setCompatibleUnits([]);
     setShowModal(true);
   };
 
@@ -177,13 +188,14 @@ const Products = () => {
     setShowModal(false);
     setEditingProduct(null);
     setRecipe([]);
-    setNewRecipeItem({ raw_material_id: '', quantity_needed: '' });
+    setNewRecipeItem({ raw_material_id: '', quantity_needed: '', unit: '' });
+    setCompatibleUnits([]);
   };
 
   // Recipe management functions
   const addRecipeItem = () => {
-    if (!newRecipeItem.raw_material_id || !newRecipeItem.quantity_needed) {
-      alert('يرجى اختيار المادة الخام وإدخال الكمية');
+    if (!newRecipeItem.raw_material_id || !newRecipeItem.quantity_needed || !newRecipeItem.unit) {
+      alert('يرجى اختيار المادة الخام وإدخال الكمية والوحدة');
       return;
     }
 
@@ -198,9 +210,11 @@ const Products = () => {
       {
         raw_material_id: parseInt(newRecipeItem.raw_material_id),
         quantity_needed: parseFloat(newRecipeItem.quantity_needed),
+        unit: newRecipeItem.unit, // Include the unit used in recipe
       },
     ]);
-    setNewRecipeItem({ raw_material_id: '', quantity_needed: '' });
+    setNewRecipeItem({ raw_material_id: '', quantity_needed: '', unit: '' });
+    setCompatibleUnits([]);
   };
 
   const removeRecipeItem = (materialId) => {
@@ -209,6 +223,23 @@ const Products = () => {
 
   const getMaterialInfo = (materialId) => {
     return rawMaterials.find((m) => m.id === materialId);
+  };
+
+  // Handle raw material selection - set compatible units
+  const handleMaterialSelect = (materialId) => {
+    const material = rawMaterials.find((m) => m.id === parseInt(materialId));
+    if (material && material.unit) {
+      const compatible = getCompatibleUnits(material.unit);
+      setCompatibleUnits(compatible);
+      setNewRecipeItem({
+        ...newRecipeItem,
+        raw_material_id: materialId,
+        unit: material.unit // Default to material's unit
+      });
+    } else {
+      setNewRecipeItem({ ...newRecipeItem, raw_material_id: materialId, unit: '' });
+      setCompatibleUnits([]);
+    }
   };
 
   const getProfit = (price, cost) => {
@@ -503,23 +534,21 @@ const Products = () => {
 
                 {/* Add Recipe Item */}
                 <div className="bg-cream-50 p-4 rounded-lg mb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div className="md:col-span-1">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         المادة الخام
                       </label>
                       <select
                         value={newRecipeItem.raw_material_id}
-                        onChange={(e) =>
-                          setNewRecipeItem({ ...newRecipeItem, raw_material_id: e.target.value })
-                        }
+                        onChange={(e) => handleMaterialSelect(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none text-sm"
                         disabled={loading}
                       >
                         <option value="">اختر المادة</option>
                         {rawMaterials.map((material) => (
                           <option key={material.id} value={material.id}>
-                            {material.name} ({material.unit_cost} ج.م/{material.unit})
+                            {material.name} - {material.unit}
                           </option>
                         ))}
                       </select>
@@ -540,6 +569,27 @@ const Products = () => {
                         placeholder="الكمية"
                         disabled={loading}
                       />
+                    </div>
+
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        الوحدة
+                      </label>
+                      <select
+                        value={newRecipeItem.unit}
+                        onChange={(e) =>
+                          setNewRecipeItem({ ...newRecipeItem, unit: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none text-sm"
+                        disabled={loading || !newRecipeItem.raw_material_id}
+                      >
+                        <option value="">اختر الوحدة</option>
+                        {compatibleUnits.map((unit) => (
+                          <option key={unit} value={unit}>
+                            {unit}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="flex items-end">
@@ -563,8 +613,8 @@ const Products = () => {
                         <tr>
                           <th className="px-4 py-2 text-right font-semibold text-gray-700">المادة الخام</th>
                           <th className="px-4 py-2 text-right font-semibold text-gray-700">الكمية</th>
-                          <th className="px-4 py-2 text-right font-semibold text-gray-700">الوحدة</th>
-                          <th className="px-4 py-2 text-right font-semibold text-gray-700">سعر الوحدة</th>
+                          <th className="px-4 py-2 text-right font-semibold text-gray-700">وحدة الوصفة</th>
+                          <th className="px-4 py-2 text-right font-semibold text-gray-700">سعر المادة</th>
                           <th className="px-4 py-2 text-right font-semibold text-gray-700">التكلفة</th>
                           <th className="px-4 py-2 text-right font-semibold text-gray-700">إجراء</th>
                         </tr>
@@ -572,15 +622,31 @@ const Products = () => {
                       <tbody className="divide-y divide-gray-200">
                         {recipe.map((item) => {
                           const material = getMaterialInfo(item.raw_material_id);
+                          // Calculate cost with unit conversion
+                          const recipeUnit = item.unit || material?.unit;
+                          const convertedQuantity = material
+                            ? convertUnits(
+                                parseFloat(item.quantity_needed),
+                                recipeUnit,
+                                material.unit
+                              )
+                            : parseFloat(item.quantity_needed);
                           const itemCost = material
-                            ? (parseFloat(material.unit_cost) * parseFloat(item.quantity_needed)).toFixed(2)
+                            ? (parseFloat(material.unit_cost) * convertedQuantity).toFixed(2)
                             : '0.00';
                           return (
                             <tr key={item.raw_material_id} className="hover:bg-gray-50">
-                              <td className="px-4 py-2">{material?.name || 'غير معروف'}</td>
+                              <td className="px-4 py-2">
+                                <div>{material?.name || 'غير معروف'}</div>
+                                <div className="text-xs text-gray-500">
+                                  {material?.unit_cost} ج.م/{material?.unit}
+                                </div>
+                              </td>
                               <td className="px-4 py-2">{item.quantity_needed}</td>
-                              <td className="px-4 py-2">{material?.unit || '-'}</td>
-                              <td className="px-4 py-2">{material?.unit_cost || '0'} ج.م</td>
+                              <td className="px-4 py-2">{recipeUnit || '-'}</td>
+                              <td className="px-4 py-2 text-gray-600">
+                                {material?.unit_cost || '0'} ج.م/{material?.unit}
+                              </td>
                               <td className="px-4 py-2 font-semibold text-coffee-600">{itemCost} ج.م</td>
                               <td className="px-4 py-2">
                                 <button
