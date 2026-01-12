@@ -155,8 +155,9 @@ async function setupInventoryTables() {
             console.log('\n✅ All inventory tables already exist!\n');
         }
 
-        // Run migration to add warehouse_id if needed
+        // Run migrations
         await migrateWarehouseColumn();
+        await migrateProductRecipeUnit();
     } catch (error) {
         console.error('⚠️  Could not setup inventory tables:', error.message);
         console.error('   Full error:', error);
@@ -209,6 +210,41 @@ async function migrateWarehouseColumn() {
             console.log('   ⏭️  warehouse_id column already exists\n');
         } else {
             console.error('⚠️  Migration warning:', error.message);
+        }
+    }
+}
+
+// Migration: Add unit column to product_recipes table
+async function migrateProductRecipeUnit() {
+    try {
+        const db = require('./src/config/database');
+
+        // Check if unit column exists
+        const [columns] = await db.query(`
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'product_recipes'
+            AND COLUMN_NAME = 'unit'
+        `);
+
+        if (columns.length === 0) {
+            console.log('🔄 Migrating product_recipes table...');
+
+            // Add unit column
+            await db.query(`
+                ALTER TABLE product_recipes
+                ADD COLUMN unit VARCHAR(50) NULL COMMENT 'وحدة القياس المستخدمة في الوصفة' AFTER quantity_needed
+            `);
+            console.log('   ✅ Added unit column to product_recipes');
+            console.log('✅ Recipe migration completed!\n');
+        }
+    } catch (error) {
+        // Column might already exist, that's ok
+        if (error.code === 'ER_DUP_FIELDNAME') {
+            console.log('   ⏭️  unit column already exists in product_recipes\n');
+        } else {
+            console.error('⚠️  Recipe migration warning:', error.message);
         }
     }
 }

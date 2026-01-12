@@ -6,7 +6,8 @@ exports.getProductRecipe = async (req, res) => {
     const { productId } = req.params;
 
     const [recipe] = await db.query(
-      `SELECT pr.*, rm.name as material_name, rm.unit, rm.unit_cost
+      `SELECT pr.raw_material_id, pr.quantity_needed, pr.unit,
+              rm.name as material_name, rm.unit as material_unit, rm.unit_cost
        FROM product_recipes pr
        JOIN raw_materials rm ON pr.raw_material_id = rm.id
        WHERE pr.product_id = ?
@@ -29,7 +30,7 @@ exports.updateProductRecipe = async (req, res) => {
     await connection.beginTransaction();
 
     const { productId } = req.params;
-    const { recipe } = req.body; // array of {raw_material_id, quantity_needed}
+    const { recipe } = req.body; // array of {raw_material_id, quantity_needed, unit}
 
     if (!recipe || !Array.isArray(recipe)) {
       return res.status(400).json({ success: false, message: 'الوصفة مطلوبة' });
@@ -41,16 +42,16 @@ exports.updateProductRecipe = async (req, res) => {
     // Insert new recipe items
     let totalCost = 0;
     for (const item of recipe) {
-      const { raw_material_id, quantity_needed } = item;
+      const { raw_material_id, quantity_needed, unit } = item;
 
       if (!raw_material_id || !quantity_needed) {
         continue;
       }
 
       await connection.query(
-        `INSERT INTO product_recipes (product_id, raw_material_id, quantity_needed)
-         VALUES (?, ?, ?)`,
-        [productId, raw_material_id, quantity_needed]
+        `INSERT INTO product_recipes (product_id, raw_material_id, quantity_needed, unit)
+         VALUES (?, ?, ?, ?)`,
+        [productId, raw_material_id, quantity_needed, unit || null]
       );
 
       // Calculate cost
@@ -74,7 +75,8 @@ exports.updateProductRecipe = async (req, res) => {
 
     // Get updated recipe
     const [updatedRecipe] = await connection.query(
-      `SELECT pr.*, rm.name as material_name, rm.unit, rm.unit_cost
+      `SELECT pr.raw_material_id, pr.quantity_needed, pr.unit,
+              rm.name as material_name, rm.unit as material_unit, rm.unit_cost
        FROM product_recipes pr
        JOIN raw_materials rm ON pr.raw_material_id = rm.id
        WHERE pr.product_id = ?`,
