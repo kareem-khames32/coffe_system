@@ -135,6 +135,21 @@ const Sidebar = () => {
       icon: Layers,
     },
     {
+      name: 'دفعات الموردين',
+      path: '/supplier-payments',
+      icon: DollarSign,
+    },
+    {
+      name: 'دفعات المواد',
+      path: '/material-batches',
+      icon: Package,
+    },
+    {
+      name: 'نقل المخزون',
+      path: '/stock-transfers',
+      icon: Truck,
+    },
+    {
       name: 'لوحة تحكم المخزون',
       path: '/inventory-dashboard',
       icon: BarChart3,

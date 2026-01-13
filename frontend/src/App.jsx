@@ -26,6 +26,9 @@ import WarehousesReport from './pages/WarehousesReport';
 import MaterialsReport from './pages/MaterialsReport';
 import SuppliersReport from './pages/SuppliersReport';
 import PurchasesReport from './pages/PurchasesReport';
+import SupplierPayments from './pages/SupplierPayments';
+import MaterialBatches from './pages/MaterialBatches';
+import StockTransfers from './pages/StockTransfers';
 
 function App() {
   return (
@@ -58,6 +61,9 @@ function App() {
             <Route path="/inventory-reports/materials" element={<MaterialsReport />} />
             <Route path="/inventory-reports/suppliers" element={<SuppliersReport />} />
             <Route path="/inventory-reports/purchases" element={<PurchasesReport />} />
+            <Route path="/supplier-payments" element={<SupplierPayments />} />
+            <Route path="/material-batches" element={<MaterialBatches />} />
+            <Route path="/stock-transfers" element={<StockTransfers />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
 
