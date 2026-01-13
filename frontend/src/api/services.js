@@ -195,3 +195,40 @@ export const inventoryReportsAPI = {
   getTopPurchasedMaterials: (days, limit) => axios.get('/reports/inventory/purchases/top-materials', { params: { days, limit } }),
   getMaterialPriceHistory: (id) => axios.get(`/reports/inventory/purchases/material/${id}/price-history`),
 };
+
+// Supplier Payments
+export const supplierPaymentsAPI = {
+  getAll: (params) => axios.get('/supplier-payments', { params }),
+  getStats: (params) => axios.get('/supplier-payments/stats', { params }),
+  getUnpaidPurchases: () => axios.get('/supplier-payments/unpaid-purchases'),
+  getSupplierPayments: (supplierId) => axios.get(`/supplier-payments/supplier/${supplierId}`),
+  getPurchasePayments: (purchaseId) => axios.get(`/supplier-payments/purchase/${purchaseId}`),
+  addPayment: (data) => axios.post('/supplier-payments', data),
+  deletePayment: (id) => axios.delete(`/supplier-payments/${id}`),
+};
+
+// Material Batches (Expiry Tracking)
+export const materialBatchesAPI = {
+  getAll: (params) => axios.get('/material-batches', { params }),
+  getStats: () => axios.get('/material-batches/stats'),
+  getExpiring: (days) => axios.get('/material-batches/expiring', { params: { days } }),
+  getExpired: () => axios.get('/material-batches/expired'),
+  getMaterialBatches: (materialId) => axios.get(`/material-batches/material/${materialId}`),
+  addBatch: (data) => axios.post('/material-batches', data),
+  updateBatch: (id, data) => axios.put(`/material-batches/${id}`, data),
+  disposeBatch: (id, data) => axios.post(`/material-batches/${id}/dispose`, data),
+  deleteBatch: (id) => axios.delete(`/material-batches/${id}`),
+};
+
+// Stock Transfers
+export const stockTransfersAPI = {
+  getAll: (params) => axios.get('/stock-transfers', { params }),
+  getStats: () => axios.get('/stock-transfers/stats'),
+  getPending: () => axios.get('/stock-transfers/pending'),
+  getById: (id) => axios.get(`/stock-transfers/${id}`),
+  create: (data) => axios.post('/stock-transfers', data),
+  approve: (id) => axios.post(`/stock-transfers/${id}/approve`),
+  complete: (id) => axios.post(`/stock-transfers/${id}/complete`),
+  cancel: (id, data) => axios.post(`/stock-transfers/${id}/cancel`, data),
+  delete: (id) => axios.delete(`/stock-transfers/${id}`),
+};

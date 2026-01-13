@@ -33,6 +33,9 @@ const warehouseRoutes = require('./src/routes/warehouseRoutes');
 const inventoryPurchaseRoutes = require('./src/routes/inventoryPurchaseRoutes');
 const productRecipeRoutes = require('./src/routes/productRecipeRoutes');
 const inventoryReportsRoutes = require('./src/routes/inventoryReportsRoutes');
+const supplierPaymentsRoutes = require('./src/routes/supplierPaymentsRoutes');
+const materialBatchesRoutes = require('./src/routes/materialBatchesRoutes');
+const stockTransfersRoutes = require('./src/routes/stockTransfersRoutes');
 const setupRoutes = require('./src/routes/setupRoutes');
 
 // API Routes
@@ -54,6 +57,9 @@ app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/inventory-purchases', inventoryPurchaseRoutes);
 app.use('/api/recipes', productRecipeRoutes);
 app.use('/api/reports/inventory', inventoryReportsRoutes);
+app.use('/api/supplier-payments', supplierPaymentsRoutes);
+app.use('/api/material-batches', materialBatchesRoutes);
+app.use('/api/stock-transfers', stockTransfersRoutes);
 app.use('/api/setup', setupRoutes);
 
 // Health check endpoint
@@ -160,6 +166,7 @@ async function setupInventoryTables() {
         // Run migrations
         await migrateWarehouseColumn();
         await migrateProductRecipeUnit();
+        await setupPhase1Tables();
     } catch (error) {
         console.error('⚠️  Could not setup inventory tables:', error.message);
         console.error('   Full error:', error);
@@ -247,6 +254,69 @@ async function migrateProductRecipeUnit() {
             console.log('   ⏭️  unit column already exists in product_recipes\n');
         } else {
             console.error('⚠️  Recipe migration warning:', error.message);
+        }
+    }
+}
+
+// Migration: Setup Phase 1 Tables (Payments, Batches, Transfers)
+async function setupPhase1Tables() {
+    try {
+        const db = require('./src/config/database');
+        const sqlFilePath = path.join(__dirname, 'database', 'phase1_schema.sql');
+
+        // Check if tables exist
+        const [tables] = await db.query(`
+            SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME IN ('supplier_payments', 'material_batches', 'stock_transfers', 'stock_transfer_items')
+        `);
+
+        if (tables[0].count === 4) {
+            console.log('   ⏭️  Phase 1 tables already exist\n');
+            return;
+        }
+
+        console.log('🔧 Setting up Phase 1 tables...');
+        console.log(`   Reading SQL file: ${sqlFilePath}`);
+
+        const sql = fs.readFileSync(sqlFilePath, 'utf8');
+
+        // Split by semicolon and execute each statement
+        const statements = sql.split(';').map(stmt => stmt.trim()).filter(stmt => stmt.length > 0);
+
+        for (const statement of statements) {
+            // Skip comments and CREATE VIEW statements (will run separately)
+            if (statement.startsWith('--') || statement.includes('CREATE OR REPLACE VIEW')) {
+                continue;
+            }
+
+            try {
+                await db.query(statement);
+            } catch (error) {
+                // Ignore duplicate errors
+                if (error.code !== 'ER_TABLE_EXISTS_ERROR' && error.code !== 'ER_DUP_FIELDNAME') {
+                    console.error(`   ⚠️  Error executing statement: ${error.message}`);
+                }
+            }
+        }
+
+        // Create views separately
+        const views = sql.match(/CREATE OR REPLACE VIEW[\s\S]*?;/gi) || [];
+        for (const viewStatement of views) {
+            try {
+                await db.query(viewStatement);
+            } catch (error) {
+                console.error(`   ⚠️  Error creating view: ${error.message}`);
+            }
+        }
+
+        console.log('   ✅ Phase 1 tables created successfully');
+        console.log('✅ Phase 1 migration completed!\n');
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            console.log('   ⏭️  Phase 1 schema file not found, skipping...\n');
+        } else {
+            console.error('⚠️  Phase 1 migration warning:', error.message);
         }
     }
 }
