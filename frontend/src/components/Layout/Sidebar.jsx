@@ -20,7 +20,8 @@ import {
   Layers,
   Warehouse,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  BarChart3
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -132,6 +133,31 @@ const Sidebar = () => {
       name: 'المواد الخام',
       path: '/raw-materials',
       icon: Layers,
+    },
+    {
+      name: 'لوحة تحكم المخزون',
+      path: '/inventory-dashboard',
+      icon: BarChart3,
+    },
+    {
+      name: 'تقارير المستودعات',
+      path: '/inventory-reports/warehouses',
+      icon: Warehouse,
+    },
+    {
+      name: 'تقارير المواد الخام',
+      path: '/inventory-reports/materials',
+      icon: Layers,
+    },
+    {
+      name: 'تقارير الموردين',
+      path: '/inventory-reports/suppliers',
+      icon: Truck,
+    },
+    {
+      name: 'تقارير المشتريات',
+      path: '/inventory-reports/purchases',
+      icon: ShoppingBasket,
     },
   ];
 

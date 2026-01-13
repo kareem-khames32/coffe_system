@@ -162,3 +162,36 @@ export const recipesAPI = {
   updateProductRecipe: (productId, recipe) => axios.put(`/recipes/product/${productId}`, { recipe }),
   checkStockAvailability: (items) => axios.post('/recipes/check-stock', { items }),
 };
+
+// Inventory Reports
+export const inventoryReportsAPI = {
+  // Dashboard
+  getDashboardStats: () => axios.get('/reports/inventory/dashboard-stats'),
+
+  // Warehouses Reports
+  getWarehousesReport: () => axios.get('/reports/inventory/warehouses'),
+  getWarehouseDetails: (id) => axios.get(`/reports/inventory/warehouses/${id}/details`),
+  getWarehouseTransactions: (id, params) => axios.get(`/reports/inventory/warehouses/${id}/transactions`, { params }),
+
+  // Raw Materials Reports
+  getMaterialsSummary: () => axios.get('/reports/inventory/materials/summary'),
+  getMaterialsByValue: () => axios.get('/reports/inventory/materials/by-value'),
+  getLowStockMaterials: () => axios.get('/reports/inventory/materials/low-stock'),
+  getOutOfStockMaterials: () => axios.get('/reports/inventory/materials/out-of-stock'),
+  getNoMovementMaterials: (days) => axios.get('/reports/inventory/materials/no-movement', { params: { days } }),
+  getMaterialTransactions: (id, params) => axios.get(`/reports/inventory/materials/${id}/transactions`, { params }),
+  getMaterialsConsumption: (days) => axios.get('/reports/inventory/materials/consumption', { params: { days } }),
+
+  // Suppliers Reports
+  getSuppliersSummary: () => axios.get('/reports/inventory/suppliers/summary'),
+  getSupplierDetails: (id) => axios.get(`/reports/inventory/suppliers/${id}/details`),
+  getSupplierPurchases: (id, params) => axios.get(`/reports/inventory/suppliers/${id}/purchases`, { params }),
+  getSupplierMaterials: (id) => axios.get(`/reports/inventory/suppliers/${id}/materials`),
+
+  // Purchases Reports
+  getPurchasesReport: (params) => axios.get('/reports/inventory/purchases', { params }),
+  getDailyPurchases: (days) => axios.get('/reports/inventory/purchases/daily', { params: { days } }),
+  getMonthlyPurchases: (months) => axios.get('/reports/inventory/purchases/monthly', { params: { months } }),
+  getTopPurchasedMaterials: (days, limit) => axios.get('/reports/inventory/purchases/top-materials', { params: { days, limit } }),
+  getMaterialPriceHistory: (id) => axios.get(`/reports/inventory/purchases/material/${id}/price-history`),
+};

@@ -21,6 +21,11 @@ import Reports from './pages/Reports';
 import Suppliers from './pages/Suppliers';
 import RawMaterials from './pages/RawMaterials';
 import Warehouses from './pages/Warehouses';
+import InventoryDashboard from './pages/InventoryDashboard';
+import WarehousesReport from './pages/WarehousesReport';
+import MaterialsReport from './pages/MaterialsReport';
+import SuppliersReport from './pages/SuppliersReport';
+import PurchasesReport from './pages/PurchasesReport';
 
 function App() {
   return (
@@ -48,6 +53,11 @@ function App() {
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/warehouses" element={<Warehouses />} />
             <Route path="/raw-materials" element={<RawMaterials />} />
+            <Route path="/inventory-dashboard" element={<InventoryDashboard />} />
+            <Route path="/inventory-reports/warehouses" element={<WarehousesReport />} />
+            <Route path="/inventory-reports/materials" element={<MaterialsReport />} />
+            <Route path="/inventory-reports/suppliers" element={<SuppliersReport />} />
+            <Route path="/inventory-reports/purchases" element={<PurchasesReport />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
 

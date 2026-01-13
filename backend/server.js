@@ -32,6 +32,7 @@ const rawMaterialRoutes = require('./src/routes/rawMaterialRoutes');
 const warehouseRoutes = require('./src/routes/warehouseRoutes');
 const inventoryPurchaseRoutes = require('./src/routes/inventoryPurchaseRoutes');
 const productRecipeRoutes = require('./src/routes/productRecipeRoutes');
+const inventoryReportsRoutes = require('./src/routes/inventoryReportsRoutes');
 const setupRoutes = require('./src/routes/setupRoutes');
 
 // API Routes
@@ -52,6 +53,7 @@ app.use('/api/raw-materials', rawMaterialRoutes);
 app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/inventory-purchases', inventoryPurchaseRoutes);
 app.use('/api/recipes', productRecipeRoutes);
+app.use('/api/reports/inventory', inventoryReportsRoutes);
 app.use('/api/setup', setupRoutes);
 
 // Health check endpoint
