@@ -29,6 +29,10 @@ import PurchasesReport from './pages/PurchasesReport';
 import SupplierPayments from './pages/SupplierPayments';
 import MaterialBatches from './pages/MaterialBatches';
 import StockTransfers from './pages/StockTransfers';
+// Phase 2 Pages
+import FIFOManagement from './pages/FIFOManagement';
+import InventoryCounts from './pages/InventoryCounts';
+import AlertsDashboard from './pages/AlertsDashboard';
 
 function App() {
   return (
@@ -64,6 +68,9 @@ function App() {
             <Route path="/supplier-payments" element={<SupplierPayments />} />
             <Route path="/material-batches" element={<MaterialBatches />} />
             <Route path="/stock-transfers" element={<StockTransfers />} />
+            <Route path="/fifo-management" element={<FIFOManagement />} />
+            <Route path="/inventory-counts" element={<InventoryCounts />} />
+            <Route path="/alerts" element={<AlertsDashboard />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
 

@@ -21,7 +21,10 @@ import {
   Warehouse,
   ChevronDown,
   ChevronRight,
-  BarChart3
+  BarChart3,
+  Bell,
+  ClipboardList,
+  TrendingUp
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -148,6 +151,21 @@ const Sidebar = () => {
       name: 'نقل المخزون',
       path: '/stock-transfers',
       icon: Truck,
+    },
+    {
+      name: 'إدارة FIFO',
+      path: '/fifo-management',
+      icon: TrendingUp,
+    },
+    {
+      name: 'الجرد المخزني',
+      path: '/inventory-counts',
+      icon: ClipboardList,
+    },
+    {
+      name: 'التنبيهات',
+      path: '/alerts',
+      icon: Bell,
     },
     {
       name: 'لوحة تحكم المخزون',
