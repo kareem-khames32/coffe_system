@@ -36,6 +36,10 @@ const inventoryReportsRoutes = require('./src/routes/inventoryReportsRoutes');
 const supplierPaymentsRoutes = require('./src/routes/supplierPaymentsRoutes');
 const materialBatchesRoutes = require('./src/routes/materialBatchesRoutes');
 const stockTransfersRoutes = require('./src/routes/stockTransfersRoutes');
+// Phase 2 Routes
+const fifoRoutes = require('./src/routes/fifoRoutes');
+const inventoryCountsRoutes = require('./src/routes/inventoryCountsRoutes');
+const alertsRoutes = require('./src/routes/alertsRoutes');
 const setupRoutes = require('./src/routes/setupRoutes');
 
 // API Routes
@@ -60,6 +64,10 @@ app.use('/api/reports/inventory', inventoryReportsRoutes);
 app.use('/api/supplier-payments', supplierPaymentsRoutes);
 app.use('/api/material-batches', materialBatchesRoutes);
 app.use('/api/stock-transfers', stockTransfersRoutes);
+// Phase 2 Routes
+app.use('/api/fifo', fifoRoutes);
+app.use('/api/inventory-counts', inventoryCountsRoutes);
+app.use('/api/alerts', alertsRoutes);
 app.use('/api/setup', setupRoutes);
 
 // Health check endpoint
@@ -167,6 +175,7 @@ async function setupInventoryTables() {
         await migrateWarehouseColumn();
         await migrateProductRecipeUnit();
         await setupPhase1Tables();
+        await setupPhase2Tables();
     } catch (error) {
         console.error('⚠️  Could not setup inventory tables:', error.message);
         console.error('   Full error:', error);
@@ -317,6 +326,69 @@ async function setupPhase1Tables() {
             console.log('   ⏭️  Phase 1 schema file not found, skipping...\n');
         } else {
             console.error('⚠️  Phase 1 migration warning:', error.message);
+        }
+    }
+}
+
+// Migration: Setup Phase 2 Tables (FIFO, Inventory Counts, Alerts)
+async function setupPhase2Tables() {
+    try {
+        const db = require('./src/config/database');
+        const sqlFilePath = path.join(__dirname, 'database', 'phase2_schema.sql');
+
+        // Check if tables exist
+        const [tables] = await db.query(`
+            SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME IN ('batch_consumption', 'inventory_counts', 'inventory_count_items', 'inventory_adjustments', 'system_alerts', 'alert_thresholds')
+        `);
+
+        if (tables[0].count === 6) {
+            console.log('   ⏭️  Phase 2 tables already exist\n');
+            return;
+        }
+
+        console.log('🔧 Setting up Phase 2 tables...');
+        console.log(`   Reading SQL file: ${sqlFilePath}`);
+
+        const sql = fs.readFileSync(sqlFilePath, 'utf8');
+
+        // Split by semicolon and execute each statement
+        const statements = sql.split(';').map(stmt => stmt.trim()).filter(stmt => stmt.length > 0);
+
+        for (const statement of statements) {
+            // Skip comments and CREATE VIEW statements (will run separately)
+            if (statement.startsWith('--') || statement.includes('CREATE OR REPLACE VIEW')) {
+                continue;
+            }
+
+            try {
+                await db.query(statement);
+            } catch (error) {
+                // Ignore duplicate errors
+                if (error.code !== 'ER_TABLE_EXISTS_ERROR' && error.code !== 'ER_DUP_FIELDNAME' && error.code !== 'ER_DUP_KEYNAME') {
+                    console.error(`   ⚠️  Error executing statement: ${error.message}`);
+                }
+            }
+        }
+
+        // Create views separately
+        const views = sql.match(/CREATE OR REPLACE VIEW[\s\S]*?;/gi) || [];
+        for (const viewStatement of views) {
+            try {
+                await db.query(viewStatement);
+            } catch (error) {
+                console.error(`   ⚠️  Error creating view: ${error.message}`);
+            }
+        }
+
+        console.log('   ✅ Phase 2 tables created successfully');
+        console.log('✅ Phase 2 migration completed!\n');
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            console.log('   ⏭️  Phase 2 schema file not found, skipping...\n');
+        } else {
+            console.error('⚠️  Phase 2 migration warning:', error.message);
         }
     }
 }

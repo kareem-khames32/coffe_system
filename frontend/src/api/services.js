@@ -232,3 +232,45 @@ export const stockTransfersAPI = {
   cancel: (id, data) => axios.post(`/stock-transfers/${id}/cancel`, data),
   delete: (id) => axios.delete(`/stock-transfers/${id}`),
 };
+
+// ========================================
+// Phase 2: FIFO, Inventory Counts, Alerts
+// ========================================
+
+// FIFO Batch Consumption
+export const fifoAPI = {
+  getAvailableBatches: (params) => axios.get('/fifo/available-batches', { params }),
+  autoConsume: (data) => axios.post('/fifo/auto-consume', data),
+  recordConsumption: (data) => axios.post('/fifo/record-consumption', data),
+  getConsumptionHistory: (params) => axios.get('/fifo/consumption-history', { params }),
+  getConsumptionStats: (params) => axios.get('/fifo/consumption-stats', { params }),
+  getBatchConsumption: (batchId) => axios.get(`/fifo/batch/${batchId}/consumption`),
+};
+
+// Inventory Counts
+export const inventoryCountsAPI = {
+  getAll: (params) => axios.get('/inventory-counts', { params }),
+  getById: (id) => axios.get(`/inventory-counts/${id}`),
+  create: (data) => axios.post('/inventory-counts', data),
+  addItem: (countId, data) => axios.post(`/inventory-counts/${countId}/items`, data),
+  removeItem: (itemId) => axios.delete(`/inventory-counts/items/${itemId}`),
+  complete: (id, data) => axios.post(`/inventory-counts/${id}/complete`, data),
+  cancel: (id) => axios.post(`/inventory-counts/${id}/cancel`),
+  getVariances: (params) => axios.get('/inventory-counts/variances/all', { params }),
+  getStats: (params) => axios.get('/inventory-counts/stats/summary', { params }),
+};
+
+// Alerts System
+export const alertsAPI = {
+  getAll: (params) => axios.get('/alerts', { params }),
+  getUnresolvedSummary: () => axios.get('/alerts/unresolved/summary'),
+  create: (data) => axios.post('/alerts', data),
+  markAsRead: (id) => axios.patch(`/alerts/${id}/read`),
+  markAllAsRead: (data) => axios.patch('/alerts/read-all', data),
+  resolve: (id, data) => axios.patch(`/alerts/${id}/resolve`, data),
+  delete: (id) => axios.delete(`/alerts/${id}`),
+  getThresholds: (params) => axios.get('/alerts/thresholds', { params }),
+  setThreshold: (data) => axios.post('/alerts/thresholds', data),
+  deleteThreshold: (id) => axios.delete(`/alerts/thresholds/${id}`),
+  generateAuto: () => axios.post('/alerts/generate-auto'),
+};
