@@ -290,37 +290,63 @@ async function setupPhase1Tables() {
 
         const sql = fs.readFileSync(sqlFilePath, 'utf8');
 
-        // Split by semicolon and execute each statement
-        const statements = sql.split(';').map(stmt => stmt.trim()).filter(stmt => stmt.length > 0);
+        // Remove comments
+        const cleanedSQL = sql
+            .split('\n')
+            .filter(line => !line.trim().startsWith('--'))
+            .join('\n');
 
+        // Split by semicolon and filter out CREATE VIEW and empty statements
+        const statements = cleanedSQL
+            .split(';')
+            .map(stmt => stmt.trim())
+            .filter(stmt => stmt.length > 0 && !stmt.includes('CREATE OR REPLACE VIEW'));
+
+        let created = 0;
         for (const statement of statements) {
-            // Skip comments and CREATE VIEW statements (will run separately)
-            if (statement.startsWith('--') || statement.includes('CREATE OR REPLACE VIEW')) {
-                continue;
-            }
-
             try {
                 await db.query(statement);
+
+                // Log what was created
+                if (statement.includes('CREATE TABLE')) {
+                    const match = statement.match(/CREATE TABLE (?:IF NOT EXISTS )?`?(\w+)`?/i);
+                    if (match) {
+                        console.log(`   ✅ Table '${match[1]}' created`);
+                        created++;
+                    }
+                } else if (statement.includes('ALTER TABLE')) {
+                    const match = statement.match(/ALTER TABLE `?(\w+)`?/i);
+                    if (match) {
+                        console.log(`   ✅ Table '${match[1]}' altered`);
+                    }
+                }
             } catch (error) {
                 // Ignore duplicate errors
-                if (error.code !== 'ER_TABLE_EXISTS_ERROR' && error.code !== 'ER_DUP_FIELDNAME') {
-                    console.error(`   ⚠️  Error executing statement: ${error.message}`);
+                if (error.code === 'ER_TABLE_EXISTS_ERROR') {
+                    const match = statement.match(/CREATE TABLE (?:IF NOT EXISTS )?`?(\w+)`?/i);
+                    if (match) console.log(`   ⏭️  Table '${match[1]}' already exists`);
+                } else if (error.code === 'ER_DUP_FIELDNAME' || error.code === 'ER_DUP_KEYNAME') {
+                    // Column or key already exists, skip silently
+                } else {
+                    console.error(`   ⚠️  Error: ${error.message}`);
                 }
             }
         }
 
-        // Create views separately
+        // Create views separately (only after tables exist)
         const views = sql.match(/CREATE OR REPLACE VIEW[\s\S]*?;/gi) || [];
         for (const viewStatement of views) {
             try {
                 await db.query(viewStatement);
+                const match = viewStatement.match(/CREATE OR REPLACE VIEW `?(\w+)`?/i);
+                if (match) console.log(`   ✅ View '${match[1]}' created`);
             } catch (error) {
-                console.error(`   ⚠️  Error creating view: ${error.message}`);
+                const match = viewStatement.match(/CREATE OR REPLACE VIEW `?(\w+)`?/i);
+                console.error(`   ⚠️  View '${match ? match[1] : 'unknown'}' error: ${error.message}`);
             }
         }
 
-        console.log('   ✅ Phase 1 tables created successfully');
-        console.log('✅ Phase 1 migration completed!\n');
+        console.log(`✅ Phase 1 migration completed! (${created} tables created)\n`);
     } catch (error) {
         if (error.code === 'ENOENT') {
             console.log('   ⏭️  Phase 1 schema file not found, skipping...\n');
@@ -353,37 +379,63 @@ async function setupPhase2Tables() {
 
         const sql = fs.readFileSync(sqlFilePath, 'utf8');
 
-        // Split by semicolon and execute each statement
-        const statements = sql.split(';').map(stmt => stmt.trim()).filter(stmt => stmt.length > 0);
+        // Remove comments
+        const cleanedSQL = sql
+            .split('\n')
+            .filter(line => !line.trim().startsWith('--'))
+            .join('\n');
 
+        // Split by semicolon and filter out CREATE VIEW and empty statements
+        const statements = cleanedSQL
+            .split(';')
+            .map(stmt => stmt.trim())
+            .filter(stmt => stmt.length > 0 && !stmt.includes('CREATE OR REPLACE VIEW'));
+
+        let created = 0;
         for (const statement of statements) {
-            // Skip comments and CREATE VIEW statements (will run separately)
-            if (statement.startsWith('--') || statement.includes('CREATE OR REPLACE VIEW')) {
-                continue;
-            }
-
             try {
                 await db.query(statement);
+
+                // Log what was created
+                if (statement.includes('CREATE TABLE')) {
+                    const match = statement.match(/CREATE TABLE (?:IF NOT EXISTS )?`?(\w+)`?/i);
+                    if (match) {
+                        console.log(`   ✅ Table '${match[1]}' created`);
+                        created++;
+                    }
+                } else if (statement.includes('ALTER TABLE')) {
+                    const match = statement.match(/ALTER TABLE `?(\w+)`?/i);
+                    if (match) {
+                        console.log(`   ✅ Table '${match[1]}' altered`);
+                    }
+                }
             } catch (error) {
                 // Ignore duplicate errors
-                if (error.code !== 'ER_TABLE_EXISTS_ERROR' && error.code !== 'ER_DUP_FIELDNAME' && error.code !== 'ER_DUP_KEYNAME') {
-                    console.error(`   ⚠️  Error executing statement: ${error.message}`);
+                if (error.code === 'ER_TABLE_EXISTS_ERROR') {
+                    const match = statement.match(/CREATE TABLE (?:IF NOT EXISTS )?`?(\w+)`?/i);
+                    if (match) console.log(`   ⏭️  Table '${match[1]}' already exists`);
+                } else if (error.code === 'ER_DUP_FIELDNAME' || error.code === 'ER_DUP_KEYNAME') {
+                    // Column or key already exists, skip silently
+                } else {
+                    console.error(`   ⚠️  Error: ${error.message}`);
                 }
             }
         }
 
-        // Create views separately
+        // Create views separately (only after tables exist)
         const views = sql.match(/CREATE OR REPLACE VIEW[\s\S]*?;/gi) || [];
         for (const viewStatement of views) {
             try {
                 await db.query(viewStatement);
+                const match = viewStatement.match(/CREATE OR REPLACE VIEW `?(\w+)`?/i);
+                if (match) console.log(`   ✅ View '${match[1]}' created`);
             } catch (error) {
-                console.error(`   ⚠️  Error creating view: ${error.message}`);
+                const match = viewStatement.match(/CREATE OR REPLACE VIEW `?(\w+)`?/i);
+                console.error(`   ⚠️  View '${match ? match[1] : 'unknown'}' error: ${error.message}`);
             }
         }
 
-        console.log('   ✅ Phase 2 tables created successfully');
-        console.log('✅ Phase 2 migration completed!\n');
+        console.log(`✅ Phase 2 migration completed! (${created} tables created)\n`);
     } catch (error) {
         if (error.code === 'ENOENT') {
             console.log('   ⏭️  Phase 2 schema file not found, skipping...\n');
