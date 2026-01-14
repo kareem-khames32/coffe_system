@@ -21,7 +21,7 @@ async function quickCreateAdmin() {
             host: process.env.DB_HOST || 'localhost',
             user: process.env.DB_USER || 'root',
             password: process.env.DB_PASSWORD || '',
-            database: process.env.DB_NAME || 'coffee_shop'
+            database: process.env.DB_NAME || 'cafe_management'
         });
 
         console.log('✓ تم الاتصال بقاعدة البيانات');
@@ -46,15 +46,14 @@ async function quickCreateAdmin() {
                     full_name = ?,
                     role = 'admin',
                     can_make_sales = 1,
-                    can_edit_orders = 1,
-                    can_cancel_orders = 1,
+                    can_view_inventory = 1,
+                    can_edit_inventory = 1,
                     can_view_order_details = 1,
-                    can_manage_products = 1,
-                    can_manage_inventory = 1,
+                    can_cancel_orders = 1,
+                    can_edit_orders = 1,
                     can_view_reports = 1,
-                    can_manage_users = 1,
-                    can_manage_settings = 1,
                     can_add_expenses = 1,
+                    can_manage_offers = 1,
                     is_active = 1
                 WHERE username = ?`,
                 [hashedPassword, fullName, username]
@@ -70,17 +69,16 @@ async function quickCreateAdmin() {
                     full_name,
                     role,
                     can_make_sales,
-                    can_edit_orders,
-                    can_cancel_orders,
+                    can_view_inventory,
+                    can_edit_inventory,
                     can_view_order_details,
-                    can_manage_products,
-                    can_manage_inventory,
+                    can_cancel_orders,
+                    can_edit_orders,
                     can_view_reports,
-                    can_manage_users,
-                    can_manage_settings,
                     can_add_expenses,
+                    can_manage_offers,
                     is_active
-                ) VALUES (?, ?, ?, 'admin', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)`,
+                ) VALUES (?, ?, ?, 'admin', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)`,
                 [username, hashedPassword, fullName]
             );
             console.log('✓ تم إنشاء المستخدم بنجاح');
