@@ -110,12 +110,12 @@ CREATE TABLE IF NOT EXISTS stock_transfer_items (
 -- Add payment terms to inventory_purchases
 -- إضافة شروط الدفع إلى جدول المشتريات
 ALTER TABLE inventory_purchases
-ADD COLUMN IF NOT EXISTS payment_terms ENUM('cash', 'credit_7', 'credit_15', 'credit_30', 'credit_60') DEFAULT 'cash' COMMENT 'شروط الدفع' AFTER total_amount,
-ADD COLUMN IF NOT EXISTS due_date DATE NULL COMMENT 'تاريخ الاستحقاق' AFTER payment_terms,
-ADD COLUMN IF NOT EXISTS payment_status ENUM('unpaid', 'partial', 'paid') DEFAULT 'unpaid' COMMENT 'حالة الدفع' AFTER due_date,
-ADD COLUMN IF NOT EXISTS paid_amount DECIMAL(10, 2) DEFAULT 0 COMMENT 'المبلغ المدفوع' AFTER payment_status,
-ADD INDEX IF NOT EXISTS idx_payment_status (payment_status),
-ADD INDEX IF NOT EXISTS idx_due_date (due_date);
+ADD COLUMN payment_terms ENUM('cash', 'credit_7', 'credit_15', 'credit_30', 'credit_60') DEFAULT 'cash' COMMENT 'شروط الدفع' AFTER total_amount,
+ADD COLUMN due_date DATE NULL COMMENT 'تاريخ الاستحقاق' AFTER payment_terms,
+ADD COLUMN payment_status ENUM('unpaid', 'partial', 'paid') DEFAULT 'unpaid' COMMENT 'حالة الدفع' AFTER due_date,
+ADD COLUMN paid_amount DECIMAL(10, 2) DEFAULT 0 COMMENT 'المبلغ المدفوع' AFTER payment_status,
+ADD INDEX idx_payment_status (payment_status),
+ADD INDEX idx_due_date (due_date);
 
 -- ================================================
 -- Views for Quick Access

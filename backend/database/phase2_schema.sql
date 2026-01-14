@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS batch_consumption (
 
 -- Update material_batches to track remaining quantity
 ALTER TABLE material_batches
-ADD COLUMN IF NOT EXISTS remaining_quantity DECIMAL(10, 3) NULL COMMENT 'Remaining quantity in batch',
-ADD COLUMN IF NOT EXISTS original_quantity DECIMAL(10, 3) NULL COMMENT 'Original quantity when batch was created';
+ADD COLUMN remaining_quantity DECIMAL(10, 3) NULL COMMENT 'Remaining quantity in batch',
+ADD COLUMN original_quantity DECIMAL(10, 3) NULL COMMENT 'Original quantity when batch was created';
 
 -- Initialize remaining_quantity for existing batches
 UPDATE material_batches
@@ -237,17 +237,17 @@ WHERE ic.status = 'completed'
 -- View: Unresolved alerts summary
 CREATE OR REPLACE VIEW unresolved_alerts_summary AS
 SELECT
-    alert_type,
-    severity,
-    warehouse_id,
+    sa.alert_type,
+    sa.severity,
+    sa.warehouse_id,
     w.name AS warehouse_name,
     COUNT(*) AS alert_count,
-    MIN(created_at) AS oldest_alert,
-    MAX(created_at) AS newest_alert
+    MIN(sa.created_at) AS oldest_alert,
+    MAX(sa.created_at) AS newest_alert
 FROM system_alerts sa
 LEFT JOIN warehouses w ON sa.warehouse_id = w.id
-WHERE is_resolved = FALSE
-GROUP BY alert_type, severity, warehouse_id, w.name;
+WHERE sa.is_resolved = FALSE
+GROUP BY sa.alert_type, sa.severity, sa.warehouse_id, w.name;
 
 -- View: Batch consumption history
 CREATE OR REPLACE VIEW batch_consumption_history AS
