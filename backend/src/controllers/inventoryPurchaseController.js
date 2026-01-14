@@ -63,7 +63,7 @@ exports.createPurchase = async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    const { supplier_id, purchase_date, invoice_number, items, notes } = req.body;
+    const { supplier_id, warehouse_id, purchase_date, invoice_number, items, notes, payment_terms } = req.body;
 
     if (!purchase_date || !items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'تاريخ الشراء والمواد مطلوبة' });
@@ -74,9 +74,9 @@ exports.createPurchase = async (req, res) => {
 
     // Insert purchase
     const [purchaseResult] = await connection.query(
-      `INSERT INTO inventory_purchases (supplier_id, purchase_date, invoice_number, total_amount, notes, created_by)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [supplier_id || null, purchase_date, invoice_number, total_amount, notes, req.user?.id || null]
+      `INSERT INTO inventory_purchases (supplier_id, warehouse_id, purchase_date, invoice_number, total_amount, payment_terms, notes, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [supplier_id || null, warehouse_id || null, purchase_date, invoice_number, total_amount, payment_terms || 'cash', notes, req.user?.id || null]
     );
 
     const purchaseId = purchaseResult.insertId;
@@ -106,6 +106,26 @@ exports.createPurchase = async (req, res) => {
         `INSERT INTO inventory_transactions (raw_material_id, transaction_type, quantity, unit_cost, reference_type, reference_id, created_by)
          VALUES (?, 'purchase', ?, ?, 'purchase', ?, ?)`,
         [raw_material_id, quantity, unit_price, purchaseId, req.user?.id || null]
+      );
+    }
+
+    // 💰 Auto-create supplier payment record for credit purchases
+    if (payment_terms && payment_terms !== 'cash' && supplier_id) {
+      // Calculate due date based on payment terms
+      let daysToAdd = 0;
+      if (payment_terms === 'credit_7') daysToAdd = 7;
+      else if (payment_terms === 'credit_15') daysToAdd = 15;
+      else if (payment_terms === 'credit_30') daysToAdd = 30;
+      else if (payment_terms === 'credit_60') daysToAdd = 60;
+
+      const dueDate = new Date(purchase_date);
+      dueDate.setDate(dueDate.getDate() + daysToAdd);
+
+      // Create payment record with status 'unpaid'
+      await connection.query(
+        `INSERT INTO supplier_payments (purchase_id, supplier_id, amount_due, amount_paid, payment_status, due_date, created_by)
+         VALUES (?, ?, ?, 0, 'unpaid', ?, ?)`,
+        [purchaseId, supplier_id, total_amount, dueDate.toISOString().split('T')[0], req.user?.id || null]
       );
     }
 
