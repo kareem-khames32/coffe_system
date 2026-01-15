@@ -68,7 +68,6 @@ CREATE OR REPLACE VIEW batch_stock_levels AS
 SELECT
     mb.*,
     rm.name as material_name,
-    rm.unit,
     w.name as warehouse_name,
     DATEDIFF(mb.expiry_date, CURDATE()) as days_until_expiry
 FROM material_batches mb
@@ -81,7 +80,6 @@ CREATE OR REPLACE VIEW expiring_batches AS
 SELECT
     mb.*,
     rm.name as material_name,
-    rm.unit,
     w.name as warehouse_name,
     DATEDIFF(mb.expiry_date, CURDATE()) as days_until_expiry
 FROM material_batches mb
@@ -96,7 +94,6 @@ CREATE OR REPLACE VIEW available_batches_fifo AS
 SELECT
     mb.*,
     rm.name as material_name,
-    rm.unit,
     w.name as warehouse_name,
     DATEDIFF(mb.expiry_date, CURDATE()) as days_until_expiry
 FROM material_batches mb
