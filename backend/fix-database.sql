@@ -3,6 +3,9 @@
 -- ========================================
 -- This script fixes missing columns and views
 
+-- Select the database
+USE cafe_management;
+
 -- 1. Add warehouse_id to inventory_purchases (if not exists)
 ALTER TABLE inventory_purchases
 ADD COLUMN warehouse_id INT NULL AFTER supplier_id;
