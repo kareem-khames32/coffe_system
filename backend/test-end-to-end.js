@@ -116,12 +116,23 @@ async function test01_Authentication() {
   });
 
   if (!login.success) {
-    log('❌ Login failed - Please create admin user first:', 'red');
-    log('   cd backend && node scripts/quick-create-admin.js admin admin123 "Admin"', 'yellow');
+    log('❌ Login failed:', 'red');
+    log(`   Error: ${login.error}`, 'yellow');
+    log(`   Status: ${login.status}`, 'yellow');
+    log('\n💡 Please create admin user first:', 'yellow');
+    log('   node scripts/quick-create-admin.js admin admin123 "Admin"', 'cyan');
     process.exit(1);
   }
 
-  testData.token = login.data.token;
+  // Debug: Check token location
+  testData.token = login.data?.token || login.data?.data?.token;
+
+  if (!testData.token) {
+    log('⚠️  Login response structure:', 'yellow');
+    console.log(JSON.stringify(login.data, null, 2));
+    process.exit(1);
+  }
+
   assert(testData.token, 'Login successful');
 }
 
@@ -135,7 +146,20 @@ async function test02_CreateSupplier() {
     address: 'Test Address'
   }, testData.token);
 
+  // Debug: Show actual response
+  if (!result.success) {
+    log(`❌ API Error: ${result.error}`, 'red');
+    log(`Status: ${result.status}`, 'yellow');
+    return;
+  }
+
   testData.supplier = result.data?.data;
+
+  if (!testData.supplier) {
+    log('⚠️  Response structure:', 'yellow');
+    console.log(JSON.stringify(result.data, null, 2));
+  }
+
   assert(result.success && testData.supplier?.id, `Created supplier: ${testData.supplier?.name}`);
 }
 
