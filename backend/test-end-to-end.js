@@ -222,6 +222,12 @@ async function test05_PurchaseCash() {
     notes: 'Cash purchase test'
   }, testData.token);
 
+  // Debug: Show response structure
+  if (!result.data?.data) {
+    log('⚠️  Purchase response structure:', 'yellow');
+    console.log(JSON.stringify(result.data, null, 2));
+  }
+
   testData.purchaseCash = result.data?.data;
   assert(result.success && testData.purchaseCash?.id, `Created cash purchase: ${testData.purchaseCash?.invoice_number}`);
 
