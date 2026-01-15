@@ -6,6 +6,16 @@
 -- Select the database
 USE cafe_management;
 
+-- 0. Fix supplier_payments table structure
+-- Add missing columns for payment tracking
+ALTER TABLE supplier_payments
+ADD COLUMN amount_due DECIMAL(10, 2) NOT NULL DEFAULT 0 COMMENT 'المبلغ المستحق' AFTER purchase_id,
+ADD COLUMN amount_paid DECIMAL(10, 2) NOT NULL DEFAULT 0 COMMENT 'المبلغ المدفوع' AFTER amount_due,
+ADD COLUMN payment_status ENUM('unpaid', 'partial', 'paid') DEFAULT 'unpaid' COMMENT 'حالة الدفع' AFTER amount_paid,
+ADD COLUMN due_date DATE NULL COMMENT 'تاريخ الاستحقاق' AFTER payment_status,
+ADD INDEX idx_payment_status (payment_status),
+ADD INDEX idx_due_date (due_date);
+
 -- 1. Add warehouse_id to inventory_purchases (if not exists)
 ALTER TABLE inventory_purchases
 ADD COLUMN warehouse_id INT NULL AFTER supplier_id;
@@ -14,6 +24,18 @@ ADD COLUMN warehouse_id INT NULL AFTER supplier_id;
 ALTER TABLE inventory_purchases
 ADD CONSTRAINT fk_purchases_warehouse
 FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON DELETE SET NULL;
+
+-- 3. Fix material_batches table - Add remaining_quantity tracking
+-- Note: Ignore errors if columns already exist
+ALTER TABLE material_batches
+ADD COLUMN remaining_quantity DECIMAL(10, 3) NULL COMMENT 'الكمية المتبقية',
+ADD COLUMN original_quantity DECIMAL(10, 3) NULL COMMENT 'الكمية الأصلية';
+
+-- Initialize remaining_quantity for existing batches
+UPDATE material_batches
+SET remaining_quantity = quantity,
+    original_quantity = quantity
+WHERE remaining_quantity IS NULL;
 
 -- 3. Create Phase 1 Views
 CREATE OR REPLACE VIEW upcoming_payments AS
