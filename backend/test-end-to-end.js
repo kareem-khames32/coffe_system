@@ -84,6 +84,16 @@ async function makeRequest(method, endpoint, data = null, token = null) {
     const response = await axios(config);
     return { success: true, data: response.data };
   } catch (error) {
+    // Debug: Log full error for troubleshooting
+    if (endpoint.includes('/inventory-purchases') || endpoint.includes('/products')) {
+      log(`⚠️  API Error for ${method} ${endpoint}:`, 'yellow');
+      log(`   Message: ${error.response?.data?.message || error.message}`, 'red');
+      log(`   Status: ${error.response?.status}`, 'red');
+      if (error.response?.data) {
+        console.log('   Response data:', JSON.stringify(error.response.data, null, 2));
+      }
+    }
+
     return {
       success: false,
       error: error.response?.data?.message || error.message,
