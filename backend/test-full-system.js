@@ -428,18 +428,19 @@ async function testInventoryManagement() {
     // Test 17: Create Purchase with Credit Payment (30 days)
     try {
         log('\n[17] Testing Create Purchase with Credit Payment...', 'cyan');
+        const today = new Date().toISOString().split('T')[0];
         const response = await api.post('/inventory-purchases', {
             supplier_id: testData.supplier1?.id,
             warehouse_id: testData.warehouse?.id,
-            total_amount: 5000.00,
-            payment_method: 'credit_30',
-            status: 'completed',
+            purchase_date: today,
+            payment_terms: 'credit_30',
             notes: 'شراء بن عربي - آجل 30 يوم',
             items: [
                 {
                     raw_material_id: testData.rawMaterial1?.id,
                     quantity: 50,
-                    unit_price: 100.00
+                    unit: 'kg',
+                    unit_cost: 100.00
                 }
             ]
         });
@@ -480,18 +481,19 @@ async function testInventoryManagement() {
     // Test 19: Create Purchase with Cash Payment
     try {
         log('\n[19] Testing Create Purchase with Cash Payment...', 'cyan');
+        const today = new Date().toISOString().split('T')[0];
         const response = await api.post('/inventory-purchases', {
             supplier_id: testData.supplier2?.id,
             warehouse_id: testData.warehouse?.id,
-            total_amount: 1500.00,
-            payment_method: 'cash',
-            status: 'completed',
+            purchase_date: today,
+            payment_terms: 'cash',
             notes: 'شراء حليب - نقدي',
             items: [
                 {
                     raw_material_id: testData.rawMaterial2?.id,
                     quantity: 30,
-                    unit_price: 50.00
+                    unit: 'liter',
+                    unit_cost: 50.00
                 }
             ]
         });
@@ -543,9 +545,12 @@ async function testInventoryManagement() {
     // Test 22: Make Payment Installment
     try {
         log('\n[22] Testing Make Payment Installment...', 'cyan');
-        const response = await api.post('/supplier-payments/pay', {
-            payment_id: testData.payment1?.id,
+        const today = new Date().toISOString().split('T')[0];
+        const response = await api.post('/supplier-payments', {
+            supplier_id: testData.supplier1?.id,
+            purchase_id: testData.purchase1?.id,
             amount: 1000.00,
+            payment_date: today,
             payment_method: 'cash',
             notes: 'دفعة أولى'
         });
@@ -1005,8 +1010,8 @@ async function testExpenses() {
             description: 'فاتورة كهرباء',
             amount: 500.00,
             category: 'utilities',
-            payment_method: 'cash',
-            date: new Date().toISOString().split('T')[0]
+            expense_date: new Date().toISOString().split('T')[0],
+            notes: 'فاتورة شهرية'
         });
 
         if (response.data.success && response.data.data) {
