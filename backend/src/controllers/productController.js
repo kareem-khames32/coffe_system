@@ -85,20 +85,30 @@ async function checkProductAvailability(productId) {
     }
 }
 
-// Get available products (stock > 0) - for online orders
+// Get available products (based on raw material availability) - for online orders
 exports.getAvailableProducts = async (req, res) => {
     try {
         const [products] = await db.query(
             `SELECT p.*, c.name as category_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.is_active = TRUE AND p.stock > 0
+             WHERE p.is_active = TRUE
              ORDER BY p.name ASC`
         );
 
+        // Check raw material availability for each product
+        const availableProducts = [];
+        for (const product of products) {
+            const availability = await checkProductAvailability(product.id);
+            if (availability.available) {
+                product.materials_available = true;
+                availableProducts.push(product);
+            }
+        }
+
         res.json({
             success: true,
-            data: products
+            data: availableProducts
         });
     } catch (error) {
         console.error('Get available products error:', error);
@@ -165,20 +175,30 @@ exports.getProductsByCategory = async (req, res) => {
     }
 };
 
-// Get low stock products
+// Get low stock products (based on unavailable raw materials)
 exports.getLowStockProducts = async (req, res) => {
     try {
         const [products] = await db.query(
             `SELECT p.*, c.name as category_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.stock <= p.low_stock_alert AND p.is_active = TRUE
-             ORDER BY p.stock ASC`
+             WHERE p.is_active = TRUE
+             ORDER BY p.name ASC`
         );
+
+        // Check which products have low/unavailable materials
+        const lowStockProducts = [];
+        for (const product of products) {
+            const availability = await checkProductAvailability(product.id);
+            if (!availability.available) {
+                product.unavailable_materials = availability.unavailable_materials;
+                lowStockProducts.push(product);
+            }
+        }
 
         res.json({
             success: true,
-            data: products
+            data: lowStockProducts
         });
     } catch (error) {
         console.error('Get low stock products error:', error);
@@ -194,13 +214,13 @@ exports.createProduct = async (req, res) => {
     try {
         const {
             name,
+            name_en,
             description,
             category_id,
             price,
             cost_price,
-            stock,
             image,
-            low_stock_alert
+            is_active
         } = req.body;
 
         if (!name || !category_id || price === undefined || cost_price === undefined) {
@@ -211,17 +231,17 @@ exports.createProduct = async (req, res) => {
         }
 
         const [result] = await db.query(
-            `INSERT INTO products (name, description, category_id, price, cost_price, stock, image, low_stock_alert)
+            `INSERT INTO products (name, name_en, description, category_id, price, cost_price, image, is_active)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 name,
+                name_en || null,
                 description || null,
                 category_id,
                 price,
                 cost_price,
-                stock || 0,
                 image || null,
-                low_stock_alert || 10
+                is_active !== undefined ? is_active : true
             ]
         );
 
@@ -244,13 +264,12 @@ exports.updateProduct = async (req, res) => {
     try {
         const {
             name,
+            name_en,
             description,
             category_id,
             price,
             cost_price,
-            stock,
             image,
-            low_stock_alert,
             is_active
         } = req.body;
 
@@ -273,6 +292,11 @@ exports.updateProduct = async (req, res) => {
             updateValues.push(name);
         }
 
+        if (name_en !== undefined) {
+            updateQuery += 'name_en = ?, ';
+            updateValues.push(name_en);
+        }
+
         if (description !== undefined) {
             updateQuery += 'description = ?, ';
             updateValues.push(description);
@@ -293,19 +317,9 @@ exports.updateProduct = async (req, res) => {
             updateValues.push(cost_price);
         }
 
-        if (stock !== undefined) {
-            updateQuery += 'stock = ?, ';
-            updateValues.push(stock);
-        }
-
         if (image !== undefined) {
             updateQuery += 'image = ?, ';
             updateValues.push(image);
-        }
-
-        if (low_stock_alert !== undefined) {
-            updateQuery += 'low_stock_alert = ?, ';
-            updateValues.push(low_stock_alert);
         }
 
         if (is_active !== undefined) {
@@ -324,43 +338,6 @@ exports.updateProduct = async (req, res) => {
         });
     } catch (error) {
         console.error('Update product error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error'
-        });
-    }
-};
-
-// Update stock
-exports.updateStock = async (req, res) => {
-    try {
-        const { stock } = req.body;
-
-        if (stock === undefined) {
-            return res.status(400).json({
-                success: false,
-                message: 'Stock value is required'
-            });
-        }
-
-        // Check if product exists
-        const [products] = await db.query('SELECT id FROM products WHERE id = ?', [req.params.id]);
-
-        if (products.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found'
-            });
-        }
-
-        await db.query('UPDATE products SET stock = ? WHERE id = ?', [stock, req.params.id]);
-
-        res.json({
-            success: true,
-            message: 'Stock updated successfully'
-        });
-    } catch (error) {
-        console.error('Update stock error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error'
