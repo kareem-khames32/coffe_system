@@ -69,14 +69,15 @@ exports.createInStoreOrder = async (req, res) => {
 
         // Add order items and update stock
         for (const item of items) {
-            // Get product name
+            // Get product info (name, cost_price)
             const [products] = await connection.query(
-                'SELECT name FROM products WHERE id = ?',
+                'SELECT name, cost_price FROM products WHERE id = ?',
                 [item.product_id]
             );
 
+            const costPrice = item.cost_price !== undefined ? item.cost_price : (products[0].cost_price || 0);
             const itemSubtotal = item.price * item.quantity;
-            const itemProfit = (item.price - item.cost_price) * item.quantity;
+            const itemProfit = (item.price - costPrice) * item.quantity;
 
             // Insert order item
             await connection.query(
@@ -89,7 +90,7 @@ exports.createInStoreOrder = async (req, res) => {
                     products[0].name,
                     item.quantity,
                     item.price,
-                    item.cost_price,
+                    costPrice,
                     itemSubtotal,
                     itemProfit
                 ]

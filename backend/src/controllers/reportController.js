@@ -109,7 +109,7 @@ exports.getSalesReport = async (req, res) => {
         let query = `
             SELECT o.*, u.full_name as cashier_name
             FROM orders o
-            LEFT JOIN users u ON o.cashier_id = u.id
+            LEFT JOIN users u ON o.created_by = u.id
             WHERE 1=1
         `;
         const params = [];
@@ -130,7 +130,7 @@ exports.getSalesReport = async (req, res) => {
         }
 
         if (status && status !== 'all') {
-            query += ' AND o.status = ?';
+            query += ' AND o.order_status = ?';
             params.push(status);
         }
 
@@ -138,9 +138,19 @@ exports.getSalesReport = async (req, res) => {
 
         const [orders] = await db.query(query, params);
 
-        // Calculate totals
-        const totalSales = orders.reduce((sum, order) => sum + parseFloat(order.total), 0);
-        const totalProfit = orders.reduce((sum, order) => sum + parseFloat(order.profit), 0);
+        // Calculate totals from order_items (since profit is not in orders table)
+        const totalSales = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+
+        // Get total profit from order_items
+        let totalProfit = 0;
+        for (const order of orders) {
+            const [items] = await db.query(
+                'SELECT SUM(profit) as order_profit FROM order_items WHERE order_id = ?',
+                [order.id]
+            );
+            totalProfit += parseFloat(items[0].order_profit || 0);
+        }
+
         const totalOrders = orders.length;
         const averageOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
 

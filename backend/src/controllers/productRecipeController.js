@@ -210,11 +210,12 @@ exports.restoreStockForOrder = async (orderId, items) => {
 // Check if sufficient stock is available
 exports.checkStockAvailability = async (req, res) => {
   try {
-    const { items } = req.body; // array of {product_id, quantity}
+    const { items, products } = req.body; // array of {product_id, quantity}
+    const itemsToCheck = items || products || [];
 
     const unavailableMaterials = [];
 
-    for (const item of items) {
+    for (const item of itemsToCheck) {
       const { product_id, quantity } = item;
 
       // Get product recipe
