@@ -592,7 +592,7 @@ async function testProductRecipes() {
     try {
         log('\n[24] Testing Create Recipe (Espresso - Coffee Beans)...', 'cyan');
         const response = await api.put(`/product-recipes/product/${testData.product1?.id}`, {
-            recipes: [
+            recipe: [
                 {
                     raw_material_id: testData.rawMaterial1?.id,
                     quantity_needed: 0.020,
@@ -615,7 +615,7 @@ async function testProductRecipes() {
     try {
         log('\n[25] Testing Create Recipe (Cappuccino - Coffee + Milk)...', 'cyan');
         const response = await api.put(`/product-recipes/product/${testData.product2?.id}`, {
-            recipes: [
+            recipe: [
                 {
                     raw_material_id: testData.rawMaterial1?.id,
                     quantity_needed: 0.020,
