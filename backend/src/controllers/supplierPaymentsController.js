@@ -8,6 +8,12 @@ exports.getAllPayments = async (req, res) => {
         let query = `
             SELECT
                 sp.id,
+                sp.purchase_id,
+                sp.supplier_id,
+                sp.amount_due,
+                sp.amount_paid,
+                sp.payment_status,
+                sp.due_date,
                 sp.amount,
                 sp.payment_date,
                 sp.payment_method,
