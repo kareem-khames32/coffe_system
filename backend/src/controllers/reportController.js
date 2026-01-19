@@ -38,11 +38,11 @@ exports.getDashboardStats = async (req, res) => {
             [today]
         );
 
-        // Low stock products count
+        // Low stock raw materials count (products don't have stock tracking)
         const [lowStock] = await db.query(
             `SELECT COUNT(*) as count
-             FROM products
-             WHERE stock <= low_stock_alert AND is_active = TRUE`
+             FROM raw_materials
+             WHERE current_stock <= minimum_stock`
         );
 
         // Top selling products (last 30 days)

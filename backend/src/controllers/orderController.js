@@ -48,25 +48,19 @@ exports.createInStoreOrder = async (req, res) => {
         // Generate order number
         const orderNumber = await generateOrderNumber();
 
-        // Create order
+        // Create order (matching actual database schema)
         const [orderResult] = await connection.query(
-            `INSERT INTO orders (order_number, order_type, status, customer_name, customer_phone,
-             customer_address, subtotal, discount_type, discount_value, discount_amount, total,
-             cost, profit, offer_id, cashier_id)
-             VALUES (?, 'in-store', 'completed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO orders (order_number, order_type, order_status, customer_name, customer_phone,
+             subtotal, discount_amount, tax_amount, total_amount, payment_method, payment_status, notes, created_by)
+             VALUES (?, 'dine-in', 'completed', ?, ?, ?, ?, 0, ?, 'cash', 'paid', ?, ?)`,
             [
                 orderNumber,
                 customer_name || null,
                 customer_phone || null,
-                customer_address || null,
                 subtotal,
-                discount_type || 'none',
-                discount_value || 0,
                 discountAmount,
                 total,
-                totalCost,
-                profit,
-                offer_id || null,
+                `Discount: ${discount_type || 'none'} ${discount_value || 0}`,
                 req.user.id
             ]
         );
@@ -371,7 +365,7 @@ exports.getAllOrders = async (req, res) => {
 exports.getPendingOrdersCount = async (req, res) => {
     try {
         const [result] = await db.query(
-            `SELECT COUNT(*) as count FROM orders WHERE status = 'pending'`
+            `SELECT COUNT(*) as count FROM orders WHERE order_status = 'pending'`
         );
 
         res.json({
