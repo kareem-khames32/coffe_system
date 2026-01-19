@@ -30,6 +30,13 @@ async function checkSchema() {
             console.log(`  ${col.Field.padEnd(20)} ${col.Type.padEnd(20)} ${col.Null} ${col.Key} ${col.Default || ''}`);
         });
 
+        console.log('\n📋 ORDER_ITEMS TABLE SCHEMA:');
+        console.log('═'.repeat(60));
+        const [orderItemsCols] = await connection.query('DESCRIBE order_items');
+        orderItemsCols.forEach(col => {
+            console.log(`  ${col.Field.padEnd(20)} ${col.Type.padEnd(20)} ${col.Null} ${col.Key} ${col.Default || ''}`);
+        });
+
     } catch (error) {
         console.error('Error:', error.message);
     } finally {
