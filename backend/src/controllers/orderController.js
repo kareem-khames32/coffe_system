@@ -105,7 +105,10 @@ exports.createInStoreOrder = async (req, res) => {
         );
 
         const [orderItems] = await connection.query(
-            'SELECT * FROM order_items WHERE order_id = ?',
+            `SELECT oi.*, p.name as product_name, oi.unit_price as price
+             FROM order_items oi
+             JOIN products p ON oi.product_id = p.id
+             WHERE oi.order_id = ?`,
             [orderId]
         );
 
