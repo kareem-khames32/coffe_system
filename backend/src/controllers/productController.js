@@ -85,14 +85,14 @@ async function checkProductAvailability(productId) {
     }
 }
 
-// Get available products (stock > 0) - for online orders
+// Get available products - for online orders
 exports.getAvailableProducts = async (req, res) => {
     try {
         const [products] = await db.query(
             `SELECT p.*, c.name as category_name
              FROM products p
              LEFT JOIN categories c ON p.category_id = c.id
-             WHERE p.is_active = TRUE AND p.stock > 0
+             WHERE p.is_active = TRUE
              ORDER BY p.name ASC`
         );
 
@@ -204,14 +204,11 @@ exports.createProduct = async (req, res) => {
     try {
         const {
             name,
-            name_en,
             description,
             category_id,
             price,
             cost_price,
-            stock,
             image,
-            low_stock_alert,
             is_active
         } = req.body;
 
@@ -222,19 +219,16 @@ exports.createProduct = async (req, res) => {
             });
         }
 
-        // Check if name_en column exists in database
         const [result] = await db.query(
-            `INSERT INTO products (name, description, category_id, price, cost_price, stock, image, low_stock_alert, is_active)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO products (name, description, category_id, price, cost_price, image, is_active)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
                 name,
                 description || null,
                 category_id,
                 price,
                 cost_price,
-                stock || 0,
                 image || null,
-                low_stock_alert || 10,
                 is_active !== undefined ? is_active : true
             ]
         );
@@ -262,9 +256,7 @@ exports.updateProduct = async (req, res) => {
             category_id,
             price,
             cost_price,
-            stock,
             image,
-            low_stock_alert,
             is_active
         } = req.body;
 
@@ -307,19 +299,9 @@ exports.updateProduct = async (req, res) => {
             updateValues.push(cost_price);
         }
 
-        if (stock !== undefined) {
-            updateQuery += 'stock = ?, ';
-            updateValues.push(stock);
-        }
-
         if (image !== undefined) {
             updateQuery += 'image = ?, ';
             updateValues.push(image);
-        }
-
-        if (low_stock_alert !== undefined) {
-            updateQuery += 'low_stock_alert = ?, ';
-            updateValues.push(low_stock_alert);
         }
 
         if (is_active !== undefined) {

@@ -110,7 +110,7 @@ exports.createInStoreOrder = async (req, res) => {
         const [completeOrder] = await connection.query(
             `SELECT o.*, u.full_name as cashier_name
              FROM orders o
-             LEFT JOIN users u ON o.cashier_id = u.id
+             LEFT JOIN users u ON o.created_by = u.id
              WHERE o.id = ?`,
             [orderId]
         );
@@ -219,25 +219,21 @@ exports.createOnlineOrder = async (req, res) => {
         // Generate order number
         const orderNumber = await generateOrderNumber();
 
-        // Create order (status = pending for online orders)
+        // Create order (order_status = pending for online orders)
         const [orderResult] = await connection.query(
-            `INSERT INTO orders (order_number, order_type, status, customer_name, customer_phone,
-             customer_address, subtotal, discount_type, discount_value, discount_amount, total,
-             cost, profit, offer_id, cashier_id)
-             VALUES (?, 'online', 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+            `INSERT INTO orders (order_number, order_type, order_status, customer_name, customer_phone,
+             customer_address, subtotal, discount_amount, tax_amount, total_amount, payment_method,
+             payment_status, notes)
+             VALUES (?, 'online', 'pending', ?, ?, ?, ?, ?, 0, ?, 'cash', 'unpaid', ?)`,
             [
                 orderNumber,
                 customer_name,
                 customer_phone,
                 customer_address,
                 subtotal,
-                discount_type,
-                discount_value,
                 discountAmount,
                 total,
-                totalCost,
-                profit,
-                offer_id || null
+                `Offer: ${offer_id || 'none'}, Discount: ${discount_type} ${discount_value}`
             ]
         );
 
@@ -319,7 +315,7 @@ exports.getAllOrders = async (req, res) => {
         let query = `
             SELECT o.*, u.full_name as cashier_name
             FROM orders o
-            LEFT JOIN users u ON o.cashier_id = u.id
+            LEFT JOIN users u ON o.created_by = u.id
             WHERE 1=1
         `;
         const params = [];
@@ -330,7 +326,7 @@ exports.getAllOrders = async (req, res) => {
         }
 
         if (status && status !== 'all') {
-            query += ' AND o.status = ?';
+            query += ' AND o.order_status = ?';
             params.push(status);
         }
 
@@ -387,7 +383,7 @@ exports.getOrderById = async (req, res) => {
         const [orders] = await db.query(
             `SELECT o.*, u.full_name as cashier_name
              FROM orders o
-             LEFT JOIN users u ON o.cashier_id = u.id
+             LEFT JOIN users u ON o.created_by = u.id
              WHERE o.id = ?`,
             [req.params.id]
         );
@@ -425,8 +421,8 @@ exports.getOrderById = async (req, res) => {
 exports.trackOrder = async (req, res) => {
     try {
         const [orders] = await db.query(
-            `SELECT o.id, o.order_number, o.order_type, o.status, o.customer_name,
-             o.customer_phone, o.customer_address, o.total, o.created_at, o.updated_at
+            `SELECT o.id, o.order_number, o.order_type, o.order_status, o.customer_name,
+             o.customer_phone, o.customer_address, o.total_amount, o.created_at, o.updated_at
              FROM orders o
              WHERE o.order_number = ?`,
             [req.params.orderNumber]
@@ -485,7 +481,7 @@ exports.updateOrderStatus = async (req, res) => {
         }
 
         // If cancelling, return stock
-        if (status === 'cancelled' && orders[0].status !== 'cancelled') {
+        if (status === 'cancelled' && orders[0].order_status !== 'cancelled') {
             const [items] = await db.query(
                 'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
                 [req.params.id]
@@ -499,7 +495,7 @@ exports.updateOrderStatus = async (req, res) => {
             }
         }
 
-        await db.query('UPDATE orders SET status = ? WHERE id = ?', [status, req.params.id]);
+        await db.query('UPDATE orders SET order_status = ? WHERE id = ?', [status, req.params.id]);
 
         res.json({
             success: true,
@@ -543,7 +539,7 @@ exports.editOrder = async (req, res) => {
             });
         }
 
-        if (orders[0].status === 'cancelled') {
+        if (orders[0].order_status === 'cancelled') {
             return res.status(400).json({
                 success: false,
                 message: 'Cannot edit cancelled order'
@@ -604,20 +600,15 @@ exports.editOrder = async (req, res) => {
         // 4. Update order
         await connection.query(
             `UPDATE orders SET customer_name = ?, customer_phone = ?, customer_address = ?,
-             subtotal = ?, discount_type = ?, discount_value = ?, discount_amount = ?,
-             total = ?, cost = ?, profit = ?
+             subtotal = ?, discount_amount = ?, total_amount = ?
              WHERE id = ?`,
             [
                 customer_name || order.customer_name,
                 customer_phone || order.customer_phone,
                 customer_address || order.customer_address,
                 subtotal,
-                discount_type || order.discount_type,
-                discount_value || order.discount_value,
                 discountAmount,
                 total,
-                totalCost,
-                profit,
                 req.params.id
             ]
         );
@@ -734,7 +725,7 @@ exports.cancelOrder = async (req, res) => {
             });
         }
 
-        if (orders[0].status === 'cancelled') {
+        if (orders[0].order_status === 'cancelled') {
             return res.status(400).json({
                 success: false,
                 message: 'Order already cancelled'
@@ -756,7 +747,7 @@ exports.cancelOrder = async (req, res) => {
 
         // Update order status
         await connection.query(
-            'UPDATE orders SET status = ? WHERE id = ?',
+            'UPDATE orders SET order_status = ? WHERE id = ?',
             ['cancelled', req.params.id]
         );
 

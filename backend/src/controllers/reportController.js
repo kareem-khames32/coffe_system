@@ -42,7 +42,7 @@ exports.getDashboardStats = async (req, res) => {
         const [lowStock] = await db.query(
             `SELECT COUNT(*) as count
              FROM raw_materials
-             WHERE current_stock <= minimum_stock`
+             WHERE current_stock <= min_stock`
         );
 
         // Top selling products (last 30 days)
