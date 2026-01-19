@@ -70,7 +70,7 @@ exports.createPurchase = async (req, res) => {
     }
 
     // Calculate total
-    const total_amount = items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unit_price)), 0);
+    const total_amount = items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unit_cost)), 0);
 
     // Insert purchase
     const [purchaseResult] = await connection.query(
@@ -83,14 +83,14 @@ exports.createPurchase = async (req, res) => {
 
     // Insert items and update stock
     for (const item of items) {
-      const { raw_material_id, quantity, unit_price } = item;
-      const total_price = parseFloat(quantity) * parseFloat(unit_price);
+      const { raw_material_id, quantity, unit, unit_cost } = item;
+      const total_cost = parseFloat(quantity) * parseFloat(unit_cost);
 
       // Insert item
       await connection.query(
-        `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit_price, total_price)
-         VALUES (?, ?, ?, ?, ?)`,
-        [purchaseId, raw_material_id, quantity, unit_price, total_price]
+        `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit, unit_cost, total_cost)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [purchaseId, raw_material_id, quantity, unit, unit_cost, total_cost]
       );
 
       // Update stock
@@ -98,14 +98,14 @@ exports.createPurchase = async (req, res) => {
         `UPDATE raw_materials
          SET current_stock = current_stock + ?, unit_cost = ?
          WHERE id = ?`,
-        [quantity, unit_price, raw_material_id]
+        [quantity, unit_cost, raw_material_id]
       );
 
       // Log transaction
       await connection.query(
-        `INSERT INTO inventory_transactions (raw_material_id, transaction_type, quantity, unit_cost, reference_type, reference_id, created_by)
-         VALUES (?, 'purchase', ?, ?, 'purchase', ?, ?)`,
-        [raw_material_id, quantity, unit_price, purchaseId, req.user?.id || null]
+        `INSERT INTO inventory_transactions (raw_material_id, transaction_type, quantity, reference_type, reference_id, created_by)
+         VALUES (?, 'purchase', ?, 'purchase', ?, ?)`,
+        [raw_material_id, quantity, purchaseId, req.user?.id || null]
       );
     }
 

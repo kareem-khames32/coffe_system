@@ -125,8 +125,7 @@ async function createPurchaseWithCredit() {
                     raw_material_id: testData.rawMaterial.id,
                     quantity: 10,
                     unit: 'كيلو',
-                    unit_cost: 100,
-                    total_cost: 1000
+                    unit_cost: 100
                 }
             ]
         });
