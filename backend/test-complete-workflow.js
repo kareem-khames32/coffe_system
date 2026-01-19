@@ -149,7 +149,18 @@ async function checkPaymentAutoCreated() {
     try {
         const response = await api.get('/supplier-payments');
 
-        const payments = response.data.data;
+        console.log('DEBUG: Response structure:', {
+            success: response.data.success,
+            dataType: typeof response.data.data,
+            isArray: Array.isArray(response.data.data),
+            dataLength: response.data.data?.length,
+            data: response.data.data
+        });
+
+        const payments = Array.isArray(response.data.data) ? response.data.data : [];
+        log(`   Found ${payments.length} total payments`, 'white');
+        log(`   Looking for purchase_id: ${testData.purchase.id}`, 'white');
+
         const autoPayment = payments.find(p => p.purchase_id === testData.purchase.id);
 
         if (autoPayment) {
@@ -162,10 +173,17 @@ async function checkPaymentAutoCreated() {
             return true;
         } else {
             log('❌ Payment was NOT auto-created!', 'red');
+            log('   Available payments:', 'yellow');
+            payments.forEach(p => {
+                console.log(`     - ID: ${p.id}, purchase_id: ${p.purchase_id}, amount: ${p.amount_due}`);
+            });
             return false;
         }
     } catch (error) {
         log('❌ Failed to check payments: ' + (error.response?.data?.message || error.message), 'red');
+        if (error.response?.data) {
+            console.log('Error response:', error.response.data);
+        }
         return false;
     }
 }
