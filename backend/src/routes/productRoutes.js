@@ -14,7 +14,6 @@ router.get('/category/:categoryId', verifyToken, checkPermission('can_view_inven
 
 router.post('/', verifyToken, checkPermission('can_edit_inventory'), productController.createProduct);
 router.put('/:id', verifyToken, checkPermission('can_edit_inventory'), productController.updateProduct);
-router.patch('/:id/stock', verifyToken, checkPermission('can_edit_inventory'), productController.updateStock);
 router.delete('/:id', verifyToken, checkPermission('can_edit_inventory'), productController.deleteProduct);
 
 module.exports = router;
