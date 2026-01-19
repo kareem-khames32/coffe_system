@@ -97,7 +97,7 @@ exports.createInStoreOrder = async (req, res) => {
 
         // Get complete order data with items for invoice
         const [completeOrder] = await connection.query(
-            `SELECT o.*, u.full_name as cashier_name
+            `SELECT o.*, o.total_amount as total, u.full_name as cashier_name
              FROM orders o
              LEFT JOIN users u ON o.created_by = u.id
              WHERE o.id = ?`,
