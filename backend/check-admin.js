@@ -12,7 +12,7 @@ async function checkAdmin() {
     try {
         // Get admin user
         const [users] = await connection.query(
-            'SELECT id, username, password, full_name, role FROM users WHERE username = ?',
+            'SELECT id, username, password, full_name, role, is_active FROM users WHERE username = ?',
             ['admin']
         );
 
@@ -27,6 +27,7 @@ async function checkAdmin() {
         console.log('   Username:', admin.username);
         console.log('   Full Name:', admin.full_name);
         console.log('   Role:', admin.role);
+        console.log('   Is Active:', admin.is_active ? '✅ TRUE' : '❌ FALSE');
         console.log('   Password Hash:', admin.password.substring(0, 20) + '...');
 
         // Test password
@@ -37,14 +38,20 @@ async function checkAdmin() {
         console.log('   Testing password:', testPassword);
         console.log('   Result:', isValid ? '✅ VALID' : '❌ INVALID');
 
-        if (!isValid) {
-            console.log('\n🔧 Fixing password...');
+        // Check if needs fixing
+        const needsFix = !isValid || !admin.is_active;
+
+        if (needsFix) {
+            console.log('\n🔧 Fixing admin user...');
+            if (!isValid) console.log('   - Password is invalid');
+            if (!admin.is_active) console.log('   - User is not active');
+
             const newHash = await bcrypt.hash('admin123', 10);
             await connection.query(
-                'UPDATE users SET password = ? WHERE username = ?',
+                'UPDATE users SET password = ?, is_active = TRUE WHERE username = ?',
                 [newHash, 'admin']
             );
-            console.log('   ✅ Password updated!');
+            console.log('   ✅ Password updated and user activated!');
 
             // Test again
             const [updatedUsers] = await connection.query(
@@ -53,6 +60,8 @@ async function checkAdmin() {
             );
             const isValidNow = await bcrypt.compare('admin123', updatedUsers[0].password);
             console.log('   ✅ Verification:', isValidNow ? 'VALID' : 'STILL INVALID');
+        } else {
+            console.log('\n✅ Everything looks good! User is active and password is correct.');
         }
 
     } catch (error) {

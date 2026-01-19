@@ -31,14 +31,14 @@ async function setupSystem() {
         if (existing.length > 0) {
             // Update existing admin
             await connection.query(
-                'UPDATE users SET password = ?, full_name = ?, role = ? WHERE username = ?',
+                'UPDATE users SET password = ?, full_name = ?, role = ?, is_active = TRUE WHERE username = ?',
                 [passwordHash, 'Admin User', 'admin', 'admin']
             );
             console.log('   ✅ Admin user updated\n');
         } else {
             // Create new admin
             await connection.query(
-                'INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)',
+                'INSERT INTO users (username, password, full_name, role, is_active) VALUES (?, ?, ?, ?, TRUE)',
                 ['admin', passwordHash, 'Admin User', 'admin']
             );
             console.log('   ✅ Admin user created\n');
