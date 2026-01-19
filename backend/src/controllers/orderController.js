@@ -379,9 +379,12 @@ exports.getOrderById = async (req, res) => {
             });
         }
 
-        // Get order items
+        // Get order items with product details
         const [items] = await db.query(
-            'SELECT * FROM order_items WHERE order_id = ?',
+            `SELECT oi.*, p.name as product_name, oi.unit_price as price
+             FROM order_items oi
+             JOIN products p ON oi.product_id = p.id
+             WHERE oi.order_id = ?`,
             [req.params.id]
         );
 
@@ -421,7 +424,7 @@ exports.trackOrder = async (req, res) => {
 
         // Get order items with product names
         const [items] = await db.query(
-            `SELECT oi.quantity, oi.unit_price, oi.subtotal, p.name as product_name
+            `SELECT oi.quantity, oi.unit_price, oi.unit_price as price, oi.subtotal, p.name as product_name
              FROM order_items oi
              JOIN products p ON oi.product_id = p.id
              WHERE oi.order_id = ?`,
