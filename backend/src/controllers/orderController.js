@@ -69,30 +69,18 @@ exports.createInStoreOrder = async (req, res) => {
 
         // Add order items and update stock
         for (const item of items) {
-            // Get product info (name, cost_price)
-            const [products] = await connection.query(
-                'SELECT name, cost_price FROM products WHERE id = ?',
-                [item.product_id]
-            );
-
-            const costPrice = item.cost_price !== undefined ? item.cost_price : (products[0].cost_price || 0);
             const itemSubtotal = item.price * item.quantity;
-            const itemProfit = (item.price - costPrice) * item.quantity;
 
-            // Insert order item
+            // Insert order item (matching actual order_items schema)
             await connection.query(
-                `INSERT INTO order_items (order_id, product_id, product_name, quantity, price,
-                 cost_price, subtotal, profit)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal)
+                 VALUES (?, ?, ?, ?, ?)`,
                 [
                     orderId,
                     item.product_id,
-                    products[0].name,
                     item.quantity,
                     item.price,
-                    costPrice,
-                    itemSubtotal,
-                    itemProfit
+                    itemSubtotal
                 ]
             );
         }
@@ -243,26 +231,21 @@ exports.createOnlineOrder = async (req, res) => {
         // Add order items and update stock
         for (const item of items) {
             const [products] = await connection.query(
-                'SELECT name, price, cost_price FROM products WHERE id = ?',
+                'SELECT price FROM products WHERE id = ?',
                 [item.product_id]
             );
 
             const itemSubtotal = products[0].price * item.quantity;
-            const itemProfit = (products[0].price - products[0].cost_price) * item.quantity;
 
             await connection.query(
-                `INSERT INTO order_items (order_id, product_id, product_name, quantity, price,
-                 cost_price, subtotal, profit)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal)
+                 VALUES (?, ?, ?, ?, ?)`,
                 [
                     orderId,
                     item.product_id,
-                    products[0].name,
                     item.quantity,
                     products[0].price,
-                    products[0].cost_price,
-                    itemSubtotal,
-                    itemProfit
+                    itemSubtotal
                 ]
             );
         }
@@ -436,9 +419,12 @@ exports.trackOrder = async (req, res) => {
             });
         }
 
-        // Get order items
+        // Get order items with product names
         const [items] = await db.query(
-            'SELECT product_name, quantity, price, subtotal FROM order_items WHERE order_id = ?',
+            `SELECT oi.quantity, oi.unit_price, oi.subtotal, p.name as product_name
+             FROM order_items oi
+             JOIN products p ON oi.product_id = p.id
+             WHERE oi.order_id = ?`,
             [orders[0].id]
         );
 
@@ -617,26 +603,21 @@ exports.editOrder = async (req, res) => {
         // 5. Add new items and deduct from stock
         for (const item of items) {
             const [products] = await connection.query(
-                'SELECT name, price, cost_price FROM products WHERE id = ?',
+                'SELECT price FROM products WHERE id = ?',
                 [item.product_id]
             );
 
             const itemSubtotal = products[0].price * item.quantity;
-            const itemProfit = (products[0].price - products[0].cost_price) * item.quantity;
 
             await connection.query(
-                `INSERT INTO order_items (order_id, product_id, product_name, quantity, price,
-                 cost_price, subtotal, profit)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal)
+                 VALUES (?, ?, ?, ?, ?)`,
                 [
                     req.params.id,
                     item.product_id,
-                    products[0].name,
                     item.quantity,
                     products[0].price,
-                    products[0].cost_price,
-                    itemSubtotal,
-                    itemProfit
+                    itemSubtotal
                 ]
             );
         }

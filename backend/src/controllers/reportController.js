@@ -138,17 +138,23 @@ exports.getSalesReport = async (req, res) => {
 
         const [orders] = await db.query(query, params);
 
-        // Calculate totals from order_items (since profit is not in orders table)
+        // Calculate totals
         const totalSales = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
 
-        // Get total profit from order_items
+        // Calculate profit from order_items (unit_price - cost_price) * quantity
         let totalProfit = 0;
         for (const order of orders) {
             const [items] = await db.query(
-                'SELECT SUM(profit) as order_profit FROM order_items WHERE order_id = ?',
+                `SELECT oi.quantity, oi.unit_price, p.cost_price
+                 FROM order_items oi
+                 JOIN products p ON oi.product_id = p.id
+                 WHERE oi.order_id = ?`,
                 [order.id]
             );
-            totalProfit += parseFloat(items[0].order_profit || 0);
+            for (const item of items) {
+                const itemProfit = (parseFloat(item.unit_price) - parseFloat(item.cost_price || 0)) * parseFloat(item.quantity);
+                totalProfit += itemProfit;
+            }
         }
 
         const totalOrders = orders.length;
