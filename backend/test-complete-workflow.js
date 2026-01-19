@@ -269,9 +269,7 @@ async function createProductRecipe() {
 async function createSaleOrder() {
     log('\n🛒 STEP 9: Creating sale order (5 cups of قهوة تركي)...', 'cyan');
     try {
-        const orderNumber = 'ORD-' + Date.now();
-        const response = await api.post('/orders', {
-            order_number: orderNumber,
+        const response = await api.post('/orders/in-store', {
             order_type: 'dine-in',
             table_number: '5',
             customer_name: 'عميل تجريبي',
@@ -279,24 +277,20 @@ async function createSaleOrder() {
                 {
                     product_id: testData.product.id,
                     quantity: 5,  // 5 cups
-                    unit_price: 15,
-                    subtotal: 75
+                    unit_price: 15
                 }
             ],
-            subtotal: 75,
-            discount_amount: 0,
-            tax_amount: 0,
-            total_amount: 75,
+            discount_type: 'none',
+            discount_value: 0,
             payment_method: 'cash',
-            payment_status: 'paid',
-            order_status: 'completed'
+            notes: 'Test order from automated workflow'
         });
 
         testData.order = response.data.data;
         log('✅ Sale order created!', 'green');
-        log(`   Order number: ${orderNumber}`, 'white');
+        log(`   Order number: ${testData.order.order_number}`, 'white');
         log(`   Items: 5x قهوة تركي`, 'white');
-        log(`   Total: 75 EGP`, 'white');
+        log(`   Total: ${testData.order.total_amount} EGP`, 'white');
         return true;
     } catch (error) {
         log('❌ Failed to create order: ' + (error.response?.data?.message || error.message), 'red');
