@@ -7,9 +7,9 @@ exports.getDashboardStats = async (req, res) => {
 
         // Today's sales
         const [todaySales] = await db.query(
-            `SELECT COALESCE(SUM(total), 0) as total
+            `SELECT COALESCE(SUM(total_amount), 0) as total
              FROM orders
-             WHERE DATE(created_at) = ? AND status IN ('completed', 'ready')`,
+             WHERE DATE(created_at) = ? AND order_status IN ('completed', 'ready', 'served')`,
             [today]
         );
 
@@ -25,14 +25,16 @@ exports.getDashboardStats = async (req, res) => {
         const [pendingOrders] = await db.query(
             `SELECT COUNT(*) as count
              FROM orders
-             WHERE status = 'pending'`
+             WHERE order_status = 'pending'`
         );
 
-        // Today's profit
+        // Today's profit (calculate from order items: revenue - cost)
         const [todayProfit] = await db.query(
-            `SELECT COALESCE(SUM(profit), 0) as profit
-             FROM orders
-             WHERE DATE(created_at) = ? AND status IN ('completed', 'ready')`,
+            `SELECT COALESCE(SUM(oi.subtotal - (p.cost_price * oi.quantity)), 0) as profit
+             FROM order_items oi
+             JOIN orders o ON oi.order_id = o.id
+             JOIN products p ON oi.product_id = p.id
+             WHERE DATE(o.created_at) = ? AND o.order_status IN ('completed', 'ready', 'served')`,
             [today]
         );
 
@@ -45,43 +47,44 @@ exports.getDashboardStats = async (req, res) => {
 
         // Top selling products (last 30 days)
         const [topProducts] = await db.query(
-            `SELECT oi.product_name, SUM(oi.quantity) as total_sold, SUM(oi.subtotal) as revenue
+            `SELECT p.name as product_name, SUM(oi.quantity) as total_sold, SUM(oi.subtotal) as revenue
              FROM order_items oi
              JOIN orders o ON oi.order_id = o.id
+             JOIN products p ON oi.product_id = p.id
              WHERE o.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-             AND o.status IN ('completed', 'ready')
-             GROUP BY oi.product_id, oi.product_name
+             AND o.order_status IN ('completed', 'ready', 'served')
+             GROUP BY oi.product_id, p.name
              ORDER BY total_sold DESC
              LIMIT 5`
         );
 
         // Sales chart data (last 7 days)
         const [salesChart] = await db.query(
-            `SELECT DATE(created_at) as date, SUM(total) as sales, COUNT(*) as orders
+            `SELECT DATE(created_at) as date, SUM(total_amount) as sales, COUNT(*) as orders
              FROM orders
              WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-             AND status IN ('completed', 'ready')
+             AND order_status IN ('completed', 'ready', 'served')
              GROUP BY DATE(created_at)
              ORDER BY DATE(created_at) ASC`
         );
 
         // Online vs In-Store comparison (last 30 days)
         const [orderTypes] = await db.query(
-            `SELECT order_type, COUNT(*) as count, SUM(total) as total
+            `SELECT order_type, COUNT(*) as count, SUM(total_amount) as total
              FROM orders
              WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-             AND status IN ('completed', 'ready')
+             AND order_status IN ('completed', 'ready', 'served')
              GROUP BY order_type`
         );
 
         res.json({
             success: true,
             data: {
-                todaySales: todaySales[0].total,
-                todayOrders: todayOrders[0].count,
-                pendingOrders: pendingOrders[0].count,
-                todayProfit: todayProfit[0].profit,
-                lowStockProducts: lowStock[0].count,
+                todaySales: parseFloat(todaySales[0].total) || 0,
+                todayOrders: todayOrders[0].count || 0,
+                pendingOrders: pendingOrders[0].count || 0,
+                todayProfit: parseFloat(todayProfit[0].profit) || 0,
+                lowStockProducts: lowStock[0].count || 0,
                 topProducts,
                 salesChart,
                 orderTypes
@@ -89,9 +92,11 @@ exports.getDashboardStats = async (req, res) => {
         });
     } catch (error) {
         console.error('Get dashboard stats error:', error);
+        console.error('Error details:', error.message);
         res.status(500).json({
             success: false,
-            message: 'Server error'
+            message: 'Server error',
+            error: error.message
         });
     }
 };
