@@ -60,6 +60,7 @@ app.use('/api/raw-materials', rawMaterialRoutes);
 app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/inventory-purchases', inventoryPurchaseRoutes);
 app.use('/api/recipes', productRecipeRoutes);
+app.use('/api/product-recipes', productRecipeRoutes); // Alias for recipes
 app.use('/api/reports/inventory', inventoryReportsRoutes);
 app.use('/api/supplier-payments', supplierPaymentsRoutes);
 app.use('/api/material-batches', materialBatchesRoutes);

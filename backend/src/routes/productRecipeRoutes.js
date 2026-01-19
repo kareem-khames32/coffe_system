@@ -8,5 +8,6 @@ router.use(verifyToken);
 router.get('/product/:productId', productRecipeController.getProductRecipe);
 router.put('/product/:productId', productRecipeController.updateProductRecipe);
 router.post('/check-stock', productRecipeController.checkStockAvailability);
+router.post('/', productRecipeController.addRecipeItem);
 
 module.exports = router;

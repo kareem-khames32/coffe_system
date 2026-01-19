@@ -262,4 +262,86 @@ exports.checkStockAvailability = async (req, res) => {
   }
 };
 
+// Add single recipe item
+exports.addRecipeItem = async (req, res) => {
+  try {
+    const { product_id, raw_material_id, quantity_needed, unit, notes } = req.body;
+
+    // Validate required fields
+    if (!product_id || !raw_material_id || !quantity_needed || !unit) {
+      return res.status(400).json({
+        success: false,
+        message: 'المنتج، المادة الخام، الكمية، والوحدة مطلوبة'
+      });
+    }
+
+    // Check if product exists
+    const [product] = await db.query('SELECT id FROM products WHERE id = ?', [product_id]);
+    if (product.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'المنتج غير موجود'
+      });
+    }
+
+    // Check if raw material exists
+    const [material] = await db.query('SELECT id FROM raw_materials WHERE id = ?', [raw_material_id]);
+    if (material.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'المادة الخام غير موجودة'
+      });
+    }
+
+    // Check if recipe already exists
+    const [existing] = await db.query(
+      'SELECT id FROM product_recipes WHERE product_id = ? AND raw_material_id = ?',
+      [product_id, raw_material_id]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'الوصفة موجودة بالفعل. استخدم التعديل لتحديثها'
+      });
+    }
+
+    // Insert recipe
+    const [result] = await db.query(`
+      INSERT INTO product_recipes (product_id, raw_material_id, quantity_needed, unit, notes)
+      VALUES (?, ?, ?, ?, ?)
+    `, [product_id, raw_material_id, quantity_needed, unit, notes || null]);
+
+    // Get the created recipe
+    const [recipe] = await db.query(`
+      SELECT
+        pr.id,
+        pr.product_id,
+        pr.raw_material_id,
+        pr.quantity_needed,
+        pr.unit,
+        pr.notes,
+        rm.name AS material_name,
+        p.name AS product_name,
+        pr.created_at
+      FROM product_recipes pr
+      JOIN raw_materials rm ON pr.raw_material_id = rm.id
+      JOIN products p ON pr.product_id = p.id
+      WHERE pr.id = ?
+    `, [result.insertId]);
+
+    res.json({
+      success: true,
+      message: 'تم إضافة الوصفة بنجاح',
+      data: recipe[0]
+    });
+  } catch (error) {
+    console.error('Add recipe error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطأ في إضافة الوصفة'
+    });
+  }
+};
+
 module.exports = exports;
