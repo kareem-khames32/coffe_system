@@ -54,7 +54,13 @@ async function login() {
             return true;
         }
     } catch (error) {
-        log('❌ Login failed: ' + error.message, 'red');
+        log('❌ Login failed!', 'red');
+        console.error('Full error:', error.message);
+        console.error('Error code:', error.code);
+        if (error.response) {
+            console.error('Response status:', error.response.status);
+            console.error('Response data:', error.response.data);
+        }
         return false;
     }
 }
