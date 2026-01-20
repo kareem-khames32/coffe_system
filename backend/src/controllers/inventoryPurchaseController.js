@@ -153,9 +153,9 @@ exports.createPurchase = async (req, res) => {
       );
     }
 
-    // 💰 Auto-create supplier payment record for credit purchases
+    // 💰 Calculate due date for credit purchases (stored in inventory_purchases.due_date)
     if (payment_terms && payment_terms !== 'cash' && supplier_id) {
-      console.log('💰 Auto-creating payment record for credit purchase...');
+      console.log('💰 Setting due date for credit purchase...');
       console.log('   Payment terms:', payment_terms);
       console.log('   Supplier ID:', supplier_id);
       console.log('   Total amount:', total_amount);
@@ -170,14 +170,13 @@ exports.createPurchase = async (req, res) => {
       const dueDate = new Date(purchase_date);
       dueDate.setDate(dueDate.getDate() + daysToAdd);
 
-      // Create payment record with status 'unpaid'
+      // Update purchase with due date
       await connection.query(
-        `INSERT INTO supplier_payments (purchase_id, supplier_id, amount_due, amount_paid, payment_status, due_date, amount, payment_date, created_by)
-         VALUES (?, ?, ?, 0, 'unpaid', ?, 0, ?, ?)`,
-        [purchaseId, supplier_id, total_amount, dueDate.toISOString().split('T')[0], purchase_date, req.user?.id || 1]
+        `UPDATE inventory_purchases SET due_date = ? WHERE id = ?`,
+        [dueDate.toISOString().split('T')[0], purchaseId]
       );
 
-      console.log('✅ Payment record created successfully!');
+      console.log('✅ Due date set successfully!');
     }
 
     await connection.commit();

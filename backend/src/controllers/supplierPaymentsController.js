@@ -29,7 +29,7 @@ exports.getAllPayments = async (req, res) => {
             JOIN suppliers s ON sp.supplier_id = s.id
             LEFT JOIN inventory_purchases ip ON sp.purchase_id = ip.id
             LEFT JOIN users u ON sp.created_by = u.id
-            WHERE 1=1
+            WHERE sp.amount > 0
         `;
 
         const params = [];
