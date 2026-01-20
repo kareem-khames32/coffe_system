@@ -21,10 +21,14 @@ async function clearAllDataExceptUsers() {
         // Delete in correct order (respecting foreign keys)
 
         // 1. Delete order items first (depend on orders)
-        const [orderItemsResult] = await connection.query('DELETE FROM order_items');
-        console.log(`✅ Deleted ${orderItemsResult.affectedRows} order items`);
+        try {
+            const [orderItemsResult] = await connection.query('DELETE FROM order_items');
+            console.log(`✅ Deleted ${orderItemsResult.affectedRows} order items`);
+        } catch (err) {
+            console.log('ℹ️  No order_items table (OK)');
+        }
 
-        // 2. Delete order edit history if exists
+        // 2. Delete order edit history
         try {
             const [historyResult] = await connection.query('DELETE FROM order_edit_history');
             console.log(`✅ Deleted ${historyResult.affectedRows} order edit history records`);
@@ -33,8 +37,12 @@ async function clearAllDataExceptUsers() {
         }
 
         // 3. Delete orders
-        const [ordersResult] = await connection.query('DELETE FROM orders');
-        console.log(`✅ Deleted ${ordersResult.affectedRows} orders`);
+        try {
+            const [ordersResult] = await connection.query('DELETE FROM orders');
+            console.log(`✅ Deleted ${ordersResult.affectedRows} orders`);
+        } catch (err) {
+            console.log('ℹ️  No orders table (OK)');
+        }
 
         // 4. Delete product recipes (depend on products)
         try {
@@ -44,7 +52,31 @@ async function clearAllDataExceptUsers() {
             console.log('ℹ️  No product_recipes table (OK)');
         }
 
-        // 5. Delete products
+        // 5. Delete inventory transactions
+        try {
+            const [inventoryTransResult] = await connection.query('DELETE FROM inventory_transactions');
+            console.log(`✅ Deleted ${inventoryTransResult.affectedRows} inventory transactions`);
+        } catch (err) {
+            console.log('ℹ️  No inventory_transactions table (OK)');
+        }
+
+        // 6. Delete inventory purchase items
+        try {
+            const [purchaseItemsResult] = await connection.query('DELETE FROM inventory_purchase_items');
+            console.log(`✅ Deleted ${purchaseItemsResult.affectedRows} inventory purchase items`);
+        } catch (err) {
+            console.log('ℹ️  No inventory_purchase_items table (OK)');
+        }
+
+        // 7. Delete inventory purchases
+        try {
+            const [purchasesResult] = await connection.query('DELETE FROM inventory_purchases');
+            console.log(`✅ Deleted ${purchasesResult.affectedRows} inventory purchases`);
+        } catch (err) {
+            console.log('ℹ️  No inventory_purchases table (OK)');
+        }
+
+        // 8. Delete products
         try {
             const [productsResult] = await connection.query('DELETE FROM products');
             console.log(`✅ Deleted ${productsResult.affectedRows} products`);
@@ -52,7 +84,7 @@ async function clearAllDataExceptUsers() {
             console.log('ℹ️  No products table (OK)');
         }
 
-        // 6. Delete raw materials
+        // 9. Delete raw materials
         try {
             const [rawMaterialsResult] = await connection.query('DELETE FROM raw_materials');
             console.log(`✅ Deleted ${rawMaterialsResult.affectedRows} raw materials`);
@@ -60,7 +92,23 @@ async function clearAllDataExceptUsers() {
             console.log('ℹ️  No raw_materials table (OK)');
         }
 
-        // 7. Delete categories
+        // 10. Delete suppliers
+        try {
+            const [suppliersResult] = await connection.query('DELETE FROM suppliers');
+            console.log(`✅ Deleted ${suppliersResult.affectedRows} suppliers`);
+        } catch (err) {
+            console.log('ℹ️  No suppliers table (OK)');
+        }
+
+        // 11. Delete warehouses
+        try {
+            const [warehousesResult] = await connection.query('DELETE FROM warehouses');
+            console.log(`✅ Deleted ${warehousesResult.affectedRows} warehouses`);
+        } catch (err) {
+            console.log('ℹ️  No warehouses table (OK)');
+        }
+
+        // 12. Delete categories
         try {
             const [categoriesResult] = await connection.query('DELETE FROM categories');
             console.log(`✅ Deleted ${categoriesResult.affectedRows} categories`);
