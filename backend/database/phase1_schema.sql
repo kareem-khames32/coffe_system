@@ -125,6 +125,7 @@ ADD INDEX idx_due_date (due_date);
 CREATE OR REPLACE VIEW unpaid_purchases AS
 SELECT
     ip.id,
+    ip.supplier_id,
     ip.invoice_number,
     ip.purchase_date,
     ip.due_date,
