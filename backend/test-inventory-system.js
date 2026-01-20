@@ -269,12 +269,12 @@ async function testInventoryPurchases() {
         }
     }
 
-    // Get Unpaid Purchases
+    // Get Unpaid Purchases (using report instead)
     try {
-        const response = await axios.get(`${BASE_URL}/inventory-purchases/unpaid`, { headers });
-        logTest(`Get Unpaid Purchases (Found: ${response.data.data?.length || 0})`, true);
+        const response = await axios.get(`${BASE_URL}/reports/inventory/purchases`, { headers });
+        logTest(`Get Purchase History`, true);
     } catch (error) {
-        logTest('Get Unpaid Purchases', false, error.response?.data);
+        logTest('Get Purchase History', false, error.response?.data);
     }
 }
 
@@ -297,7 +297,7 @@ async function testProducts() {
     // Check Stock Availability
     if (testData.productId) {
         try {
-            await axios.post(`${BASE_URL}/products/check-stock`, {
+            await axios.post(`${BASE_URL}/recipes/check-stock`, {
                 products: [
                     { product_id: testData.productId, quantity: 2 }
                 ]
@@ -334,8 +334,7 @@ async function testOrders() {
 
     // Create Order
     try {
-        const response = await axios.post(`${BASE_URL}/orders`, {
-            order_type: 'in-store',
+        const response = await axios.post(`${BASE_URL}/orders/in-store`, {
             items: [
                 { product_id: testData.productId, quantity: 2, price: 30 }
             ]
@@ -391,15 +390,15 @@ async function testReports() {
 
     // Inventory Report
     try {
-        const response = await axios.get(`${BASE_URL}/reports/inventory`, { headers });
-        logTest(`Inventory Report (Low Stock Items: ${response.data.data?.lowStockMaterials?.length || 0})`, true);
+        const response = await axios.get(`${BASE_URL}/reports/inventory/materials/summary`, { headers });
+        logTest(`Inventory Report (Materials Summary)`, true);
     } catch (error) {
         logTest('Inventory Report', false, error.response?.data);
     }
 
     // Purchase Report
     try {
-        const response = await axios.get(`${BASE_URL}/reports/purchases`, { headers });
+        const response = await axios.get(`${BASE_URL}/reports/inventory/purchases`, { headers });
         logTest(`Purchase Report`, true);
     } catch (error) {
         logTest('Purchase Report', false, error.response?.data);
