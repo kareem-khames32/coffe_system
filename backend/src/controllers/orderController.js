@@ -300,7 +300,7 @@ exports.getAllOrders = async (req, res) => {
         } = req.query;
 
         let query = `
-            SELECT o.*, u.full_name as cashier_name
+            SELECT o.*, o.total_amount as total, u.full_name as cashier_name
             FROM orders o
             LEFT JOIN users u ON o.created_by = u.id
             WHERE 1=1
@@ -368,7 +368,7 @@ exports.getPendingOrdersCount = async (req, res) => {
 exports.getOrderById = async (req, res) => {
     try {
         const [orders] = await db.query(
-            `SELECT o.*, u.full_name as cashier_name
+            `SELECT o.*, o.total_amount as total, u.full_name as cashier_name
              FROM orders o
              LEFT JOIN users u ON o.created_by = u.id
              WHERE o.id = ?`,
@@ -412,7 +412,7 @@ exports.trackOrder = async (req, res) => {
     try {
         const [orders] = await db.query(
             `SELECT o.id, o.order_number, o.order_type, o.order_status, o.customer_name,
-             o.customer_phone, o.customer_address, o.total_amount, o.created_at, o.updated_at
+             o.customer_phone, o.customer_address, o.total_amount, o.total_amount as total, o.created_at, o.updated_at
              FROM orders o
              WHERE o.order_number = ?`,
             [req.params.orderNumber]
