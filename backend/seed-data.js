@@ -20,15 +20,15 @@ async function seedData() {
         // ====== 1. WAREHOUSES (المستودعات) ======
         console.log('🏢 Adding warehouses...');
         const warehouses = [
-            ['المستودع الرئيسي', 'شارع الجامعة، القاهرة', 'مستودع رئيسي لجميع المواد الخام', '01012345678'],
-            ['مستودع الفرع الثاني', 'شارع الهرم، الجيزة', 'مستودع فرعي', '01098765432'],
+            ['المستودع الرئيسي', 'شارع الجامعة، القاهرة', 'مستودع رئيسي لجميع المواد الخام'],
+            ['مستودع الفرع الثاني', 'شارع الهرم، الجيزة', 'مستودع فرعي'],
         ];
 
         const warehouseIds = [];
-        for (const [name, location, description, phone] of warehouses) {
+        for (const [name, location, description] of warehouses) {
             const [result] = await connection.query(
-                'INSERT INTO warehouses (name, location, description, contact_phone, is_active) VALUES (?, ?, ?, ?, 1)',
-                [name, location, description, phone]
+                'INSERT INTO warehouses (name, location, description, is_active) VALUES (?, ?, ?, 1)',
+                [name, location, description]
             );
             warehouseIds.push(result.insertId);
         }
@@ -37,16 +37,16 @@ async function seedData() {
         // ====== 2. SUPPLIERS (الموردين) ======
         console.log('\n🚚 Adding suppliers...');
         const suppliers = [
-            ['شركة القهوة المصرية', 'البن والمواد الخام', 'أحمد محمد', '01123456789', 'ahmed@coffee.com', 'شارع التحرير، القاهرة'],
-            ['مؤسسة الألبان الطازجة', 'الحليب ومشتقاته', 'سارة علي', '01198765432', 'sara@dairy.com', 'شارع الهرم، الجيزة'],
-            ['شركة المواد الغذائية', 'سكر وتوابل ومواد غذائية', 'محمود حسن', '01234567890', 'mahmoud@foods.com', 'المنصورة'],
+            ['شركة القهوة المصرية', 'أحمد محمد', '01123456789', 'ahmed@coffee.com', 'شارع التحرير، القاهرة'],
+            ['مؤسسة الألبان الطازجة', 'سارة علي', '01198765432', 'sara@dairy.com', 'شارع الهرم، الجيزة'],
+            ['شركة المواد الغذائية', 'محمود حسن', '01234567890', 'mahmoud@foods.com', 'المنصورة'],
         ];
 
         const supplierIds = [];
-        for (const [name, category, contact, phone, email, address] of suppliers) {
+        for (const [name, contact, phone, email, address] of suppliers) {
             const [result] = await connection.query(
-                'INSERT INTO suppliers (name, category, contact_person, contact_phone, email, address, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)',
-                [name, category, contact, phone, email, address]
+                'INSERT INTO suppliers (name, contact_person, phone, email, address, is_active) VALUES (?, ?, ?, ?, ?, 1)',
+                [name, contact, phone, email, address]
             );
             supplierIds.push(result.insertId);
         }
@@ -104,14 +104,14 @@ async function seedData() {
 
         // Purchase 1: بن عربي
         const [purchase1] = await connection.query(
-            `INSERT INTO inventory_purchases (purchase_number, supplier_id, warehouse_id, total_amount, payment_status, notes, created_by)
-             VALUES (?, ?, ?, ?, 'paid', 'شراء بن عربي', ?)`,
-            ['PUR-001', supplierIds[0], warehouseIds[0], 300, userId]
+            `INSERT INTO inventory_purchases (supplier_id, warehouse_id, purchase_date, total_amount, payment_status, notes, created_by)
+             VALUES (?, ?, CURDATE(), ?, 'paid', 'شراء بن عربي', ?)`,
+            [supplierIds[0], warehouseIds[0], 300, userId]
         );
         await connection.query(
-            `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit_price, total_price)
-             VALUES (?, ?, ?, ?, ?)`,
-            [purchase1.insertId, rawMaterialIds[0].id, 2000, 0.15, 300]
+            `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit, unit_cost, total_cost)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [purchase1.insertId, rawMaterialIds[0].id, 2000, 'جرام', 0.15, 300]
         );
         // Update stock
         await connection.query(
@@ -121,34 +121,34 @@ async function seedData() {
 
         // Purchase 2: حليب
         const [purchase2] = await connection.query(
-            `INSERT INTO inventory_purchases (purchase_number, supplier_id, warehouse_id, total_amount, payment_status, notes, created_by)
-             VALUES (?, ?, ?, ?, 'paid', 'شراء حليب طازج', ?)`,
-            ['PUR-002', supplierIds[1], warehouseIds[0], 1000, userId]
+            `INSERT INTO inventory_purchases (supplier_id, warehouse_id, purchase_date, total_amount, payment_status, notes, created_by)
+             VALUES (?, ?, CURDATE(), ?, 'paid', 'شراء حليب طازج', ?)`,
+            [supplierIds[1], warehouseIds[0], 1000, userId]
         );
         await connection.query(
-            `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit_price, total_price)
-             VALUES (?, ?, ?, ?, ?)`,
-            [purchase2.insertId, rawMaterialIds[1].id, 50000, 0.02, 1000]
+            `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit, unit_cost, total_cost)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [purchase2.insertId, rawMaterialIds[1].id, 50000, 'مل', 0.02, 1000]
         );
         await connection.query(
             'UPDATE raw_materials SET current_stock = current_stock + ? WHERE id = ?',
             [50000, rawMaterialIds[1].id]
         );
 
-        // Purchase 3: سكر
+        // Purchase 3: سكر وكاكاو وتوابل
         const [purchase3] = await connection.query(
-            `INSERT INTO inventory_purchases (purchase_number, supplier_id, warehouse_id, total_amount, payment_status, notes, created_by)
-             VALUES (?, ?, ?, ?, 'paid', 'شراء سكر وكاكاو وتوابل', ?)`,
-            ['PUR-003', supplierIds[2], warehouseIds[0], 290, userId]
+            `INSERT INTO inventory_purchases (supplier_id, warehouse_id, purchase_date, total_amount, payment_status, notes, created_by)
+             VALUES (?, ?, CURDATE(), ?, 'paid', 'شراء سكر وكاكاو وتوابل', ?)`,
+            [supplierIds[2], warehouseIds[0], 290, userId]
         );
         await connection.query(
-            `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit_price, total_price)
-             VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)`,
+            `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit, unit_cost, total_cost)
+             VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?)`,
             [
-                purchase3.insertId, rawMaterialIds[2].id, 10000, 0.008, 80,
-                purchase3.insertId, rawMaterialIds[3].id, 1000, 0.045, 45,
-                purchase3.insertId, rawMaterialIds[4].id, 500, 0.30, 150,
-                purchase3.insertId, rawMaterialIds[5].id, 200, 0.055, 11
+                purchase3.insertId, rawMaterialIds[2].id, 10000, 'جرام', 0.008, 80,
+                purchase3.insertId, rawMaterialIds[3].id, 1000, 'جرام', 0.045, 45,
+                purchase3.insertId, rawMaterialIds[4].id, 500, 'مل', 0.30, 150,
+                purchase3.insertId, rawMaterialIds[5].id, 200, 'مل', 0.055, 11
             ]
         );
         await connection.query('UPDATE raw_materials SET current_stock = current_stock + ? WHERE id = ?', [10000, rawMaterialIds[2].id]);
@@ -158,14 +158,14 @@ async function seedData() {
 
         // Purchase 4: كريمة خفق
         const [purchase4] = await connection.query(
-            `INSERT INTO inventory_purchases (purchase_number, supplier_id, warehouse_id, total_amount, payment_status, notes, created_by)
-             VALUES (?, ?, ?, ?, 'paid', 'شراء كريمة خفق', ?)`,
-            ['PUR-004', supplierIds[1], warehouseIds[0], 70, userId]
+            `INSERT INTO inventory_purchases (supplier_id, warehouse_id, purchase_date, total_amount, payment_status, notes, created_by)
+             VALUES (?, ?, CURDATE(), ?, 'paid', 'شراء كريمة خفق', ?)`,
+            [supplierIds[1], warehouseIds[0], 70, userId]
         );
         await connection.query(
-            `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit_price, total_price)
-             VALUES (?, ?, ?, ?, ?)`,
-            [purchase4.insertId, rawMaterialIds[6].id, 2000, 0.035, 70]
+            `INSERT INTO inventory_purchase_items (purchase_id, raw_material_id, quantity, unit, unit_cost, total_cost)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [purchase4.insertId, rawMaterialIds[6].id, 2000, 'مل', 0.035, 70]
         );
         await connection.query(
             'UPDATE raw_materials SET current_stock = current_stock + ? WHERE id = ?',
