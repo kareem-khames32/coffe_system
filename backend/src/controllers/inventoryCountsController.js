@@ -9,14 +9,14 @@ exports.getAllCounts = async (req, res) => {
       SELECT
         ic.*,
         w.name AS warehouse_name,
-        u1.full_name AS counted_by_name,
-        u2.full_name AS approved_by_name,
+        u1.full_name AS created_by_name,
+        u2.full_name AS completed_by_name,
         (SELECT COUNT(*) FROM inventory_count_items WHERE count_id = ic.id) AS items_count,
         (SELECT COUNT(*) FROM inventory_count_items ici WHERE ici.count_id = ic.id AND ici.variance != 0) AS variance_count
       FROM inventory_counts ic
       JOIN warehouses w ON ic.warehouse_id = w.id
-      JOIN users u1 ON ic.counted_by = u1.id
-      LEFT JOIN users u2 ON ic.approved_by = u2.id
+      JOIN users u1 ON ic.created_by = u1.id
+      LEFT JOIN users u2 ON ic.completed_by = u2.id
       WHERE 1=1
     `;
     const params = [];
@@ -68,12 +68,12 @@ exports.getCountById = async (req, res) => {
       `SELECT
          ic.*,
          w.name AS warehouse_name,
-         u1.full_name AS counted_by_name,
-         u2.full_name AS approved_by_name
+         u1.full_name AS created_by_name,
+         u2.full_name AS completed_by_name
        FROM inventory_counts ic
        JOIN warehouses w ON ic.warehouse_id = w.id
-       JOIN users u1 ON ic.counted_by = u1.id
-       LEFT JOIN users u2 ON ic.approved_by = u2.id
+       JOIN users u1 ON ic.created_by = u1.id
+       LEFT JOIN users u2 ON ic.completed_by = u2.id
        WHERE ic.id = ?`,
       [id]
     );
@@ -133,15 +133,12 @@ exports.createCount = async (req, res) => {
       });
     }
 
-    // Generate count number
-    const countNumber = `CNT-${Date.now()}`;
-
     // Insert count
     const [result] = await connection.query(
       `INSERT INTO inventory_counts
-       (count_number, warehouse_id, count_date, counted_by, notes)
-       VALUES (?, ?, ?, ?, ?)`,
-      [countNumber, warehouse_id, count_date, req.user.id, notes]
+       (warehouse_id, count_date, created_by, notes)
+       VALUES (?, ?, ?, ?)`,
+      [warehouse_id, count_date, req.user.id, notes]
     );
 
     await connection.commit();
@@ -151,7 +148,6 @@ exports.createCount = async (req, res) => {
       message: 'تم إنشاء الجرد بنجاح',
       data: {
         id: result.insertId,
-        count_number: countNumber,
       },
     });
   } catch (error) {
@@ -359,7 +355,7 @@ exports.completeCount = async (req, res) => {
     // Update count status
     await connection.query(
       `UPDATE inventory_counts
-       SET status = 'completed', approved_by = ?, completed_at = NOW()
+       SET status = 'completed', completed_by = ?, completed_at = NOW()
        WHERE id = ?`,
       [req.user.id, id]
     );
@@ -394,7 +390,7 @@ exports.completeCount = async (req, res) => {
             quantity,
             req.user.id,
             req.user.id,
-            `تعديل تلقائي من الجرد ${counts[0].count_number}`,
+            `تعديل تلقائي من جرد #${id}`,
           ]
         );
 
@@ -428,7 +424,7 @@ exports.completeCount = async (req, res) => {
             item.raw_material_id,
             counts[0].warehouse_id,
             stockChange,
-            `تعديل من جرد ${counts[0].count_number}: فرق ${item.variance}`,
+            `تعديل من جرد #${id}: فرق ${item.variance}`,
             req.user.id,
           ]
         );
@@ -437,13 +433,12 @@ exports.completeCount = async (req, res) => {
         if (Math.abs(item.variance_percentage) > 10) {
           await connection.query(
             `INSERT INTO system_alerts
-             (alert_type, severity, title, message, reference_type, reference_id, warehouse_id)
-             VALUES ('count_variance', 'warning', ?, ?, 'count', ?, ?)`,
+             (alert_type, severity, title, message, reference_type, reference_id)
+             VALUES ('variance', 'medium', ?, ?, 'count', ?)`,
             [
               'فرق جرد كبير',
-              `تم اكتشاف فرق ${item.variance_percentage.toFixed(2)}% في المادة خلال الجرد ${counts[0].count_number}`,
+              `تم اكتشاف فرق ${item.variance_percentage.toFixed(2)}% في المادة خلال جرد #${id}`,
               id,
-              counts[0].warehouse_id,
             ]
           );
         }

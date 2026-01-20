@@ -106,9 +106,26 @@ exports.getExpiringBatches = async (req, res) => {
         const { days = 30 } = req.query;
 
         const [batches] = await db.query(`
-            SELECT * FROM expiring_materials
-            WHERE days_until_expiry <= ?
-            ORDER BY days_until_expiry ASC
+            SELECT
+                mb.id,
+                mb.batch_number,
+                rm.name AS material_name,
+                mb.quantity,
+                mb.unit,
+                mb.expiry_date,
+                DATEDIFF(mb.expiry_date, CURDATE()) AS days_until_expiry,
+                mb.unit_cost,
+                (mb.quantity * mb.unit_cost) AS total_value,
+                mb.status,
+                w.name AS warehouse_name
+            FROM material_batches mb
+            JOIN raw_materials rm ON mb.raw_material_id = rm.id
+            LEFT JOIN warehouses w ON mb.warehouse_id = w.id
+            WHERE mb.expiry_date IS NOT NULL
+              AND DATEDIFF(mb.expiry_date, CURDATE()) <= ?
+              AND DATEDIFF(mb.expiry_date, CURDATE()) > 0
+              AND mb.status = 'active'
+            ORDER BY mb.expiry_date ASC
         `, [days]);
 
         res.json({

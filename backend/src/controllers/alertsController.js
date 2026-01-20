@@ -15,10 +15,8 @@ exports.getAllAlerts = async (req, res) => {
     let query = `
       SELECT
         sa.*,
-        w.name AS warehouse_name,
         u.full_name AS resolved_by_name
       FROM system_alerts sa
-      LEFT JOIN warehouses w ON sa.warehouse_id = w.id
       LEFT JOIN users u ON sa.resolved_by = u.id
       WHERE 1=1
     `;
@@ -34,19 +32,9 @@ exports.getAllAlerts = async (req, res) => {
       params.push(severity);
     }
 
-    if (is_read !== undefined) {
-      query += ` AND sa.is_read = ?`;
-      params.push(is_read === 'true' || is_read === '1');
-    }
-
     if (is_resolved !== undefined) {
       query += ` AND sa.is_resolved = ?`;
       params.push(is_resolved === 'true' || is_resolved === '1');
-    }
-
-    if (warehouse_id) {
-      query += ` AND sa.warehouse_id = ?`;
-      params.push(warehouse_id);
     }
 
     query += ` ORDER BY sa.severity DESC, sa.created_at DESC LIMIT ?`;
@@ -105,13 +93,12 @@ exports.getUnresolvedSummary = async (req, res) => {
 exports.createAlert = async (req, res) => {
   try {
     const {
-      alert_type = 'custom',
-      severity = 'info',
+      alert_type = 'low_stock',
+      severity = 'low',
       title,
       message,
       reference_type = null,
       reference_id = null,
-      warehouse_id = null,
     } = req.body;
 
     // Validation
@@ -124,9 +111,9 @@ exports.createAlert = async (req, res) => {
 
     const [result] = await db.query(
       `INSERT INTO system_alerts
-       (alert_type, severity, title, message, reference_type, reference_id, warehouse_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [alert_type, severity, title, message, reference_type, reference_id, warehouse_id]
+       (alert_type, severity, title, message, reference_type, reference_id)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [alert_type, severity, title, message, reference_type, reference_id]
     );
 
     res.status(201).json({
@@ -144,77 +131,16 @@ exports.createAlert = async (req, res) => {
   }
 };
 
-// Mark alert as read
-exports.markAsRead = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    await db.query(`UPDATE system_alerts SET is_read = TRUE WHERE id = ?`, [id]);
-
-    res.json({
-      success: true,
-      message: 'تم تحديد التنبيه كمقروء',
-    });
-  } catch (error) {
-    console.error('Error marking alert as read:', error);
-    res.status(500).json({
-      success: false,
-      message: 'حدث خطأ أثناء تحديث التنبيه',
-      error: error.message,
-    });
-  }
-};
-
-// Mark all alerts as read
-exports.markAllAsRead = async (req, res) => {
-  try {
-    const { alert_type, severity, warehouse_id } = req.body;
-
-    let query = `UPDATE system_alerts SET is_read = TRUE WHERE is_read = FALSE`;
-    const params = [];
-
-    if (alert_type) {
-      query += ` AND alert_type = ?`;
-      params.push(alert_type);
-    }
-
-    if (severity) {
-      query += ` AND severity = ?`;
-      params.push(severity);
-    }
-
-    if (warehouse_id) {
-      query += ` AND warehouse_id = ?`;
-      params.push(warehouse_id);
-    }
-
-    await db.query(query, params);
-
-    res.json({
-      success: true,
-      message: 'تم تحديد جميع التنبيهات كمقروءة',
-    });
-  } catch (error) {
-    console.error('Error marking all as read:', error);
-    res.status(500).json({
-      success: false,
-      message: 'حدث خطأ أثناء تحديث التنبيهات',
-      error: error.message,
-    });
-  }
-};
-
 // Resolve alert
 exports.resolveAlert = async (req, res) => {
   try {
     const { id } = req.params;
-    const { notes = null } = req.body;
 
     await db.query(
       `UPDATE system_alerts
-       SET is_resolved = TRUE, resolved_by = ?, resolved_at = NOW(), resolved_notes = ?
+       SET is_resolved = TRUE, resolved_by = ?, resolved_at = NOW()
        WHERE id = ?`,
-      [req.user.id, notes, id]
+      [req.user.id, id]
     );
 
     res.json({
@@ -262,11 +188,9 @@ exports.getThresholds = async (req, res) => {
         at.*,
         rm.name AS material_name,
         rm.current_stock,
-        rm.unit,
-        w.name AS warehouse_name
+        rm.unit
       FROM alert_thresholds at
       JOIN raw_materials rm ON at.raw_material_id = rm.id
-      LEFT JOIN warehouses w ON at.warehouse_id = w.id
       WHERE 1=1
     `;
     const params = [];
@@ -297,7 +221,6 @@ exports.setThreshold = async (req, res) => {
   try {
     const {
       raw_material_id,
-      warehouse_id = null,
       low_stock_threshold,
       critical_stock_threshold,
       expiry_warning_days = 30,
@@ -322,14 +245,12 @@ exports.setThreshold = async (req, res) => {
       // Update existing
       await db.query(
         `UPDATE alert_thresholds
-         SET warehouse_id = ?,
-             low_stock_threshold = ?,
+         SET low_stock_threshold = ?,
              critical_stock_threshold = ?,
              expiry_warning_days = ?,
              enabled = ?
          WHERE raw_material_id = ?`,
         [
-          warehouse_id,
           low_stock_threshold,
           critical_stock_threshold,
           expiry_warning_days,
@@ -346,11 +267,10 @@ exports.setThreshold = async (req, res) => {
       // Insert new
       await db.query(
         `INSERT INTO alert_thresholds
-         (raw_material_id, warehouse_id, low_stock_threshold, critical_stock_threshold, expiry_warning_days, enabled)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+         (raw_material_id, low_stock_threshold, critical_stock_threshold, expiry_warning_days, enabled)
+         VALUES (?, ?, ?, ?, ?)`,
         [
           raw_material_id,
-          warehouse_id,
           low_stock_threshold,
           critical_stock_threshold,
           expiry_warning_days,
@@ -418,20 +338,19 @@ exports.generateAutoAlerts = async (req, res) => {
       );
 
       if (existingAlerts.length === 0) {
-        const severity = material.stock_status === 'critical' ? 'critical' : 'warning';
+        const severity = material.stock_status === 'critical' ? 'critical' : 'medium';
         const title =
           material.stock_status === 'critical' ? 'مخزون حرج' : 'مخزون منخفض';
 
         await connection.query(
           `INSERT INTO system_alerts
-           (alert_type, severity, title, message, reference_type, reference_id, warehouse_id)
-           VALUES ('low_stock', ?, ?, ?, 'material', ?, ?)`,
+           (alert_type, severity, title, message, reference_type, reference_id)
+           VALUES ('low_stock', ?, ?, ?, 'material', ?)`,
           [
             severity,
             title,
             `المادة "${material.material_name}" لديها مخزون ${material.stock_status === 'critical' ? 'حرج' : 'منخفض'}: ${material.current_stock} ${material.unit}`,
             material.material_id,
-            material.warehouse_id,
           ]
         );
 
@@ -441,13 +360,23 @@ exports.generateAutoAlerts = async (req, res) => {
 
     // 2. Expiry warnings
     const [expiringBatches] = await connection.query(
-      `SELECT * FROM expiring_materials WHERE days_until_expiry <= 30 AND days_until_expiry > 0`
+      `SELECT
+         mb.id,
+         mb.batch_number,
+         rm.name AS material_name,
+         DATEDIFF(mb.expiry_date, CURDATE()) AS days_until_expiry
+       FROM material_batches mb
+       JOIN raw_materials rm ON mb.raw_material_id = rm.id
+       WHERE mb.expiry_date IS NOT NULL
+         AND DATEDIFF(mb.expiry_date, CURDATE()) <= 30
+         AND DATEDIFF(mb.expiry_date, CURDATE()) > 0
+         AND mb.status = 'active'`
     );
 
     for (const batch of expiringBatches) {
       const [existingAlerts] = await connection.query(
         `SELECT id FROM system_alerts
-         WHERE alert_type = 'expiry_warning'
+         WHERE alert_type = 'expiring_batch'
            AND reference_type = 'batch'
            AND reference_id = ?
            AND is_resolved = FALSE
@@ -456,18 +385,17 @@ exports.generateAutoAlerts = async (req, res) => {
       );
 
       if (existingAlerts.length === 0) {
-        const severity = batch.days_until_expiry <= 7 ? 'critical' : 'warning';
+        const severity = batch.days_until_expiry <= 7 ? 'critical' : 'medium';
 
         await connection.query(
           `INSERT INTO system_alerts
-           (alert_type, severity, title, message, reference_type, reference_id, warehouse_id)
-           VALUES ('expiry_warning', ?, ?, ?, 'batch', ?, ?)`,
+           (alert_type, severity, title, message, reference_type, reference_id)
+           VALUES ('expiring_batch', ?, ?, ?, 'batch', ?)`,
           [
             severity,
             'انتهاء صلاحية قريب',
             `الدفعة "${batch.batch_number}" من مادة "${batch.material_name}" ستنتهي صلاحيتها خلال ${batch.days_until_expiry} يوم`,
             batch.id,
-            batch.warehouse_id,
           ]
         );
 
@@ -492,7 +420,7 @@ exports.generateAutoAlerts = async (req, res) => {
       );
 
       if (existingAlerts.length === 0) {
-        const severity = purchase.days_overdue > 7 ? 'critical' : 'warning';
+        const severity = purchase.days_overdue > 7 ? 'critical' : 'medium';
 
         await connection.query(
           `INSERT INTO system_alerts
@@ -501,7 +429,7 @@ exports.generateAutoAlerts = async (req, res) => {
           [
             severity,
             'دفعة متأخرة',
-            `فاتورة "${purchase.invoice_number}" من مورد "${purchase.supplier_name}" متأخرة ${purchase.days_overdue} يوم. المبلغ المتبقي: ${parseFloat(purchase.total_amount) - parseFloat(purchase.paid_amount)} جنيه`,
+            `فاتورة "${purchase.invoice_number}" من مورد "${purchase.supplier_name}" متأخرة ${purchase.days_overdue} يوم. المبلغ المتبقي: ${purchase.remaining_amount} جنيه`,
             purchase.id,
           ]
         );
@@ -534,13 +462,12 @@ exports.generateAutoAlerts = async (req, res) => {
       if (existingAlerts.length === 0) {
         await connection.query(
           `INSERT INTO system_alerts
-           (alert_type, severity, title, message, reference_type, reference_id, warehouse_id)
-           VALUES ('transfer_pending', 'warning', ?, ?, 'transfer', ?, ?)`,
+           (alert_type, severity, title, message, reference_type, reference_id)
+           VALUES ('low_stock', 'medium', ?, ?, 'transfer', ?)`,
           [
             'تحويل معلق',
             `التحويل "${transfer.transfer_number}" معلق منذ ${transfer.days_pending} يوم بانتظار الموافقة`,
             transfer.id,
-            transfer.from_warehouse_id,
           ]
         );
 
