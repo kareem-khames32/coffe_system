@@ -536,7 +536,9 @@ const SupplierPayments = () => {
             )}
 
             <form onSubmit={handleAddPayment} className="space-y-4">
-              {!formData.purchase_id && (
+              {formData.purchase_id ? (
+                <input type="hidden" name="supplier_id" value={formData.supplier_id} />
+              ) : (
                 <div>
                   <label className="block text-amber-900 font-semibold mb-2">
                     المورد <span className="text-red-500">*</span>
