@@ -9,7 +9,7 @@ async function checkSchema() {
     });
 
     try {
-        const tables = ['categories', 'raw_materials', 'products', 'product_recipes', 'orders', 'order_items'];
+        const tables = ['warehouses', 'suppliers', 'categories', 'raw_materials', 'products', 'product_recipes', 'orders', 'order_items', 'inventory_purchases', 'inventory_purchase_items'];
 
         for (const table of tables) {
             try {
