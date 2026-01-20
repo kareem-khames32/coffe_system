@@ -65,12 +65,53 @@ exports.createPurchase = async (req, res) => {
 
     const { supplier_id, warehouse_id, purchase_date, invoice_number, items, notes, payment_terms } = req.body;
 
+    // Debug logging
+    console.log('📝 Create Purchase Request:');
+    console.log('   Supplier ID:', supplier_id);
+    console.log('   Warehouse ID:', warehouse_id);
+    console.log('   Purchase Date:', purchase_date);
+    console.log('   Invoice Number:', invoice_number);
+    console.log('   Items:', JSON.stringify(items, null, 2));
+    console.log('   Payment Terms:', payment_terms);
+
     if (!purchase_date || !items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'تاريخ الشراء والمواد مطلوبة' });
     }
 
-    // Calculate total
-    const total_amount = items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unit_cost)), 0);
+    // Validate and calculate total
+    let total_amount = 0;
+    for (const item of items) {
+      const quantity = parseFloat(item.quantity);
+      const unit_cost = parseFloat(item.unit_cost || item.unitCost || item.price || item.unit_price);
+
+      console.log('   Processing item:', {
+        raw_material_id: item.raw_material_id,
+        quantity: item.quantity,
+        unit_cost_field: item.unit_cost || item.unitCost || item.price || item.unit_price,
+        parsed_quantity: quantity,
+        parsed_unit_cost: unit_cost
+      });
+
+      if (isNaN(quantity) || isNaN(unit_cost)) {
+        return res.status(400).json({
+          success: false,
+          message: 'الكمية وسعر الوحدة يجب أن يكونا أرقام صحيحة',
+          debug: { item, quantity, unit_cost }
+        });
+      }
+
+      total_amount += quantity * unit_cost;
+    }
+
+    console.log('   💰 Total Amount:', total_amount);
+
+    if (isNaN(total_amount) || total_amount < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'خطأ في حساب الإجمالي',
+        debug: { total_amount, items }
+      });
+    }
 
     // Insert purchase
     const [purchaseResult] = await connection.query(
@@ -83,8 +124,11 @@ exports.createPurchase = async (req, res) => {
 
     // Insert items and update stock
     for (const item of items) {
-      const { raw_material_id, quantity, unit, unit_cost } = item;
-      const total_cost = parseFloat(quantity) * parseFloat(unit_cost);
+      const raw_material_id = item.raw_material_id || item.rawMaterialId;
+      const quantity = parseFloat(item.quantity);
+      const unit = item.unit || 'unit';
+      const unit_cost = parseFloat(item.unit_cost || item.unitCost || item.price || item.unit_price);
+      const total_cost = quantity * unit_cost;
 
       // Insert item
       await connection.query(
