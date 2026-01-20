@@ -45,7 +45,7 @@ async function login() {
     logSection('🔐 AUTHENTICATION');
     try {
         const response = await axios.post(`${BASE_URL}/auth/login`, {
-            email: 'admin@cafe.com',
+            username: 'admin',
             password: 'admin123'
         });
         authToken = response.data.token;
