@@ -15,12 +15,6 @@ router.get('/unresolved/summary', alertsController.getUnresolvedSummary);
 // Create custom alert
 router.post('/', alertsController.createAlert);
 
-// Mark alert as read
-router.patch('/:id/read', alertsController.markAsRead);
-
-// Mark all alerts as read
-router.patch('/read-all', alertsController.markAllAsRead);
-
 // Resolve alert
 router.patch('/:id/resolve', alertsController.resolveAlert);
 
