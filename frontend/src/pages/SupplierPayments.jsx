@@ -358,12 +358,15 @@ const SupplierPayments = () => {
                       <th className="px-6 py-4 text-center text-xs font-bold text-amber-900 uppercase">
                         الحالة
                       </th>
+                      <th className="px-6 py-4 text-center text-xs font-bold text-amber-900 uppercase">
+                        الإجراءات
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-amber-100">
                     {unpaidPurchases.length === 0 ? (
                       <tr>
-                        <td colSpan="8" className="px-6 py-8 text-center text-green-600 font-semibold">
+                        <td colSpan="9" className="px-6 py-8 text-center text-green-600 font-semibold">
                           ✓ جميع الفواتير مدفوعة
                         </td>
                       </tr>
@@ -406,6 +409,25 @@ const SupplierPayments = () => {
                                 {purchase.payment_status === 'unpaid' ? 'غير مدفوع' : 'جزئي'}
                               </span>
                             )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => {
+                                setFormData({
+                                  supplier_id: purchase.supplier_id,
+                                  purchase_id: purchase.id,
+                                  amount: purchase.remaining_amount,
+                                  payment_date: new Date().toISOString().split('T')[0],
+                                  payment_method: 'cash',
+                                  reference_number: '',
+                                  notes: '',
+                                });
+                                setShowAddModal(true);
+                              }}
+                              className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-lg transition-all shadow-md font-semibold"
+                            >
+                              سداد
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -487,7 +509,20 @@ const SupplierPayments = () => {
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-amber-900 mb-6">إضافة دفعة جديدة</h2>
+            <h2 className="text-2xl font-bold text-amber-900 mb-6">
+              {formData.purchase_id ? 'سداد دفعة' : 'إضافة دفعة جديدة'}
+            </h2>
+
+            {formData.purchase_id && (
+              <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 font-semibold mb-2">
+                  💡 سيتم ربط هذه الدفعة بالفاتورة وسيتم تحديث حالة السداد تلقائياً
+                </p>
+                <p className="text-xs text-blue-700">
+                  رقم الفاتورة: {unpaidPurchases.find(p => p.id === formData.purchase_id)?.invoice_number || '-'}
+                </p>
+              </div>
+            )}
 
             <form onSubmit={handleAddPayment} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -498,8 +533,9 @@ const SupplierPayments = () => {
                   <select
                     value={formData.supplier_id}
                     onChange={(e) => setFormData({ ...formData, supplier_id: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-coffee-500"
+                    className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-coffee-500 disabled:bg-gray-100"
                     required
+                    disabled={!!formData.purchase_id}
                   >
                     <option value="">اختر المورد</option>
                     {suppliers.map((s) => (
