@@ -20,15 +20,15 @@ async function seedData() {
         // 1. Add Categories
         console.log('📁 Adding categories...');
         const categories = [
-            ['قهوة ساخنة', 'hot-coffee', 'مشروبات قهوة ساخنة'],
-            ['قهوة باردة', 'iced-coffee', 'مشروبات قهوة باردة'],
-            ['مشروبات أخرى', 'other-drinks', 'شاي ومشروبات أخرى'],
+            ['قهوة ساخنة', 'مشروبات قهوة ساخنة'],
+            ['قهوة باردة', 'مشروبات قهوة باردة'],
+            ['مشروبات أخرى', 'شاي ومشروبات أخرى'],
         ];
 
-        for (const [name, slug, description] of categories) {
+        for (const [name, description] of categories) {
             await connection.query(
-                'INSERT INTO categories (name, slug, description) VALUES (?, ?, ?)',
-                [name, slug, description]
+                'INSERT INTO categories (name, description, is_active) VALUES (?, ?, 1)',
+                [name, description]
             );
         }
         console.log(`✅ Added ${categories.length} categories`);
@@ -36,19 +36,19 @@ async function seedData() {
         // 2. Add Raw Materials
         console.log('\n📦 Adding raw materials...');
         const rawMaterials = [
-            ['بن عربي', 'حبوب', 1000, 200, 150],
-            ['حليب كامل الدسم', 'لتر', 50, 20, 25],
-            ['سكر أبيض', 'جرام', 5000, 500, 8],
-            ['كاكاو بودر', 'جرام', 500, 100, 45],
-            ['فانيليا', 'مل', 200, 50, 30],
-            ['كراميل صوص', 'مل', 300, 100, 55],
-            ['كريمة خفق', 'مل', 400, 150, 35],
+            ['بن عربي', 'قهوة محمصة للاستخدام في المشروبات', 'جرام', 1000, 200, 0.15],
+            ['حليب كامل الدسم', 'حليب طازج كامل الدسم', 'مل', 50000, 10000, 0.02],
+            ['سكر أبيض', 'سكر أبيض ناعم', 'جرام', 5000, 500, 0.008],
+            ['كاكاو بودر', 'كاكاو فاخر للمشروبات', 'جرام', 500, 100, 0.045],
+            ['فانيليا', 'خلاصة فانيليا طبيعية', 'مل', 200, 50, 0.30],
+            ['كراميل صوص', 'صوص كراميل للتزيين', 'مل', 300, 100, 0.055],
+            ['كريمة خفق', 'كريمة خفق طازجة', 'مل', 400, 150, 0.035],
         ];
 
-        for (const [name, unit, stock, minStock, unitCost] of rawMaterials) {
+        for (const [name, description, unit, stock, minStock, unitCost] of rawMaterials) {
             await connection.query(
-                'INSERT INTO raw_materials (name, unit, stock_quantity, min_stock, unit_cost) VALUES (?, ?, ?, ?, ?)',
-                [name, unit, stock, minStock, unitCost]
+                'INSERT INTO raw_materials (name, description, unit, current_stock, min_stock, unit_cost, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)',
+                [name, description, unit, stock, minStock, unitCost]
             );
         }
         console.log(`✅ Added ${rawMaterials.length} raw materials`);
@@ -57,28 +57,27 @@ async function seedData() {
         console.log('\n☕ Adding products...');
 
         // Get category IDs
-        const [hotCoffee] = await connection.query("SELECT id FROM categories WHERE slug = 'hot-coffee'");
-        const [icedCoffee] = await connection.query("SELECT id FROM categories WHERE slug = 'iced-coffee'");
-        const [otherDrinks] = await connection.query("SELECT id FROM categories WHERE slug = 'other-drinks'");
+        const [hotCoffee] = await connection.query("SELECT id FROM categories WHERE name = 'قهوة ساخنة'");
+        const [icedCoffee] = await connection.query("SELECT id FROM categories WHERE name = 'قهوة باردة'");
 
         const products = [
-            ['إسبريسو', 'espresso', 'قهوة إسبريسو إيطالية أصلية', hotCoffee[0].id, 25, 28, 15, 'متوفر'],
-            ['كابتشينو', 'cappuccino', 'كابتشينو بالحليب الطازج', hotCoffee[0].id, 22, 30, 18, 'متوفر'],
-            ['لاتيه', 'latte', 'لاتيه بالحليب الكريمي', hotCoffee[0].id, 24, 32, 20, 'متوفر'],
-            ['أمريكانو', 'americano', 'قهوة أمريكية كلاسيكية', hotCoffee[0].id, 18, 25, 12, 'متوفر'],
-            ['موكا', 'mocha', 'موكا بالشوكولاتة الفاخرة', hotCoffee[0].id, 26, 35, 22, 'متوفر'],
-            ['آيس لاتيه', 'iced-latte', 'لاتيه بارد منعش', icedCoffee[0].id, 25, 35, 22, 'متوفر'],
-            ['آيس موكا', 'iced-mocha', 'موكا بارد بالشوكولاتة', icedCoffee[0].id, 27, 38, 24, 'متوفر'],
-            ['فرابتشينو كراميل', 'caramel-frappuccino', 'فرابتشينو بالكراميل', icedCoffee[0].id, 30, 40, 28, 'متوفر'],
+            ['إسبريسو', 'قهوة إسبريسو إيطالية أصلية', hotCoffee[0].id, 15, 28],
+            ['كابتشينو', 'كابتشينو بالحليب الطازج', hotCoffee[0].id, 18, 30],
+            ['لاتيه', 'لاتيه بالحليب الكريمي', hotCoffee[0].id, 20, 32],
+            ['أمريكانو', 'قهوة أمريكية كلاسيكية', hotCoffee[0].id, 12, 25],
+            ['موكا', 'موكا بالشوكولاتة الفاخرة', hotCoffee[0].id, 22, 35],
+            ['آيس لاتيه', 'لاتيه بارد منعش', icedCoffee[0].id, 22, 35],
+            ['آيس موكا', 'موكا بارد بالشوكولاتة', icedCoffee[0].id, 24, 38],
+            ['فرابتشينو كراميل', 'فرابتشينو بالكراميل', icedCoffee[0].id, 28, 40],
         ];
 
         const productIds = [];
-        for (const [name, slug, description, categoryId, costPrice, price, prepTime, status] of products) {
+        for (const [name, description, categoryId, costPrice, price] of products) {
             const [result] = await connection.query(
-                'INSERT INTO products (name, slug, description, category_id, cost_price, price, preparation_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [name, slug, description, categoryId, costPrice, price, prepTime, status]
+                'INSERT INTO products (name, description, category_id, cost_price, price, is_available, is_active) VALUES (?, ?, ?, ?, ?, 1, 1)',
+                [name, description, categoryId, costPrice, price]
             );
-            productIds.push({ id: result.insertId, name, slug });
+            productIds.push({ id: result.insertId, name });
         }
         console.log(`✅ Added ${products.length} products`);
 
@@ -93,50 +92,50 @@ async function seedData() {
         const [caramel] = await connection.query("SELECT id FROM raw_materials WHERE name = 'كراميل صوص'");
         const [cream] = await connection.query("SELECT id FROM raw_materials WHERE name = 'كريمة خفق'");
 
-        // Recipes: [product_slug, raw_material_id, quantity]
+        // Recipes: [product_name, raw_material_id, quantity, unit]
         const recipes = [
-            ['espresso', coffee[0].id, 18],
-            ['espresso', sugar[0].id, 5],
+            ['إسبريسو', coffee[0].id, 18, 'جرام'],
+            ['إسبريسو', sugar[0].id, 5, 'جرام'],
 
-            ['cappuccino', coffee[0].id, 18],
-            ['cappuccino', milk[0].id, 120],
-            ['cappuccino', sugar[0].id, 8],
+            ['كابتشينو', coffee[0].id, 18, 'جرام'],
+            ['كابتشينو', milk[0].id, 120, 'مل'],
+            ['كابتشينو', sugar[0].id, 8, 'جرام'],
 
-            ['latte', coffee[0].id, 18],
-            ['latte', milk[0].id, 200],
-            ['latte', sugar[0].id, 8],
+            ['لاتيه', coffee[0].id, 18, 'جرام'],
+            ['لاتيه', milk[0].id, 200, 'مل'],
+            ['لاتيه', sugar[0].id, 8, 'جرام'],
 
-            ['americano', coffee[0].id, 18],
-            ['americano', sugar[0].id, 5],
+            ['أمريكانو', coffee[0].id, 18, 'جرام'],
+            ['أمريكانو', sugar[0].id, 5, 'جرام'],
 
-            ['mocha', coffee[0].id, 18],
-            ['mocha', milk[0].id, 150],
-            ['mocha', cocoa[0].id, 20],
-            ['mocha', sugar[0].id, 10],
+            ['موكا', coffee[0].id, 18, 'جرام'],
+            ['موكا', milk[0].id, 150, 'مل'],
+            ['موكا', cocoa[0].id, 20, 'جرام'],
+            ['موكا', sugar[0].id, 10, 'جرام'],
 
-            ['iced-latte', coffee[0].id, 18],
-            ['iced-latte', milk[0].id, 200],
-            ['iced-latte', sugar[0].id, 10],
+            ['آيس لاتيه', coffee[0].id, 18, 'جرام'],
+            ['آيس لاتيه', milk[0].id, 200, 'مل'],
+            ['آيس لاتيه', sugar[0].id, 10, 'جرام'],
 
-            ['iced-mocha', coffee[0].id, 18],
-            ['iced-mocha', milk[0].id, 150],
-            ['iced-mocha', cocoa[0].id, 25],
-            ['iced-mocha', sugar[0].id, 12],
+            ['آيس موكا', coffee[0].id, 18, 'جرام'],
+            ['آيس موكا', milk[0].id, 150, 'مل'],
+            ['آيس موكا', cocoa[0].id, 25, 'جرام'],
+            ['آيس موكا', sugar[0].id, 12, 'جرام'],
 
-            ['caramel-frappuccino', coffee[0].id, 18],
-            ['caramel-frappuccino', milk[0].id, 180],
-            ['caramel-frappuccino', caramel[0].id, 30],
-            ['caramel-frappuccino', cream[0].id, 40],
-            ['caramel-frappuccino', sugar[0].id, 15],
+            ['فرابتشينو كراميل', coffee[0].id, 18, 'جرام'],
+            ['فرابتشينو كراميل', milk[0].id, 180, 'مل'],
+            ['فرابتشينو كراميل', caramel[0].id, 30, 'مل'],
+            ['فرابتشينو كراميل', cream[0].id, 40, 'مل'],
+            ['فرابتشينو كراميل', sugar[0].id, 15, 'جرام'],
         ];
 
         let recipeCount = 0;
-        for (const [productSlug, rawMaterialId, quantity] of recipes) {
-            const product = productIds.find(p => p.slug === productSlug);
+        for (const [productName, rawMaterialId, quantity, unit] of recipes) {
+            const product = productIds.find(p => p.name === productName);
             if (product) {
                 await connection.query(
-                    'INSERT INTO product_recipes (product_id, raw_material_id, quantity_required) VALUES (?, ?, ?)',
-                    [product.id, rawMaterialId, quantity]
+                    'INSERT INTO product_recipes (product_id, raw_material_id, quantity_needed, unit) VALUES (?, ?, ?, ?)',
+                    [product.id, rawMaterialId, quantity, unit]
                 );
                 recipeCount++;
             }
