@@ -518,14 +518,25 @@ const SupplierPayments = () => {
                 <p className="text-sm text-blue-800 font-semibold mb-2">
                   💡 سيتم ربط هذه الدفعة بالفاتورة وسيتم تحديث حالة السداد تلقائياً
                 </p>
-                <p className="text-xs text-blue-700">
-                  رقم الفاتورة: {unpaidPurchases.find(p => p.id === formData.purchase_id)?.invoice_number || '-'}
-                </p>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <div>
+                    <p className="text-xs text-blue-600 font-semibold">رقم الفاتورة:</p>
+                    <p className="text-sm text-blue-900">
+                      {unpaidPurchases.find(p => p.id === formData.purchase_id)?.invoice_number || '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-600 font-semibold">المورد:</p>
+                    <p className="text-sm text-blue-900">
+                      {unpaidPurchases.find(p => p.id === formData.purchase_id)?.supplier_name || '-'}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
             <form onSubmit={handleAddPayment} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {!formData.purchase_id && (
                 <div>
                   <label className="block text-amber-900 font-semibold mb-2">
                     المورد <span className="text-red-500">*</span>
@@ -533,9 +544,8 @@ const SupplierPayments = () => {
                   <select
                     value={formData.supplier_id}
                     onChange={(e) => setFormData({ ...formData, supplier_id: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-coffee-500 disabled:bg-gray-100"
+                    className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-coffee-500"
                     required
-                    disabled={!!formData.purchase_id}
                   >
                     <option value="">اختر المورد</option>
                     {suppliers.map((s) => (
@@ -545,7 +555,9 @@ const SupplierPayments = () => {
                     ))}
                   </select>
                 </div>
+              )}
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-amber-900 font-semibold mb-2">
                     المبلغ <span className="text-red-500">*</span>
@@ -553,10 +565,12 @@ const SupplierPayments = () => {
                   <input
                     type="number"
                     step="0.01"
+                    min="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-coffee-500"
                     required
+                    placeholder={formData.purchase_id ? `المتبقي: ${unpaidPurchases.find(p => p.id === formData.purchase_id)?.remaining_amount || 0} ج.م` : ''}
                   />
                 </div>
 
