@@ -143,7 +143,7 @@ exports.deductStockForOrder = async (orderId, items) => {
         await connection.query(
           `INSERT INTO inventory_transactions (raw_material_id, transaction_type, quantity, reference_type, reference_id)
            VALUES (?, 'sale', ?, 'order', ?)`,
-          [recipeItem.raw_material_id, 'sale', -totalQuantity, 'order', orderId]
+          [recipeItem.raw_material_id, -totalQuantity, orderId]
         );
       }
     }
@@ -187,11 +187,11 @@ exports.restoreStockForOrder = async (orderId, items) => {
           [totalQuantity, recipeItem.raw_material_id]
         );
 
-        // Log transaction
+        // Log transaction (use 'adjustment' since 'return' is not in ENUM)
         await connection.query(
           `INSERT INTO inventory_transactions (raw_material_id, transaction_type, quantity, reference_type, reference_id)
-           VALUES (?, 'return', ?, 'order_cancel', ?)`,
-          [recipeItem.raw_material_id, 'return', totalQuantity, 'order_cancel', orderId]
+           VALUES (?, 'adjustment', ?, 'order_cancel', ?)`,
+          [recipeItem.raw_material_id, totalQuantity, orderId]
         );
       }
     }
