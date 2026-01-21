@@ -114,7 +114,52 @@ const SuppliersReport = () => {
   };
 
   const exportToExcel = () => {
-    alert('سيتم تنفيذ تصدير Excel قريباً');
+    let csvContent = '';
+    let filename = 'suppliers-report';
+
+    if (activeView === 'list') {
+      if (!suppliers.length) return alert('لا توجد بيانات للتصدير');
+      filename = 'suppliers-summary';
+      csvContent = 'اسم المورد,رقم الهاتف,البريد الإلكتروني,عدد المشتريات,إجمالي المشتريات,عدد المواد\n';
+      suppliers.forEach((s) => {
+        csvContent += `${s.name},${s.phone || '-'},${s.email || '-'},${s.total_purchases || 0},${formatCurrency(s.total_amount)},${s.materials_count || 0}\n`;
+      });
+    } else if (activeView === 'purchases' && selectedSupplier) {
+      if (!supplierPurchases.length) return alert('لا توجد بيانات للتصدير');
+      filename = `purchases-${selectedSupplier.name}`;
+      csvContent = 'رقم الفاتورة,التاريخ,عدد المواد,المبلغ الإجمالي,المستخدم\n';
+      supplierPurchases.forEach((p) => {
+        const date = new Date(p.purchase_date).toLocaleDateString('ar-EG');
+        csvContent += `${p.invoice_number},${date},${p.items_count},${formatCurrency(p.total_amount)},${p.created_by_name || '-'}\n`;
+      });
+    } else if (activeView === 'materials' && selectedSupplier) {
+      if (!supplierMaterials.length) return alert('لا توجد بيانات للتصدير');
+      filename = `materials-${selectedSupplier.name}`;
+      csvContent = 'اسم المادة,آخر سعر شراء,الوحدة,المخزون الحالي,المستودع\n';
+      supplierMaterials.forEach((m) => {
+        csvContent += `${m.material_name},${formatCurrency(m.last_purchase_price)},${m.unit},${formatCurrency(m.current_stock)},${m.warehouse_name || '-'}\n`;
+      });
+    } else if (activeView === 'details' && supplierDetails) {
+      filename = `supplier-details-${supplierDetails.name}`;
+      csvContent = 'البيان,القيمة\n';
+      csvContent += `اسم المورد,${supplierDetails.name}\n`;
+      csvContent += `رقم الهاتف,${supplierDetails.phone || '-'}\n`;
+      csvContent += `البريد الإلكتروني,${supplierDetails.email || '-'}\n`;
+      csvContent += `العنوان,${supplierDetails.address || '-'}\n`;
+      csvContent += `عدد المشتريات,${supplierDetails.total_purchases || 0}\n`;
+      csvContent += `إجمالي المشتريات,${formatCurrency(supplierDetails.total_amount)} ج.م\n`;
+    } else {
+      return alert('لا توجد بيانات للتصدير');
+    }
+
+    // Add UTF-8 BOM for Arabic support
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
   };
 
   if (loading) {

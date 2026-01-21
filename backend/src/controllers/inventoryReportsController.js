@@ -392,16 +392,17 @@ exports.getSuppliersSummary = async (req, res) => {
                 s.name,
                 s.contact_person,
                 s.phone,
-                COUNT(DISTINCT ip.id) AS invoices_count,
-                COALESCE(SUM(ip.total_amount), 0) AS total_purchases,
-                COUNT(DISTINCT rm.id) AS materials_supplied,
+                s.email,
+                COUNT(DISTINCT ip.id) AS total_purchases,
+                COALESCE(SUM(ip.total_amount), 0) AS total_amount,
+                COUNT(DISTINCT rm.id) AS materials_count,
                 MAX(ip.purchase_date) AS last_purchase_date
             FROM suppliers s
             LEFT JOIN inventory_purchases ip ON s.id = ip.supplier_id
             LEFT JOIN raw_materials rm ON s.id = rm.supplier_id AND rm.is_active = 1
             WHERE s.is_active = 1
             GROUP BY s.id
-            ORDER BY total_purchases DESC
+            ORDER BY total_amount DESC
         `);
 
         res.json({
