@@ -322,10 +322,28 @@ exports.generateAutoAlerts = async (req, res) => {
 
     let alertsCreated = 0;
 
-    // 1. Low stock alerts
-    const [lowStock] = await connection.query(`SELECT * FROM low_stock_materials`);
+    // 1. Low stock alerts - using min_stock from raw_materials directly
+    const [lowStockMaterials] = await connection.query(`
+      SELECT
+        rm.id AS material_id,
+        rm.name AS material_name,
+        rm.current_stock,
+        rm.min_stock,
+        rm.unit,
+        w.name AS warehouse_name,
+        CASE
+          WHEN rm.current_stock = 0 THEN 'out_of_stock'
+          WHEN rm.current_stock <= rm.min_stock * 0.5 THEN 'critical'
+          WHEN rm.current_stock <= rm.min_stock THEN 'warning'
+          ELSE 'normal'
+        END AS stock_status
+      FROM raw_materials rm
+      LEFT JOIN warehouses w ON rm.warehouse_id = w.id
+      WHERE rm.is_active = 1
+        AND rm.current_stock <= rm.min_stock
+    `);
 
-    for (const material of lowStock) {
+    for (const material of lowStockMaterials) {
       // Check if alert already exists
       const [existingAlerts] = await connection.query(
         `SELECT id FROM system_alerts
@@ -338,20 +356,27 @@ exports.generateAutoAlerts = async (req, res) => {
       );
 
       if (existingAlerts.length === 0) {
-        const severity = material.stock_status === 'critical' ? 'critical' : 'medium';
-        const title =
-          material.stock_status === 'critical' ? 'مخزون حرج' : 'مخزون منخفض';
+        let severity, title, message;
+
+        if (material.stock_status === 'out_of_stock') {
+          severity = 'critical';
+          title = 'نفاد المخزون';
+          message = `المادة "${material.material_name}" نفدت تماماً من المخزون!`;
+        } else if (material.stock_status === 'critical') {
+          severity = 'warning';
+          title = 'مخزون حرج';
+          message = `المادة "${material.material_name}" وصلت لمستوى حرج: ${material.current_stock} ${material.unit} (الحد الأدنى: ${material.min_stock})`;
+        } else {
+          severity = 'info';
+          title = 'مخزون منخفض';
+          message = `المادة "${material.material_name}" قاربت على النفاد: ${material.current_stock} ${material.unit} (الحد الأدنى: ${material.min_stock})`;
+        }
 
         await connection.query(
           `INSERT INTO system_alerts
            (alert_type, severity, title, message, reference_type, reference_id)
            VALUES ('low_stock', ?, ?, ?, 'material', ?)`,
-          [
-            severity,
-            title,
-            `المادة "${material.material_name}" لديها مخزون ${material.stock_status === 'critical' ? 'حرج' : 'منخفض'}: ${material.current_stock} ${material.unit}`,
-            material.material_id,
-          ]
+          [severity, title, message, material.material_id]
         );
 
         alertsCreated++;
