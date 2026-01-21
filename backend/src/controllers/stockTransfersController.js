@@ -139,7 +139,27 @@ exports.getTransferById = async (req, res) => {
 // Get pending transfers
 exports.getPendingTransfers = async (req, res) => {
     try {
-        const [transfers] = await db.query(`SELECT * FROM pending_transfers`);
+        const [transfers] = await db.query(`
+            SELECT
+                st.id,
+                st.transfer_number,
+                st.transfer_date,
+                st.from_warehouse_id,
+                wf.name AS from_warehouse_name,
+                st.to_warehouse_id,
+                wt.name AS to_warehouse_name,
+                st.status,
+                st.requested_by,
+                u.full_name AS requested_by_name,
+                st.notes,
+                st.created_at
+            FROM stock_transfers st
+            JOIN warehouses wf ON st.from_warehouse_id = wf.id
+            JOIN warehouses wt ON st.to_warehouse_id = wt.id
+            JOIN users u ON st.requested_by = u.id
+            WHERE st.status = 'pending'
+            ORDER BY st.created_at DESC
+        `);
 
         res.json({
             success: true,
