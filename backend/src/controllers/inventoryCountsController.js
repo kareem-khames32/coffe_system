@@ -90,11 +90,9 @@ exports.getCountById = async (req, res) => {
       `SELECT
          ici.*,
          rm.name AS material_name,
-         rm.unit,
-         mb.batch_number
+         rm.unit
        FROM inventory_count_items ici
        JOIN raw_materials rm ON ici.raw_material_id = rm.id
-       LEFT JOIN material_batches mb ON ici.batch_id = mb.id
        WHERE ici.count_id = ?
        ORDER BY rm.name`,
       [id]
@@ -170,7 +168,7 @@ exports.addCountItem = async (req, res) => {
     await connection.beginTransaction();
 
     const { count_id } = req.params;
-    const { raw_material_id, batch_id = null, counted_quantity, notes = null } = req.body;
+    const { raw_material_id, counted_quantity, notes = null } = req.body;
 
     // Validation
     if (!raw_material_id || counted_quantity === undefined) {
@@ -203,33 +201,17 @@ exports.addCountItem = async (req, res) => {
     }
 
     // Get system quantity (current stock)
-    let systemQuantity = 0;
-
-    if (batch_id) {
-      // Specific batch count
-      const [batches] = await connection.query(
-        `SELECT remaining_quantity FROM material_batches WHERE id = ?`,
-        [batch_id]
-      );
-      if (batches.length > 0) {
-        systemQuantity = batches[0].remaining_quantity;
-      }
-    } else {
-      // Total material count
-      const [materials] = await connection.query(
-        `SELECT current_stock FROM raw_materials WHERE id = ?`,
-        [raw_material_id]
-      );
-      if (materials.length > 0) {
-        systemQuantity = materials[0].current_stock;
-      }
-    }
+    const [materials] = await connection.query(
+      `SELECT current_stock FROM raw_materials WHERE id = ?`,
+      [raw_material_id]
+    );
+    const systemQuantity = materials.length > 0 ? materials[0].current_stock : 0;
 
     // Check if item already exists in this count
     const [existingItems] = await connection.query(
       `SELECT id FROM inventory_count_items
-       WHERE count_id = ? AND raw_material_id = ? AND (batch_id = ? OR (batch_id IS NULL AND ? IS NULL))`,
-      [count_id, raw_material_id, batch_id, batch_id]
+       WHERE count_id = ? AND raw_material_id = ?`,
+      [count_id, raw_material_id]
     );
 
     if (existingItems.length > 0) {
@@ -244,9 +226,9 @@ exports.addCountItem = async (req, res) => {
       // Insert new item
       await connection.query(
         `INSERT INTO inventory_count_items
-         (count_id, raw_material_id, batch_id, system_quantity, counted_quantity, notes)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [count_id, raw_material_id, batch_id, systemQuantity, counted_quantity, notes]
+         (count_id, raw_material_id, system_quantity, counted_quantity, notes)
+         VALUES (?, ?, ?, ?, ?)`,
+        [count_id, raw_material_id, systemQuantity, counted_quantity, notes]
       );
     }
 
@@ -360,7 +342,7 @@ exports.completeCount = async (req, res) => {
       [req.user.id, id]
     );
 
-    // If auto_adjust is true, create adjustments for variances
+    // If auto_adjust is true, adjust stock for variances
     if (auto_adjust) {
       const [items] = await connection.query(
         `SELECT * FROM inventory_count_items WHERE count_id = ? AND variance != 0`,
@@ -368,80 +350,27 @@ exports.completeCount = async (req, res) => {
       );
 
       for (const item of items) {
-        const adjustmentType = item.variance > 0 ? 'increase' : 'decrease';
-        const quantity = Math.abs(item.variance);
-
-        // Generate adjustment number
-        const adjustmentNumber = `ADJ-${Date.now()}-${item.id}`;
-
-        // Create adjustment
-        await connection.query(
-          `INSERT INTO inventory_adjustments
-           (adjustment_number, count_id, warehouse_id, raw_material_id, batch_id,
-            adjustment_type, quantity, reason, adjusted_by, approved_by, notes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'count_variance', ?, ?, ?)`,
-          [
-            adjustmentNumber,
-            id,
-            counts[0].warehouse_id,
-            item.raw_material_id,
-            item.batch_id,
-            adjustmentType,
-            quantity,
-            req.user.id,
-            req.user.id,
-            `تعديل تلقائي من جرد #${id}`,
-          ]
-        );
-
-        // Update stock
-        if (item.batch_id) {
-          // Update batch
-          await connection.query(
-            `UPDATE material_batches
-             SET remaining_quantity = ?
-             WHERE id = ?`,
-            [item.counted_quantity, item.batch_id]
-          );
-        }
-
-        // Update material total stock
-        const stockChange = adjustmentType === 'increase' ? quantity : -quantity;
+        // Update material stock to match counted quantity
         await connection.query(
           `UPDATE raw_materials
-           SET current_stock = current_stock + ?
+           SET current_stock = ?
            WHERE id = ?`,
-          [stockChange, item.raw_material_id]
+          [item.counted_quantity, item.raw_material_id]
         );
 
         // Log transaction
         await connection.query(
           `INSERT INTO inventory_transactions
-           (raw_material_id, warehouse_id, transaction_type, quantity,
-            transaction_date, notes, user_id)
-           VALUES (?, ?, 'adjustment', ?, NOW(), ?, ?)`,
+           (raw_material_id, transaction_type, quantity, reference_type, reference_id, notes, created_by)
+           VALUES (?, 'adjustment', ?, 'count', ?, ?, ?)`,
           [
             item.raw_material_id,
-            counts[0].warehouse_id,
-            stockChange,
-            `تعديل من جرد #${id}: فرق ${item.variance}`,
+            item.variance,
+            id,
+            `تعديل من جرد: فرق ${item.variance}`,
             req.user.id,
           ]
         );
-
-        // Create alert for significant variances (> 10%)
-        if (Math.abs(item.variance_percentage) > 10) {
-          await connection.query(
-            `INSERT INTO system_alerts
-             (alert_type, severity, title, message, reference_type, reference_id)
-             VALUES ('variance', 'medium', ?, ?, 'count', ?)`,
-            [
-              'فرق جرد كبير',
-              `تم اكتشاف فرق ${item.variance_percentage.toFixed(2)}% في المادة خلال جرد #${id}`,
-              id,
-            ]
-          );
-        }
       }
     }
 
@@ -512,22 +441,41 @@ exports.cancelCount = async (req, res) => {
 // Get count variances
 exports.getCountVariances = async (req, res) => {
   try {
-    const { warehouse_id, level } = req.query;
+    const { warehouse_id } = req.query;
 
-    let query = `SELECT * FROM count_variances WHERE 1=1`;
+    let query = `
+      SELECT
+        ic.count_number,
+        ic.warehouse_id,
+        w.name AS warehouse_name,
+        ici.raw_material_id,
+        rm.name AS material_name,
+        ici.system_quantity,
+        ici.counted_quantity,
+        ici.variance,
+        CASE
+          WHEN ici.system_quantity = 0 THEN 0
+          ELSE (ici.variance / ici.system_quantity * 100)
+        END AS variance_percentage,
+        CASE
+          WHEN ABS(CASE WHEN ici.system_quantity = 0 THEN 0 ELSE (ici.variance / ici.system_quantity * 100) END) > 10 THEN 'high'
+          WHEN ABS(CASE WHEN ici.system_quantity = 0 THEN 0 ELSE (ici.variance / ici.system_quantity * 100) END) > 5 THEN 'medium'
+          ELSE 'low'
+        END AS variance_level
+      FROM inventory_count_items ici
+      JOIN inventory_counts ic ON ici.count_id = ic.id
+      JOIN raw_materials rm ON ici.raw_material_id = rm.id
+      JOIN warehouses w ON ic.warehouse_id = w.id
+      WHERE ici.variance != 0 AND ic.status = 'completed'
+    `;
     const params = [];
 
     if (warehouse_id) {
-      query += ` AND warehouse_id = ?`;
+      query += ` AND ic.warehouse_id = ?`;
       params.push(warehouse_id);
     }
 
-    if (level) {
-      query += ` AND variance_level = ?`;
-      params.push(level);
-    }
-
-    query += ` ORDER BY ABS(variance_percentage) DESC`;
+    query += ` ORDER BY ABS(ici.variance) DESC`;
 
     const [variances] = await db.query(query, params);
 
@@ -574,14 +522,19 @@ exports.getCountStats = async (req, res) => {
       params
     );
 
-    // Variance summary
+    // Variance summary from inventory_count_items
     const [varianceSummary] = await db.query(
       `SELECT
-         variance_level,
+         CASE
+           WHEN ABS(CASE WHEN ici.system_quantity = 0 THEN 0 ELSE (ici.variance / ici.system_quantity * 100) END) > 10 THEN 'high'
+           WHEN ABS(CASE WHEN ici.system_quantity = 0 THEN 0 ELSE (ici.variance / ici.system_quantity * 100) END) > 5 THEN 'medium'
+           ELSE 'low'
+         END AS variance_level,
          COUNT(*) AS count,
-         AVG(ABS(variance_percentage)) AS avg_variance_pct
-       FROM count_variances
-       WHERE 1=1 ${dateFilter}
+         AVG(ABS(CASE WHEN ici.system_quantity = 0 THEN 0 ELSE (ici.variance / ici.system_quantity * 100) END)) AS avg_variance_pct
+       FROM inventory_count_items ici
+       JOIN inventory_counts ic ON ici.count_id = ic.id
+       WHERE ici.variance != 0 AND ic.status = 'completed' ${dateFilter.replace(/count_date/g, 'ic.count_date')}
        GROUP BY variance_level`,
       params
     );
@@ -589,13 +542,15 @@ exports.getCountStats = async (req, res) => {
     // Most problematic materials
     const [problematicMaterials] = await db.query(
       `SELECT
-         raw_material_id,
-         material_name,
+         ici.raw_material_id,
+         rm.name AS material_name,
          COUNT(*) AS variance_count,
-         AVG(ABS(variance_percentage)) AS avg_variance_pct
-       FROM count_variances
-       WHERE 1=1 ${dateFilter}
-       GROUP BY raw_material_id, material_name
+         AVG(ABS(CASE WHEN ici.system_quantity = 0 THEN 0 ELSE (ici.variance / ici.system_quantity * 100) END)) AS avg_variance_pct
+       FROM inventory_count_items ici
+       JOIN inventory_counts ic ON ici.count_id = ic.id
+       JOIN raw_materials rm ON ici.raw_material_id = rm.id
+       WHERE ici.variance != 0 AND ic.status = 'completed' ${dateFilter.replace(/count_date/g, 'ic.count_date')}
+       GROUP BY ici.raw_material_id, rm.name
        ORDER BY avg_variance_pct DESC
        LIMIT 10`,
       params
