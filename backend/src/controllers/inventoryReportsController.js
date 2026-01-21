@@ -424,8 +424,8 @@ exports.getSupplierDetails = async (req, res) => {
         const [supplier] = await db.query(`
             SELECT
                 s.*,
-                COUNT(DISTINCT ip.id) AS total_invoices,
-                COALESCE(SUM(ip.total_amount), 0) AS total_purchases,
+                COUNT(DISTINCT ip.id) AS total_purchases,
+                COALESCE(SUM(ip.total_amount), 0) AS total_amount,
                 COUNT(DISTINCT rm.id) AS materials_count
             FROM suppliers s
             LEFT JOIN inventory_purchases ip ON s.id = ip.supplier_id
@@ -495,12 +495,21 @@ exports.getSupplierMaterials = async (req, res) => {
                 rm.unit_cost,
                 rm.current_stock,
                 (rm.current_stock * rm.unit_cost) AS stock_value,
-                w.name AS warehouse_name
+                w.name AS warehouse_name,
+                COALESCE(
+                    (SELECT ipi.unit_cost
+                     FROM inventory_purchase_items ipi
+                     JOIN inventory_purchases ip ON ipi.purchase_id = ip.id
+                     WHERE ipi.raw_material_id = rm.id AND ip.supplier_id = ?
+                     ORDER BY ip.purchase_date DESC, ip.id DESC
+                     LIMIT 1),
+                    rm.unit_cost
+                ) AS last_purchase_price
             FROM raw_materials rm
             LEFT JOIN warehouses w ON rm.warehouse_id = w.id
             WHERE rm.supplier_id = ? AND rm.is_active = 1
             ORDER BY rm.name ASC
-        `, [id]);
+        `, [id, id]);
 
         res.json({
             success: true,
