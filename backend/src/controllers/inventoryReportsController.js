@@ -311,6 +311,7 @@ exports.getMaterialsConsumption = async (req, res) => {
         console.log('Sample Sale Transactions:', JSON.stringify(sampleTransactions, null, 2));
 
         // Combine consumption from both inventory_transactions (sales) and batch_consumption (FIFO)
+        // Note: Old records have corrupted data where quantity=0 and actual quantity is in reference_id (negative)
         const [consumption] = await db.query(`
             SELECT
                 rm.id,
@@ -324,7 +325,12 @@ exports.getMaterialsConsumption = async (req, res) => {
             LEFT JOIN (
                 SELECT
                     raw_material_id,
-                    ABS(SUM(quantity)) AS total_consumed,
+                    SUM(
+                        CASE
+                            WHEN quantity = 0 AND reference_id < 0 THEN ABS(reference_id)
+                            ELSE ABS(quantity)
+                        END
+                    ) AS total_consumed,
                     COUNT(*) AS times_used
                 FROM inventory_transactions
                 WHERE transaction_type = 'sale'
