@@ -88,7 +88,13 @@ exports.getCountById = async (req, res) => {
     // Get count items
     const [items] = await db.query(
       `SELECT
-         ici.*,
+         ici.id,
+         ici.count_id,
+         ici.raw_material_id,
+         ici.system_quantity,
+         ici.actual_quantity AS counted_quantity,
+         ici.variance,
+         ici.notes,
          rm.name AS material_name,
          rm.unit
        FROM inventory_count_items ici
@@ -178,7 +184,7 @@ exports.addCountItem = async (req, res) => {
       });
     }
 
-    // Check count exists and is draft or in_progress
+    // Check count exists and is draft
     const [counts] = await connection.query(
       `SELECT * FROM inventory_counts WHERE id = ?`,
       [count_id]
@@ -192,7 +198,7 @@ exports.addCountItem = async (req, res) => {
       });
     }
 
-    if (!['draft', 'in_progress'].includes(counts[0].status)) {
+    if (counts[0].status !== 'draft') {
       await connection.rollback();
       return res.status(400).json({
         success: false,
@@ -218,7 +224,7 @@ exports.addCountItem = async (req, res) => {
       // Update existing item
       await connection.query(
         `UPDATE inventory_count_items
-         SET counted_quantity = ?, system_quantity = ?, notes = ?
+         SET actual_quantity = ?, system_quantity = ?, notes = ?
          WHERE id = ?`,
         [counted_quantity, systemQuantity, notes, existingItems[0].id]
       );
@@ -226,17 +232,9 @@ exports.addCountItem = async (req, res) => {
       // Insert new item
       await connection.query(
         `INSERT INTO inventory_count_items
-         (count_id, raw_material_id, system_quantity, counted_quantity, notes)
+         (count_id, raw_material_id, system_quantity, actual_quantity, notes)
          VALUES (?, ?, ?, ?, ?)`,
         [count_id, raw_material_id, systemQuantity, counted_quantity, notes]
-      );
-    }
-
-    // Update count status to in_progress if still draft
-    if (counts[0].status === 'draft') {
-      await connection.query(
-        `UPDATE inventory_counts SET status = 'in_progress' WHERE id = ?`,
-        [count_id]
       );
     }
 
@@ -350,12 +348,12 @@ exports.completeCount = async (req, res) => {
       );
 
       for (const item of items) {
-        // Update material stock to match counted quantity
+        // Update material stock to match actual quantity
         await connection.query(
           `UPDATE raw_materials
            SET current_stock = ?
            WHERE id = ?`,
-          [item.counted_quantity, item.raw_material_id]
+          [item.actual_quantity, item.raw_material_id]
         );
 
         // Log transaction
@@ -445,13 +443,13 @@ exports.getCountVariances = async (req, res) => {
 
     let query = `
       SELECT
-        ic.count_number,
+        ic.id AS count_id,
         ic.warehouse_id,
         w.name AS warehouse_name,
         ici.raw_material_id,
         rm.name AS material_name,
         ici.system_quantity,
-        ici.counted_quantity,
+        ici.actual_quantity AS counted_quantity,
         ici.variance,
         CASE
           WHEN ici.system_quantity = 0 THEN 0
