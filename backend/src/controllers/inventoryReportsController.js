@@ -290,32 +290,12 @@ exports.getMaterialsConsumption = async (req, res) => {
     try {
         const days = parseInt(req.query.days) || 30;
 
-        // First check if there are any transactions at all (for debugging)
-        const [debugInfo] = await db.query(`
-            SELECT
-                (SELECT COUNT(*) FROM inventory_transactions WHERE transaction_type = 'sale') as sale_transactions,
-                (SELECT COUNT(*) FROM batch_consumption) as batch_consumptions,
-                (SELECT COUNT(*) FROM product_recipes) as product_recipes
-        `);
-
-        // Check actual transaction data to see if it's corrupted
-        const [sampleTransactions] = await db.query(`
-            SELECT id, raw_material_id, transaction_type, quantity, reference_type, reference_id, created_at
-            FROM inventory_transactions
-            WHERE transaction_type = 'sale'
-            ORDER BY created_at DESC
-            LIMIT 5
-        `);
-
-        console.log('Consumption Debug Info:', debugInfo[0]);
-        console.log('Sample Sale Transactions:', JSON.stringify(sampleTransactions, null, 2));
-
         // Combine consumption from both inventory_transactions (sales) and batch_consumption (FIFO)
         // Note: Old records have corrupted data where quantity=0 and actual quantity is in reference_id (negative)
         const [consumption] = await db.query(`
             SELECT
                 rm.id,
-                rm.name,
+                rm.name AS material_name,
                 rm.unit,
                 rm.unit_cost,
                 rm.current_stock,
@@ -351,18 +331,16 @@ exports.getMaterialsConsumption = async (req, res) => {
             ORDER BY total_consumed DESC
         `, [days, days]);
 
-        // Calculate consumption_value with unit_cost
+        // Calculate consumption_value and daily_rate
         const result = consumption.map(item => ({
             ...item,
-            consumption_value: parseFloat(item.total_consumed) * parseFloat(item.unit_cost || 0)
+            consumption_value: parseFloat(item.total_consumed) * parseFloat(item.unit_cost || 0),
+            daily_rate: parseFloat(item.total_consumed) / days
         }));
-
-        console.log('Consumption Results:', result.length, 'items found');
 
         res.json({
             success: true,
-            data: result,
-            debug: debugInfo[0] // Include debug info in response
+            data: result
         });
     } catch (error) {
         console.error('Get materials consumption error:', error);
