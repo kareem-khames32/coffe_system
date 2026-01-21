@@ -63,7 +63,7 @@ exports.getWarehouseDetails = async (req, res) => {
         const [materials] = await db.query(`
             SELECT
                 rm.id,
-                rm.name,
+                rm.name AS material_name,
                 rm.current_stock,
                 rm.unit,
                 rm.unit_cost,
@@ -71,10 +71,9 @@ exports.getWarehouseDetails = async (req, res) => {
                 (rm.current_stock * rm.unit_cost) AS total_value,
                 s.name AS supplier_name,
                 CASE
-                    WHEN rm.current_stock = 0 THEN 'out'
-                    WHEN rm.current_stock <= rm.min_stock THEN 'low'
-                    WHEN rm.current_stock <= rm.min_stock * 1.5 THEN 'warning'
-                    ELSE 'ok'
+                    WHEN rm.current_stock = 0 THEN 'out_of_stock'
+                    WHEN rm.current_stock <= rm.min_stock THEN 'low_stock'
+                    ELSE 'in_stock'
                 END AS stock_status
             FROM raw_materials rm
             LEFT JOIN suppliers s ON rm.supplier_id = s.id
@@ -101,7 +100,7 @@ exports.getWarehouseTransactions = async (req, res) => {
         const [transactions] = await db.query(`
             SELECT
                 it.id,
-                it.created_at,
+                it.created_at AS transaction_date,
                 it.transaction_type,
                 it.quantity,
                 it.unit_cost,
@@ -110,7 +109,7 @@ exports.getWarehouseTransactions = async (req, res) => {
                 it.notes,
                 rm.name AS material_name,
                 rm.unit,
-                u.full_name AS created_by_name
+                u.full_name AS user_name
             FROM inventory_transactions it
             JOIN raw_materials rm ON it.raw_material_id = rm.id
             LEFT JOIN users u ON it.created_by = u.id

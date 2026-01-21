@@ -91,8 +91,41 @@ const WarehousesReport = () => {
   };
 
   const exportToExcel = () => {
-    // TODO: Implement Excel export using xlsx library
-    alert('سيتم تنفيذ تصدير Excel قريباً');
+    let csvContent = '';
+    let filename = '';
+
+    if (activeTab === 'list') {
+      // Export warehouses list
+      csvContent = 'اسم المستودع,الموقع,عدد المواد,القيمة الإجمالية\n';
+      warehouses.forEach((w) => {
+        csvContent += `${w.warehouse_name},${w.location || '-'},${w.materials_count},${formatCurrency(w.total_value)}\n`;
+      });
+      filename = 'warehouses_report.csv';
+    } else if (activeTab === 'details') {
+      // Export warehouse details
+      csvContent = 'اسم المادة,المخزون الحالي,الحد الأدنى,الوحدة,سعر الوحدة,القيمة الإجمالية,الحالة\n';
+      warehouseDetails.forEach((m) => {
+        const status = m.stock_status === 'out_of_stock' ? 'نفذ' : m.stock_status === 'low_stock' ? 'منخفض' : 'متوفر';
+        csvContent += `${m.material_name},${m.current_stock},${m.min_stock},${m.unit},${m.unit_cost},${formatCurrency(m.total_value)},${status}\n`;
+      });
+      filename = `warehouse_${selectedWarehouse?.id}_details.csv`;
+    } else if (activeTab === 'transactions') {
+      // Export transactions
+      csvContent = 'التاريخ,المادة,نوع المعاملة,الكمية,الوحدة,المستخدم\n';
+      warehouseTransactions.forEach((t) => {
+        const type = t.transaction_type === 'purchase' ? 'شراء' : t.transaction_type === 'sale' ? 'بيع' : 'تعديل';
+        csvContent += `${new Date(t.transaction_date).toLocaleDateString('ar-EG')},${t.material_name},${type},${t.quantity},${t.unit},${t.user_name || '-'}\n`;
+      });
+      filename = `warehouse_${selectedWarehouse?.id}_transactions.csv`;
+    }
+
+    // Add BOM for UTF-8 encoding to support Arabic
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
   };
 
   if (loading) {
