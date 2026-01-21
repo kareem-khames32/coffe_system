@@ -11,6 +11,7 @@ import {
   ArrowRight,
   BarChart3,
   Eye,
+  Trash2,
 } from 'lucide-react';
 
 const formatCurrency = (value) => {
