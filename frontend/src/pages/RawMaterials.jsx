@@ -238,6 +238,7 @@ const RawMaterials = () => {
           raw_material_id: purchasingMaterial.id,
           batch_number: purchaseData.invoice_number || `BATCH-${Date.now()}`,
           quantity: parseFloat(purchaseData.quantity),
+          unit: purchasingMaterial.unit,
           production_date: purchaseData.production_date || null,
           expiry_date: purchaseData.expiry_date,
           supplier_id: parseInt(purchaseData.supplier_id),
