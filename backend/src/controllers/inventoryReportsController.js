@@ -290,27 +290,49 @@ exports.getMaterialsConsumption = async (req, res) => {
     try {
         const days = parseInt(req.query.days) || 30;
 
+        // Combine consumption from both inventory_transactions (sales) and batch_consumption (FIFO)
         const [consumption] = await db.query(`
             SELECT
                 rm.id,
                 rm.name,
                 rm.unit,
+                rm.unit_cost,
                 rm.current_stock,
-                ABS(COALESCE(SUM(CASE WHEN it.transaction_type IN ('sale', 'consumption') THEN it.quantity ELSE 0 END), 0)) AS total_consumed,
-                ABS(COALESCE(SUM(CASE WHEN it.transaction_type IN ('sale', 'consumption') THEN it.quantity * rm.unit_cost ELSE 0 END), 0)) AS consumption_value,
-                COUNT(CASE WHEN it.transaction_type IN ('sale', 'consumption') THEN 1 END) AS times_used
+                COALESCE(it_consumption.total_consumed, 0) + COALESCE(bc_consumption.total_consumed, 0) AS total_consumed,
+                COALESCE(it_consumption.times_used, 0) + COALESCE(bc_consumption.times_used, 0) AS times_used
             FROM raw_materials rm
-            LEFT JOIN inventory_transactions it ON rm.id = it.raw_material_id
-                AND it.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            LEFT JOIN (
+                SELECT
+                    raw_material_id,
+                    ABS(SUM(CASE WHEN transaction_type = 'sale' THEN quantity ELSE 0 END)) AS total_consumed,
+                    COUNT(CASE WHEN transaction_type = 'sale' THEN 1 END) AS times_used
+                FROM inventory_transactions
+                WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                GROUP BY raw_material_id
+            ) it_consumption ON rm.id = it_consumption.raw_material_id
+            LEFT JOIN (
+                SELECT
+                    raw_material_id,
+                    SUM(quantity_consumed) AS total_consumed,
+                    COUNT(*) AS times_used
+                FROM batch_consumption
+                WHERE consumption_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                GROUP BY raw_material_id
+            ) bc_consumption ON rm.id = bc_consumption.raw_material_id
             WHERE rm.is_active = 1
-            GROUP BY rm.id
             HAVING total_consumed > 0
             ORDER BY total_consumed DESC
-        `, [days]);
+        `, [days, days]);
+
+        // Calculate consumption_value with unit_cost
+        const result = consumption.map(item => ({
+            ...item,
+            consumption_value: parseFloat(item.total_consumed) * parseFloat(item.unit_cost || 0)
+        }));
 
         res.json({
             success: true,
-            data: consumption
+            data: result
         });
     } catch (error) {
         console.error('Get materials consumption error:', error);
