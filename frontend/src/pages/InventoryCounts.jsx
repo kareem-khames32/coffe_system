@@ -67,17 +67,17 @@ const InventoryCounts = () => {
 
   const fetchCounts = async () => {
     const response = await inventoryCountsAPI.getAll({});
-    setCounts(response.data.data);
+    setCounts(response.data?.data || []);
   };
 
   const fetchVariances = async () => {
     const response = await inventoryCountsAPI.getVariances({});
-    setVariances(response.data.data);
+    setVariances(response.data?.data || []);
   };
 
   const fetchStats = async () => {
     const response = await inventoryCountsAPI.getStats({});
-    setStats(response.data.data);
+    setStats(response.data?.data || null);
   };
 
   const handleCreateCount = async (e) => {
@@ -387,7 +387,7 @@ const InventoryCounts = () => {
             <div className="space-y-6">
               {/* Summary */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {stats.summary.map((item) => (
+                {(stats.summary || []).map((item) => (
                   <div key={item.status} className="bg-white rounded-lg shadow-md p-6">
                     <p className="text-sm text-gray-600 mb-2">{getStatusBadge(item.status)}</p>
                     <p className="text-3xl font-bold text-coffee-600">{item.count}</p>
