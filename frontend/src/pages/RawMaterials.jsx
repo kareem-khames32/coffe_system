@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { rawMaterialsAPI, suppliersAPI, warehousesAPI, inventoryPurchasesAPI } from '../api/services';
+import { rawMaterialsAPI, suppliersAPI, warehousesAPI, inventoryPurchasesAPI, materialBatchesAPI } from '../api/services';
 import { Plus, Edit, Trash2, X, Package, Search, AlertTriangle, TrendingUp, TrendingDown, ShoppingCart } from 'lucide-react';
 import MEASUREMENT_UNITS from '../constants/units';
 
@@ -39,6 +39,8 @@ const RawMaterials = () => {
     total_amount: 0,
     invoice_number: '',
     purchase_date: new Date().toISOString().split('T')[0],
+    production_date: '',
+    expiry_date: '',
     payment_terms: 'cash',
     notes: '',
   });
@@ -191,6 +193,8 @@ const RawMaterials = () => {
       total_amount: 0,
       invoice_number: '',
       purchase_date: new Date().toISOString().split('T')[0],
+      production_date: '',
+      expiry_date: '',
       payment_terms: 'cash',
       notes: '',
     });
@@ -225,7 +229,25 @@ const RawMaterials = () => {
         ],
       };
 
-      await inventoryPurchasesAPI.create(purchasePayload);
+      // Create the purchase
+      const purchaseResponse = await inventoryPurchasesAPI.create(purchasePayload);
+
+      // If expiry date is provided, create a material batch for expiry tracking
+      if (purchaseData.expiry_date) {
+        const batchPayload = {
+          raw_material_id: purchasingMaterial.id,
+          batch_number: purchaseData.invoice_number || `BATCH-${Date.now()}`,
+          quantity: parseFloat(purchaseData.quantity),
+          production_date: purchaseData.production_date || null,
+          expiry_date: purchaseData.expiry_date,
+          supplier_id: parseInt(purchaseData.supplier_id),
+          purchase_price: parseFloat(purchaseData.unit_price),
+          notes: purchaseData.notes,
+        };
+
+        await materialBatchesAPI.addBatch(batchPayload);
+      }
+
       alert('تم إضافة المشتريات بنجاح');
       fetchData();
       closePurchaseModal();
@@ -817,6 +839,38 @@ const RawMaterials = () => {
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
                     required
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* Production Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    تاريخ الإنتاج
+                  </label>
+                  <input
+                    type="date"
+                    value={purchaseData.production_date}
+                    onChange={(e) =>
+                      setPurchaseData({ ...purchaseData, production_date: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* Expiry Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    تاريخ انتهاء الصلاحية
+                  </label>
+                  <input
+                    type="date"
+                    value={purchaseData.expiry_date}
+                    onChange={(e) =>
+                      setPurchaseData({ ...purchaseData, expiry_date: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
                     disabled={loading}
                   />
                 </div>
