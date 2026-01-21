@@ -103,7 +103,6 @@ exports.getWarehouseTransactions = async (req, res) => {
                 it.created_at AS transaction_date,
                 it.transaction_type,
                 it.quantity,
-                it.unit_cost,
                 it.reference_type,
                 it.reference_id,
                 it.notes,
