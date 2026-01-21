@@ -143,19 +143,9 @@ const Sidebar = () => {
       icon: DollarSign,
     },
     {
-      name: 'دفعات المواد',
-      path: '/material-batches',
-      icon: Package,
-    },
-    {
       name: 'نقل المخزون',
       path: '/stock-transfers',
       icon: Truck,
-    },
-    {
-      name: 'إدارة FIFO',
-      path: '/fifo-management',
-      icon: TrendingUp,
     },
     {
       name: 'الجرد المخزني',
