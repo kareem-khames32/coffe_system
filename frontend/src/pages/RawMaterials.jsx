@@ -241,8 +241,8 @@ const RawMaterials = () => {
           unit: purchasingMaterial.unit,
           production_date: purchaseData.production_date || null,
           expiry_date: purchaseData.expiry_date,
-          supplier_id: parseInt(purchaseData.supplier_id),
-          purchase_price: parseFloat(purchaseData.unit_price),
+          warehouse_id: purchasingMaterial.warehouse_id,
+          unit_cost: parseFloat(purchaseData.unit_price),
           notes: purchaseData.notes,
         };
 
