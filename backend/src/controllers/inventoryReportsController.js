@@ -136,7 +136,7 @@ exports.getMaterialsSummary = async (req, res) => {
     try {
         const [summary] = await db.query(`
             SELECT
-                COUNT(*) AS total_count,
+                COUNT(*) AS total_materials,
                 SUM(current_stock * unit_cost) AS total_value,
                 SUM(CASE WHEN current_stock <= min_stock AND current_stock > 0 THEN 1 ELSE 0 END) AS low_stock_count,
                 SUM(CASE WHEN current_stock = 0 THEN 1 ELSE 0 END) AS out_of_stock_count,
