@@ -275,7 +275,7 @@ const InventoryCounts = () => {
                     counts.map((count) => (
                       <tr key={count.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {count.count_number}
+                          جرد #{count.id}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {count.warehouse_name}
@@ -350,7 +350,7 @@ const InventoryCounts = () => {
                     variances.map((variance, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {variance.count_number}
+                          جرد #{variance.count_id}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {variance.material_name}
@@ -367,9 +367,9 @@ const InventoryCounts = () => {
                           {variance.variance > 0 ? '+' : ''}{variance.variance}
                         </td>
                         <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                          Math.abs(variance.variance_percentage) > 10 ? 'text-red-600' : 'text-gray-900'
+                          Math.abs(variance.variance_percentage || 0) > 10 ? 'text-red-600' : 'text-gray-900'
                         }`}>
-                          {variance.variance_percentage.toFixed(2)}%
+                          {(variance.variance_percentage || 0).toFixed(2)}%
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getVarianceBadge(variance.variance_level)}
@@ -492,7 +492,7 @@ const InventoryCounts = () => {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h2 className="text-xl font-bold">تفاصيل الجرد</h2>
-                <p className="text-sm text-gray-600">{selectedCount.count.count_number}</p>
+                <p className="text-sm text-gray-600">جرد #{selectedCount.count.id}</p>
               </div>
               <div className="flex gap-2">
                 {['draft', 'in_progress'].includes(selectedCount.count.status) && (
