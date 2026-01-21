@@ -9,6 +9,12 @@ router.use(verifyToken);
 // Get all inventory counts
 router.get('/', inventoryCountsController.getAllCounts);
 
+// Get count variances - MUST be before /:id
+router.get('/variances/all', inventoryCountsController.getCountVariances);
+
+// Get count statistics - MUST be before /:id
+router.get('/stats/summary', inventoryCountsController.getCountStats);
+
 // Get count by ID with items
 router.get('/:id', inventoryCountsController.getCountById);
 
@@ -26,11 +32,5 @@ router.post('/:id/complete', inventoryCountsController.completeCount);
 
 // Cancel count
 router.post('/:id/cancel', inventoryCountsController.cancelCount);
-
-// Get count variances
-router.get('/variances/all', inventoryCountsController.getCountVariances);
-
-// Get count statistics
-router.get('/stats/summary', inventoryCountsController.getCountStats);
 
 module.exports = router;
