@@ -415,9 +415,9 @@ const InventoryCountsContent = () => {
                           {variance.variance > 0 ? '+' : ''}{variance.variance}
                         </td>
                         <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                          Math.abs(variance.variance_percentage || 0) > 10 ? 'text-red-600' : 'text-gray-900'
+                          Math.abs(parseFloat(variance.variance_percentage) || 0) > 10 ? 'text-red-600' : 'text-gray-900'
                         }`}>
-                          {(variance.variance_percentage || 0).toFixed(2)}%
+                          {(parseFloat(variance.variance_percentage) || 0).toFixed(2)}%
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getVarianceBadge(variance.variance_level)}
