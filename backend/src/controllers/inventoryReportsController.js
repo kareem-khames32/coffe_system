@@ -261,13 +261,14 @@ exports.getMaterialTransactions = async (req, res) => {
                 it.created_at,
                 it.transaction_type,
                 it.quantity,
-                it.unit_cost,
-                (it.quantity * COALESCE(it.unit_cost, 0)) AS total_value,
+                rm.unit_cost,
+                (it.quantity * COALESCE(rm.unit_cost, 0)) AS total_value,
                 it.reference_type,
                 it.reference_id,
                 it.notes,
                 u.full_name AS created_by_name
             FROM inventory_transactions it
+            JOIN raw_materials rm ON it.raw_material_id = rm.id
             LEFT JOIN users u ON it.created_by = u.id
             WHERE it.raw_material_id = ?
             ORDER BY it.created_at DESC
@@ -295,7 +296,7 @@ exports.getMaterialsConsumption = async (req, res) => {
                 rm.name,
                 rm.unit,
                 ABS(COALESCE(SUM(CASE WHEN it.transaction_type = 'sale' THEN it.quantity ELSE 0 END), 0)) AS total_consumed,
-                ABS(COALESCE(SUM(CASE WHEN it.transaction_type = 'sale' THEN it.quantity * it.unit_cost ELSE 0 END), 0)) AS consumption_value,
+                ABS(COALESCE(SUM(CASE WHEN it.transaction_type = 'sale' THEN it.quantity * rm.unit_cost ELSE 0 END), 0)) AS consumption_value,
                 COUNT(CASE WHEN it.transaction_type = 'sale' THEN 1 END) AS times_used
             FROM raw_materials rm
             LEFT JOIN inventory_transactions it ON rm.id = it.raw_material_id
