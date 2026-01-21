@@ -298,7 +298,17 @@ exports.getMaterialsConsumption = async (req, res) => {
                 (SELECT COUNT(*) FROM product_recipes) as product_recipes
         `);
 
+        // Check actual transaction data to see if it's corrupted
+        const [sampleTransactions] = await db.query(`
+            SELECT id, raw_material_id, transaction_type, quantity, reference_type, reference_id, created_at
+            FROM inventory_transactions
+            WHERE transaction_type = 'sale'
+            ORDER BY created_at DESC
+            LIMIT 5
+        `);
+
         console.log('Consumption Debug Info:', debugInfo[0]);
+        console.log('Sample Sale Transactions:', JSON.stringify(sampleTransactions, null, 2));
 
         // Combine consumption from both inventory_transactions (sales) and batch_consumption (FIFO)
         const [consumption] = await db.query(`
