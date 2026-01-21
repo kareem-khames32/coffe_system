@@ -613,15 +613,15 @@ const MaterialsReport = () => {
                               {formatCurrency(material.current_stock)} {material.unit}
                             </td>
                             <td className="px-6 py-4 text-green-600 font-semibold">
-                              {formatCurrency(material.stock_value)} ج.م
+                              {formatCurrency(material.total_value)} ج.م
                             </td>
                             <td className="px-6 py-4 text-amber-700">
-                              {material.last_transaction_date
-                                ? new Date(material.last_transaction_date).toLocaleDateString('ar-EG')
+                              {material.last_movement
+                                ? new Date(material.last_movement).toLocaleDateString('ar-EG')
                                 : 'لا توجد حركة'}
                             </td>
                             <td className="px-6 py-4 text-red-600 font-bold">
-                              {material.days_since_last_transaction || '-'} يوم
+                              {material.days_since_movement || '-'} يوم
                             </td>
                           </tr>
                         ))
