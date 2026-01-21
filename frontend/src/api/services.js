@@ -180,7 +180,7 @@ export const inventoryReportsAPI = {
   getOutOfStockMaterials: () => axios.get('/reports/inventory/materials/out-of-stock'),
   getNoMovementMaterials: (days) => axios.get('/reports/inventory/materials/no-movement', { params: { days } }),
   getMaterialTransactions: (id, params) => axios.get(`/reports/inventory/materials/${id}/transactions`, { params }),
-  getMaterialsConsumption: (days) => axios.get('/reports/inventory/materials/consumption', { params: { days } }),
+  getMaterialsConsumption: (params) => axios.get('/reports/inventory/materials/consumption', { params }),
 
   // Suppliers Reports
   getSuppliersSummary: () => axios.get('/reports/inventory/suppliers/summary'),

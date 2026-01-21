@@ -288,7 +288,26 @@ exports.getMaterialTransactions = async (req, res) => {
 // استهلاك المواد
 exports.getMaterialsConsumption = async (req, res) => {
     try {
+        const { startDate, endDate } = req.query;
         const days = parseInt(req.query.days) || 30;
+
+        // Calculate date range
+        let dateConditionIT, dateConditionBC, params;
+        let daysDiff = days;
+
+        if (startDate && endDate) {
+            dateConditionIT = 'AND created_at >= ? AND created_at <= DATE_ADD(?, INTERVAL 1 DAY)';
+            dateConditionBC = 'AND consumption_date >= ? AND consumption_date <= DATE_ADD(?, INTERVAL 1 DAY)';
+            params = [startDate, endDate, startDate, endDate];
+            // Calculate days difference for daily rate
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            daysDiff = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
+        } else {
+            dateConditionIT = 'AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)';
+            dateConditionBC = 'AND consumption_date >= DATE_SUB(NOW(), INTERVAL ? DAY)';
+            params = [days, days];
+        }
 
         // Combine consumption from both inventory_transactions (sales) and batch_consumption (FIFO)
         // Note: Old records have corrupted data where quantity=0 and actual quantity is in reference_id (negative)
@@ -314,7 +333,7 @@ exports.getMaterialsConsumption = async (req, res) => {
                     COUNT(*) AS times_used
                 FROM inventory_transactions
                 WHERE transaction_type = 'sale'
-                    AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                    ${dateConditionIT}
                 GROUP BY raw_material_id
             ) it_consumption ON rm.id = it_consumption.raw_material_id
             LEFT JOIN (
@@ -323,19 +342,20 @@ exports.getMaterialsConsumption = async (req, res) => {
                     SUM(quantity_consumed) AS total_consumed,
                     COUNT(*) AS times_used
                 FROM batch_consumption
-                WHERE consumption_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                WHERE 1=1
+                    ${dateConditionBC}
                 GROUP BY raw_material_id
             ) bc_consumption ON rm.id = bc_consumption.raw_material_id
             WHERE rm.is_active = 1
                 AND (COALESCE(it_consumption.total_consumed, 0) + COALESCE(bc_consumption.total_consumed, 0)) > 0
             ORDER BY total_consumed DESC
-        `, [days, days]);
+        `, params);
 
         // Calculate consumption_value and daily_rate
         const result = consumption.map(item => ({
             ...item,
             consumption_value: parseFloat(item.total_consumed) * parseFloat(item.unit_cost || 0),
-            daily_rate: parseFloat(item.total_consumed) / days
+            daily_rate: parseFloat(item.total_consumed) / daysDiff
         }));
 
         res.json({

@@ -31,12 +31,29 @@ const MaterialsReport = () => {
   const [noMovement, setNoMovement] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [consumptionDays, setConsumptionDays] = useState(30);
+
+  // Date range filters
+  const [consumptionStartDate, setConsumptionStartDate] = useState(() => {
+    // Default to 30 days ago
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date.toISOString().split('T')[0];
+  });
+  const [consumptionEndDate, setConsumptionEndDate] = useState(() => {
+    // Default to today
+    return new Date().toISOString().split('T')[0];
+  });
   const [noMovementDays, setNoMovementDays] = useState(60);
 
   useEffect(() => {
     fetchData();
-  }, [activeTab, consumptionDays, noMovementDays]);
+  }, [activeTab, noMovementDays]);
+
+  const handleConsumptionFilter = () => {
+    if (activeTab === 'consumption') {
+      fetchData();
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -61,7 +78,10 @@ const MaterialsReport = () => {
           setOutOfStockMaterials(outOfStockRes.data.data);
           break;
         case 'consumption':
-          const consumptionRes = await inventoryReportsAPI.getMaterialsConsumption(consumptionDays);
+          const consumptionRes = await inventoryReportsAPI.getMaterialsConsumption({
+            startDate: consumptionStartDate,
+            endDate: consumptionEndDate
+          });
           setConsumption(consumptionRes.data.data);
           break;
         case 'no-movement':
@@ -123,7 +143,7 @@ const MaterialsReport = () => {
 
       case 'consumption':
         if (!consumption.length) return alert('لا توجد بيانات للتصدير');
-        filename = `consumption-report-${consumptionDays}-days`;
+        filename = `consumption-report-${consumptionStartDate}-to-${consumptionEndDate}`;
         csvContent = 'اسم المادة,الكمية المستهلكة,الوحدة,القيمة,المخزون الحالي,معدل الاستهلاك اليومي\n';
         consumption.forEach((m) => {
           csvContent += `${m.material_name},${formatCurrency(m.total_consumed)},${m.unit},${formatCurrency(m.consumption_value)},${formatCurrency(m.current_stock)},${formatCurrency(m.daily_rate)}\n`;
@@ -450,18 +470,32 @@ const MaterialsReport = () => {
           {activeTab === 'consumption' && (
             <>
               <div className="bg-white rounded-xl shadow-xl border-2 border-amber-200 p-4">
-                <label className="block text-amber-900 font-semibold mb-2">الفترة الزمنية:</label>
-                <select
-                  value={consumptionDays}
-                  onChange={(e) => setConsumptionDays(Number(e.target.value))}
-                  className="px-4 py-2 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-coffee-500"
-                >
-                  <option value={7}>آخر 7 أيام</option>
-                  <option value={14}>آخر 14 يوم</option>
-                  <option value={30}>آخر 30 يوم</option>
-                  <option value={60}>آخر 60 يوم</option>
-                  <option value={90}>آخر 90 يوم</option>
-                </select>
+                <div className="flex flex-wrap items-end gap-4">
+                  <div>
+                    <label className="block text-amber-900 font-semibold mb-2">من تاريخ:</label>
+                    <input
+                      type="date"
+                      value={consumptionStartDate}
+                      onChange={(e) => setConsumptionStartDate(e.target.value)}
+                      className="px-4 py-2 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-coffee-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-amber-900 font-semibold mb-2">إلى تاريخ:</label>
+                    <input
+                      type="date"
+                      value={consumptionEndDate}
+                      onChange={(e) => setConsumptionEndDate(e.target.value)}
+                      className="px-4 py-2 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-coffee-500"
+                    />
+                  </div>
+                  <button
+                    onClick={handleConsumptionFilter}
+                    className="px-6 py-2 bg-gradient-to-r from-coffee-600 to-coffee-500 hover:from-coffee-700 hover:to-coffee-600 text-white rounded-lg transition-all shadow-lg"
+                  >
+                    عرض
+                  </button>
+                </div>
               </div>
 
               <div className="bg-white rounded-xl shadow-xl border-2 border-amber-200 overflow-hidden">
