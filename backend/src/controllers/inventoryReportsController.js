@@ -641,9 +641,9 @@ exports.getTopPurchasedMaterials = async (req, res) => {
                 rm.name,
                 rm.unit,
                 SUM(ipi.quantity) AS total_quantity,
-                SUM(ipi.total_price) AS total_value,
+                SUM(ipi.total_cost) AS total_value,
                 COUNT(DISTINCT ipi.purchase_id) AS purchase_times,
-                AVG(ipi.unit_price) AS avg_price
+                AVG(ipi.unit_cost) AS avg_price
             FROM inventory_purchase_items ipi
             JOIN raw_materials rm ON ipi.raw_material_id = rm.id
             JOIN inventory_purchases ip ON ipi.purchase_id = ip.id
