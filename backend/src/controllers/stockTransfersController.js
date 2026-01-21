@@ -299,9 +299,9 @@ exports.approveTransfer = async (req, res) => {
             // Log transaction
             await connection.query(`
                 INSERT INTO inventory_transactions
-                (raw_material_id, transaction_type, quantity, unit, transaction_date, reference_id, notes, created_by)
-                VALUES (?, 'transfer_out', ?, ?, CURDATE(), ?, ?, ?)
-            `, [item.raw_material_id, -item.quantity, item.unit, id,
+                (raw_material_id, transaction_type, quantity, reference_type, reference_id, notes, created_by)
+                VALUES (?, 'transfer', ?, 'transfer_out', ?, ?, ?)
+            `, [item.raw_material_id, -item.quantity, id,
                 `نقل خارج إلى مستودع آخر - رقم النقلية: ${transfer[0].transfer_number}`, req.user.id]);
         }
 
@@ -384,9 +384,9 @@ exports.completeTransfer = async (req, res) => {
             // Log transaction
             await connection.query(`
                 INSERT INTO inventory_transactions
-                (raw_material_id, transaction_type, quantity, unit, transaction_date, reference_id, notes, created_by)
-                VALUES (?, 'transfer_in', ?, ?, CURDATE(), ?, ?, ?)
-            `, [item.raw_material_id, item.quantity, item.unit, id,
+                (raw_material_id, transaction_type, quantity, reference_type, reference_id, notes, created_by)
+                VALUES (?, 'transfer', ?, 'transfer_in', ?, ?, ?)
+            `, [item.raw_material_id, item.quantity, id,
                 `نقل وارد من مستودع آخر - رقم النقلية: ${transfer[0].transfer_number}`, req.user.id]);
         }
 
@@ -453,9 +453,9 @@ exports.cancelTransfer = async (req, res) => {
                 // Log transaction
                 await connection.query(`
                     INSERT INTO inventory_transactions
-                    (raw_material_id, transaction_type, quantity, unit, transaction_date, reference_id, notes, created_by)
-                    VALUES (?, 'transfer_cancelled', ?, ?, CURDATE(), ?, ?, ?)
-                `, [item.raw_material_id, item.quantity, item.unit, id,
+                    (raw_material_id, transaction_type, quantity, reference_type, reference_id, notes, created_by)
+                    VALUES (?, 'adjustment', ?, 'transfer_cancelled', ?, ?, ?)
+                `, [item.raw_material_id, item.quantity, id,
                     `إلغاء نقلية: ${transfer[0].transfer_number}. ${reason || ''}`, req.user.id]);
             }
         }
