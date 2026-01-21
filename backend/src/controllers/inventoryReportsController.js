@@ -290,6 +290,16 @@ exports.getMaterialsConsumption = async (req, res) => {
     try {
         const days = parseInt(req.query.days) || 30;
 
+        // First check if there are any transactions at all (for debugging)
+        const [debugInfo] = await db.query(`
+            SELECT
+                (SELECT COUNT(*) FROM inventory_transactions WHERE transaction_type = 'sale') as sale_transactions,
+                (SELECT COUNT(*) FROM batch_consumption) as batch_consumptions,
+                (SELECT COUNT(*) FROM product_recipes) as product_recipes
+        `);
+
+        console.log('Consumption Debug Info:', debugInfo[0]);
+
         // Combine consumption from both inventory_transactions (sales) and batch_consumption (FIFO)
         const [consumption] = await db.query(`
             SELECT
@@ -304,10 +314,11 @@ exports.getMaterialsConsumption = async (req, res) => {
             LEFT JOIN (
                 SELECT
                     raw_material_id,
-                    ABS(SUM(CASE WHEN transaction_type = 'sale' THEN quantity ELSE 0 END)) AS total_consumed,
-                    COUNT(CASE WHEN transaction_type = 'sale' THEN 1 END) AS times_used
+                    ABS(SUM(quantity)) AS total_consumed,
+                    COUNT(*) AS times_used
                 FROM inventory_transactions
-                WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                WHERE transaction_type = 'sale'
+                    AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
                 GROUP BY raw_material_id
             ) it_consumption ON rm.id = it_consumption.raw_material_id
             LEFT JOIN (
@@ -320,7 +331,7 @@ exports.getMaterialsConsumption = async (req, res) => {
                 GROUP BY raw_material_id
             ) bc_consumption ON rm.id = bc_consumption.raw_material_id
             WHERE rm.is_active = 1
-            HAVING total_consumed > 0
+                AND (COALESCE(it_consumption.total_consumed, 0) + COALESCE(bc_consumption.total_consumed, 0)) > 0
             ORDER BY total_consumed DESC
         `, [days, days]);
 
@@ -330,9 +341,12 @@ exports.getMaterialsConsumption = async (req, res) => {
             consumption_value: parseFloat(item.total_consumed) * parseFloat(item.unit_cost || 0)
         }));
 
+        console.log('Consumption Results:', result.length, 'items found');
+
         res.json({
             success: true,
-            data: result
+            data: result,
+            debug: debugInfo[0] // Include debug info in response
         });
     } catch (error) {
         console.error('Get materials consumption error:', error);
