@@ -48,8 +48,8 @@ const InventoryCounts = () => {
         rawMaterialsAPI.getAll(),
         warehousesAPI.getAll(),
       ]);
-      setMaterials(materialsRes.data.data);
-      setWarehouses(warehousesRes.data.data);
+      setMaterials(materialsRes.data?.data || []);
+      setWarehouses(warehousesRes.data?.data || []);
 
       if (activeTab === 'counts') {
         await fetchCounts();
@@ -66,18 +66,33 @@ const InventoryCounts = () => {
   };
 
   const fetchCounts = async () => {
-    const response = await inventoryCountsAPI.getAll({});
-    setCounts(response.data?.data || []);
+    try {
+      const response = await inventoryCountsAPI.getAll({});
+      setCounts(response.data?.data || []);
+    } catch (error) {
+      console.error('Error fetching counts:', error);
+      setCounts([]);
+    }
   };
 
   const fetchVariances = async () => {
-    const response = await inventoryCountsAPI.getVariances({});
-    setVariances(response.data?.data || []);
+    try {
+      const response = await inventoryCountsAPI.getVariances({});
+      setVariances(response.data?.data || []);
+    } catch (error) {
+      console.error('Error fetching variances:', error);
+      setVariances([]);
+    }
   };
 
   const fetchStats = async () => {
-    const response = await inventoryCountsAPI.getStats({});
-    setStats(response.data?.data || null);
+    try {
+      const response = await inventoryCountsAPI.getStats({});
+      setStats(response.data?.data || null);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      setStats(null);
+    }
   };
 
   const handleCreateCount = async (e) => {
