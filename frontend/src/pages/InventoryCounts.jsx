@@ -1,17 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component } from 'react';
 import { inventoryCountsAPI, rawMaterialsAPI, warehousesAPI } from '../api/services';
 import {
   ClipboardList,
   Plus,
-  Check,
   X,
   AlertTriangle,
-  FileText,
   BarChart3,
-  Calendar,
 } from 'lucide-react';
 
-const InventoryCounts = () => {
+// Error Boundary to catch and display errors
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('InventoryCounts Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 bg-red-50 text-red-700 rounded-lg m-4">
+          <h2 className="text-xl font-bold mb-2">حدث خطأ</h2>
+          <pre className="bg-red-100 p-4 rounded overflow-auto text-sm">
+            {this.state.error?.toString()}
+          </pre>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-red-600 text-white px-4 py-2 rounded"
+          >
+            إعادة تحميل الصفحة
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const InventoryCountsContent = () => {
   const [activeTab, setActiveTab] = useState('counts');
   const [counts, setCounts] = useState([]);
   const [variances, setVariances] = useState([]);
@@ -683,5 +716,12 @@ const InventoryCounts = () => {
     </div>
   );
 };
+
+// Wrapper component with ErrorBoundary
+const InventoryCounts = () => (
+  <ErrorBoundary>
+    <InventoryCountsContent />
+  </ErrorBoundary>
+);
 
 export default InventoryCounts;
