@@ -80,7 +80,78 @@ const MaterialsReport = () => {
   };
 
   const exportToExcel = () => {
-    alert('سيتم تنفيذ تصدير Excel قريباً');
+    let csvContent = '';
+    let filename = 'materials-report';
+
+    switch (activeTab) {
+      case 'summary':
+        if (!summary) return alert('لا توجد بيانات للتصدير');
+        filename = 'materials-summary';
+        csvContent = 'التقرير,القيمة\n';
+        csvContent += `إجمالي المواد,${summary.total_materials || 0}\n`;
+        csvContent += `القيمة الإجمالية,${formatCurrency(summary.total_value)} ج.م\n`;
+        csvContent += `مواد قليلة المخزون,${summary.low_stock_count || 0}\n`;
+        csvContent += `مواد نفذت,${summary.out_of_stock_count || 0}\n`;
+        break;
+
+      case 'by-value':
+        if (!materialsByValue.length) return alert('لا توجد بيانات للتصدير');
+        filename = 'materials-by-value';
+        csvContent = 'الترتيب,اسم المادة,المخزون الحالي,الوحدة,سعر الوحدة,القيمة الإجمالية\n';
+        materialsByValue.forEach((m, i) => {
+          csvContent += `${i + 1},${m.name},${m.current_stock},${m.unit},${formatCurrency(m.unit_cost)},${formatCurrency(m.total_value)}\n`;
+        });
+        break;
+
+      case 'low-stock':
+        if (!lowStockMaterials.length) return alert('لا توجد بيانات للتصدير');
+        filename = 'low-stock-materials';
+        csvContent = 'اسم المادة,المخزون الحالي,الحد الأدنى,الوحدة,المستودع\n';
+        lowStockMaterials.forEach((m) => {
+          csvContent += `${m.name},${m.current_stock},${m.min_stock || '-'},${m.unit},${m.warehouse_name || '-'}\n`;
+        });
+        break;
+
+      case 'out-of-stock':
+        if (!outOfStockMaterials.length) return alert('لا توجد بيانات للتصدير');
+        filename = 'out-of-stock-materials';
+        csvContent = 'اسم المادة,المخزون الحالي,الوحدة,المستودع,المورد\n';
+        outOfStockMaterials.forEach((m) => {
+          csvContent += `${m.name},${m.current_stock},${m.unit},${m.warehouse_name || '-'},${m.supplier_name || '-'}\n`;
+        });
+        break;
+
+      case 'consumption':
+        if (!consumption.length) return alert('لا توجد بيانات للتصدير');
+        filename = `consumption-report-${consumptionDays}-days`;
+        csvContent = 'اسم المادة,الكمية المستهلكة,الوحدة,القيمة,المخزون الحالي,معدل الاستهلاك اليومي\n';
+        consumption.forEach((m) => {
+          csvContent += `${m.material_name},${formatCurrency(m.total_consumed)},${m.unit},${formatCurrency(m.consumption_value)},${formatCurrency(m.current_stock)},${formatCurrency(m.daily_rate)}\n`;
+        });
+        break;
+
+      case 'no-movement':
+        if (!noMovement.length) return alert('لا توجد بيانات للتصدير');
+        filename = `no-movement-${noMovementDays}-days`;
+        csvContent = 'اسم المادة,المخزون الحالي,الوحدة,القيمة,آخر حركة\n';
+        noMovement.forEach((m) => {
+          const lastMovement = m.last_movement ? new Date(m.last_movement).toLocaleDateString('ar-EG') : 'لا يوجد';
+          csvContent += `${m.name},${m.current_stock},${m.unit},${formatCurrency(m.total_value)},${lastMovement}\n`;
+        });
+        break;
+
+      default:
+        return alert('لا توجد بيانات للتصدير');
+    }
+
+    // Add UTF-8 BOM for Arabic support
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
   };
 
   const tabs = [
