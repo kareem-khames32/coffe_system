@@ -32,7 +32,7 @@ const Orders = () => {
       order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || order.order_type === filterType;
-    const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
+    const matchesStatus = filterStatus === 'all' || order.order_status === filterStatus;
     return matchesSearch && matchesType && matchesStatus;
   });
 
@@ -98,7 +98,7 @@ const Orders = () => {
   };
 
   const getOrderTypeText = (type) => {
-    return type === 'in-store' ? 'داخل المقهى' : 'أونلاين';
+    return type === 'dine-in' ? 'داخل المقهى' : 'أونلاين';
   };
 
   const getNextStatuses = (currentStatus, orderType) => {
@@ -185,7 +185,7 @@ const Orders = () => {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coffee-500 focus:border-transparent outline-none"
           >
             <option value="all">جميع الأنواع</option>
-            <option value="in-store">داخل المقهى</option>
+            <option value="dine-in">داخل المقهى</option>
             <option value="online">أونلاين</option>
           </select>
 
@@ -254,8 +254,8 @@ const Orders = () => {
                     {parseFloat(order.total || 0).toFixed(2)} ج.م
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
-                      {getStatusText(order.status)}
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.order_status)}`}>
+                      {getStatusText(order.order_status)}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -417,7 +417,7 @@ const Orders = () => {
                   طباعة الفاتورة
                 </button>
 
-                {selectedOrder.status !== 'cancelled' && (
+                {selectedOrder.order_status !== 'cancelled' && (
                   <button
                     onClick={() => handleCancelOrder(selectedOrder.id)}
                     disabled={loading}
@@ -430,11 +430,11 @@ const Orders = () => {
               </div>
 
               {/* Status Update */}
-              {getNextStatuses(selectedOrder.status, selectedOrder.order_type).length > 0 && (
+              {getNextStatuses(selectedOrder.order_status, selectedOrder.order_type).length > 0 && (
                 <div>
                   <h3 className="text-lg font-bold mb-3">تحديث حالة الطلب</h3>
                   <div className="flex gap-2 flex-wrap">
-                    {getNextStatuses(selectedOrder.status, selectedOrder.order_type).map((status) => (
+                    {getNextStatuses(selectedOrder.order_status, selectedOrder.order_type).map((status) => (
                       <button
                         key={status}
                         onClick={() => updateOrderStatus(selectedOrder.id, status)}
