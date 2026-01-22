@@ -27,12 +27,12 @@ const OnlineOrder = () => {
     try {
       const today = new Date().toISOString().split('T')[0];
       const [productsRes, categoriesRes, offersRes, dailyDiscountRes] = await Promise.all([
-        productsAPI.getAll(),
+        productsAPI.getAvailable(),
         categoriesAPI.getAll(),
         offersAPI.getActive(),
         dailyDiscountsAPI.getForDate(today),
       ]);
-      setProducts(productsRes.data.data.filter(p => p.is_active));
+      setProducts(productsRes.data.data || []);
       setCategories(categoriesRes.data.data);
       setOffers(offersRes.data.data);
 
