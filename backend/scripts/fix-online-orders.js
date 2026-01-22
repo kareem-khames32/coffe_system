@@ -54,6 +54,15 @@ async function fixOnlineOrders() {
       console.error('⚠️  Error updating order_status:', error.message, '\n');
     }
 
+    // Make created_by nullable for online orders (no authenticated user)
+    try {
+      console.log('Making created_by nullable for online orders...');
+      await connection.query(`ALTER TABLE orders MODIFY COLUMN created_by INT NULL`);
+      console.log('✅ created_by is now nullable\n');
+    } catch (error) {
+      console.error('⚠️  Error updating created_by:', error.message, '\n');
+    }
+
     console.log('🎉 Done! Online orders should now work correctly.');
 
   } catch (error) {
