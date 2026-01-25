@@ -39,22 +39,15 @@ const Orders = () => {
   const updateOrderStatus = async (orderId, newStatus) => {
     setLoading(true);
     try {
-      console.log('Updating order', orderId, 'to status', newStatus);
-      const updateRes = await ordersAPI.updateStatus(orderId, newStatus);
-      console.log('Update response:', updateRes.data);
-
-      await fetchOrders();
-
-      if (selectedOrder && selectedOrder.id === orderId) {
-        const response = await ordersAPI.getById(orderId);
-        console.log('Refreshed order:', response.data.data);
-        setSelectedOrder(response.data.data);
-      }
+      await ordersAPI.updateStatus(orderId, newStatus);
       alert('تم تحديث حالة الطلب بنجاح');
+      // Close modal and refresh page to ensure data is updated
+      setShowModal(false);
+      setSelectedOrder(null);
+      window.location.reload();
     } catch (error) {
       console.error('Update error:', error);
       alert('حدث خطأ: ' + (error.response?.data?.message || 'خطأ في الخادم'));
-    } finally {
       setLoading(false);
     }
   };
