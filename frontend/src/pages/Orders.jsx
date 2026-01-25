@@ -39,14 +39,20 @@ const Orders = () => {
   const updateOrderStatus = async (orderId, newStatus) => {
     setLoading(true);
     try {
-      await ordersAPI.updateStatus(orderId, newStatus);
-      alert('تم تحديث حالة الطلب بنجاح');
-      fetchOrders();
+      console.log('Updating order', orderId, 'to status', newStatus);
+      const updateRes = await ordersAPI.updateStatus(orderId, newStatus);
+      console.log('Update response:', updateRes.data);
+
+      await fetchOrders();
+
       if (selectedOrder && selectedOrder.id === orderId) {
         const response = await ordersAPI.getById(orderId);
+        console.log('Refreshed order:', response.data.data);
         setSelectedOrder(response.data.data);
       }
+      alert('تم تحديث حالة الطلب بنجاح');
     } catch (error) {
+      console.error('Update error:', error);
       alert('حدث خطأ: ' + (error.response?.data?.message || 'خطأ في الخادم'));
     } finally {
       setLoading(false);
@@ -79,6 +85,7 @@ const Orders = () => {
       confirmed: 'bg-blue-100 text-blue-800',
       preparing: 'bg-purple-100 text-purple-800',
       ready: 'bg-green-100 text-green-800',
+      served: 'bg-teal-100 text-teal-800',
       completed: 'bg-gray-100 text-gray-800',
       cancelled: 'bg-red-100 text-red-800',
     };
@@ -91,6 +98,7 @@ const Orders = () => {
       confirmed: 'مؤكد',
       preparing: 'قيد التحضير',
       ready: 'جاهز',
+      served: 'تم التقديم',
       completed: 'مكتمل',
       cancelled: 'ملغي',
     };
@@ -103,10 +111,11 @@ const Orders = () => {
 
   const getNextStatuses = (currentStatus, orderType) => {
     const flow = {
-      pending: ['confirmed', 'preparing', 'ready', 'completed', 'cancelled'],
-      confirmed: ['preparing', 'ready', 'completed', 'cancelled'],
-      preparing: ['ready', 'completed', 'cancelled'],
-      ready: ['completed', 'cancelled'],
+      pending: ['confirmed', 'preparing', 'ready', 'served', 'completed', 'cancelled'],
+      confirmed: ['preparing', 'ready', 'served', 'completed', 'cancelled'],
+      preparing: ['ready', 'served', 'completed', 'cancelled'],
+      ready: ['served', 'completed', 'cancelled'],
+      served: ['completed', 'cancelled'],
       completed: ['pending', 'cancelled'],  // Allow editing completed orders
       cancelled: ['pending'],  // Allow reactivating cancelled orders
     };
@@ -199,6 +208,7 @@ const Orders = () => {
             <option value="confirmed">مؤكد</option>
             <option value="preparing">قيد التحضير</option>
             <option value="ready">جاهز</option>
+            <option value="served">تم التقديم</option>
             <option value="completed">مكتمل</option>
             <option value="cancelled">ملغي</option>
           </select>
