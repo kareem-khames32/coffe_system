@@ -144,7 +144,9 @@ exports.createOnlineOrder = async (req, res) => {
             customer_name,
             customer_phone,
             customer_address,
-            offer_id
+            offer_id,
+            discount_type: requestDiscountType,
+            discount_value: requestDiscountValue
         } = req.body;
 
         // Validate required fields for online orders
@@ -186,11 +188,12 @@ exports.createOnlineOrder = async (req, res) => {
             totalCost += products[0].cost_price * item.quantity;
         }
 
-        // Apply offer if provided
+        // Apply discount - either from offer_id or from direct discount values (daily discount)
         let discount_type = 'none';
         let discount_value = 0;
 
         if (offer_id) {
+            // Apply offer if provided
             const [offers] = await connection.query(
                 `SELECT * FROM offers WHERE id = ? AND is_active = TRUE
                  AND start_date <= CURDATE() AND end_date >= CURDATE()`,
@@ -203,6 +206,11 @@ exports.createOnlineOrder = async (req, res) => {
                 discount_value = offer.discount_value;
                 discountAmount = calculateDiscount(subtotal, discount_type, discount_value);
             }
+        } else if (requestDiscountType && requestDiscountValue) {
+            // Apply daily discount if provided (no offer_id but direct discount values)
+            discount_type = requestDiscountType;
+            discount_value = parseFloat(requestDiscountValue);
+            discountAmount = calculateDiscount(subtotal, discount_type, discount_value);
         }
 
         const total = subtotal - discountAmount;
@@ -225,7 +233,7 @@ exports.createOnlineOrder = async (req, res) => {
                 subtotal,
                 discountAmount,
                 total,
-                `Offer: ${offer_id || 'none'}, Discount: ${discount_type} ${discount_value}`
+                `${offer_id ? 'Offer ID: ' + offer_id : 'Daily Discount'}, Type: ${discount_type}, Value: ${discount_value}`
             ]
         );
 
