@@ -68,6 +68,13 @@ const TrackOrder = () => {
         icon: Package,
         description: 'طلبك جاهز للتسليم',
       },
+      served: {
+        label: 'تم التقديم',
+        color: 'text-teal-600',
+        bgColor: 'bg-teal-100',
+        icon: CheckCircle,
+        description: 'تم تقديم طلبك',
+      },
       completed: {
         label: 'مكتمل',
         color: 'text-gray-600',
@@ -87,8 +94,8 @@ const TrackOrder = () => {
   };
 
   const getStatusSteps = () => {
-    const steps = ['pending', 'confirmed', 'preparing', 'ready', 'completed'];
-    const currentIndex = steps.indexOf(order?.status);
+    const steps = ['pending', 'confirmed', 'preparing', 'ready', 'served', 'completed'];
+    const currentIndex = steps.indexOf(order?.order_status);
     return steps.map((step, index) => ({
       ...getStatusInfo(step),
       step,
@@ -156,25 +163,25 @@ const TrackOrder = () => {
           {order && (
             <div className="space-y-6">
               {/* Status Card */}
-              <div className={`${getStatusInfo(order.status).bgColor} p-6 rounded-lg`}>
+              <div className={`${getStatusInfo(order.order_status).bgColor} p-6 rounded-lg`}>
                 <div className="flex items-center justify-center gap-3 mb-4">
                   {(() => {
-                    const StatusIcon = getStatusInfo(order.status).icon;
-                    return <StatusIcon className={`w-12 h-12 ${getStatusInfo(order.status).color}`} />;
+                    const StatusIcon = getStatusInfo(order.order_status).icon;
+                    return <StatusIcon className={`w-12 h-12 ${getStatusInfo(order.order_status).color}`} />;
                   })()}
                   <div className="text-center">
-                    <h2 className={`text-2xl font-bold ${getStatusInfo(order.status).color}`}>
-                      {getStatusInfo(order.status).label}
+                    <h2 className={`text-2xl font-bold ${getStatusInfo(order.order_status).color}`}>
+                      {getStatusInfo(order.order_status).label}
                     </h2>
                     <p className="text-sm text-gray-700 mt-1">
-                      {getStatusInfo(order.status).description}
+                      {getStatusInfo(order.order_status).description}
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Progress Steps (Only for non-cancelled orders) */}
-              {order.status !== 'cancelled' && order.order_type === 'online' && (
+              {order.order_status !== 'cancelled' && order.order_type === 'online' && (
                 <div className="bg-white p-6 rounded-xl shadow-2xl border-2 border-amber-200">
                   <h3 className="font-bold text-lg mb-6 text-amber-900">مراحل الطلب</h3>
                   <div className="space-y-4">

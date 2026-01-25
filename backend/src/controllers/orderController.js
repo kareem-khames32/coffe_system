@@ -410,6 +410,9 @@ exports.getOrderById = async (req, res) => {
 // Track order by order number (no authentication required)
 exports.trackOrder = async (req, res) => {
     try {
+        console.log('=== TRACK ORDER ===');
+        console.log('Order Number:', req.params.orderNumber);
+
         const [orders] = await db.query(
             `SELECT o.id, o.order_number, o.order_type, o.order_status, o.customer_name,
              o.customer_phone, o.customer_address, o.total_amount, o.total_amount as total, o.created_at, o.updated_at
@@ -417,6 +420,13 @@ exports.trackOrder = async (req, res) => {
              WHERE o.order_number = ?`,
             [req.params.orderNumber]
         );
+
+        console.log('Order found:', orders.length > 0 ? 'YES' : 'NO');
+        if (orders.length > 0) {
+            console.log('Order ID:', orders[0].id);
+            console.log('Order Status from DB:', orders[0].order_status);
+        }
+        console.log('=== END TRACK ===');
 
         if (orders.length === 0) {
             return res.status(404).json({
@@ -454,9 +464,15 @@ exports.trackOrder = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
     try {
         const { status } = req.body;
+        const orderId = req.params.id;
+
+        console.log('=== UPDATE ORDER STATUS ===');
+        console.log('Order ID:', orderId);
+        console.log('New Status:', status);
 
         const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'served', 'completed', 'cancelled'];
         if (!validStatuses.includes(status)) {
+            console.log('ERROR: Invalid status:', status);
             return res.status(400).json({
                 success: false,
                 message: 'Invalid status'
@@ -464,7 +480,11 @@ exports.updateOrderStatus = async (req, res) => {
         }
 
         // Check if order exists
-        const [orders] = await db.query('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+        const [orders] = await db.query('SELECT * FROM orders WHERE id = ?', [orderId]);
+        console.log('Order found:', orders.length > 0 ? 'YES' : 'NO');
+        if (orders.length > 0) {
+            console.log('Current order_status in DB:', orders[0].order_status);
+        }
 
         if (orders.length === 0) {
             return res.status(404).json({
@@ -477,18 +497,26 @@ exports.updateOrderStatus = async (req, res) => {
         if (status === 'cancelled' && orders[0].order_status !== 'cancelled') {
             const [items] = await db.query(
                 'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
-                [req.params.id]
+                [orderId]
             );
 
             // Restore raw materials to inventory
             try {
-                await restoreStockForOrder(req.params.id, items);
+                await restoreStockForOrder(orderId, items);
             } catch (error) {
                 console.error('Error restoring raw material stock:', error);
             }
         }
 
-        await db.query('UPDATE orders SET order_status = ? WHERE id = ?', [status, req.params.id]);
+        const [result] = await db.query('UPDATE orders SET order_status = ? WHERE id = ?', [status, orderId]);
+        console.log('Update result:', result);
+        console.log('Affected rows:', result.affectedRows);
+        console.log('Changed rows:', result.changedRows);
+
+        // Verify the update
+        const [verifyOrder] = await db.query('SELECT order_status FROM orders WHERE id = ?', [orderId]);
+        console.log('Status after update:', verifyOrder[0]?.order_status);
+        console.log('=== END UPDATE ===');
 
         res.json({
             success: true,
