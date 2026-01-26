@@ -33,8 +33,8 @@ export const exportSalesReportToExcel = (reportData, dateRange) => {
               order.order_status === 'cancelled' ? 'ملغي' : order.order_status,
     'المجموع الفرعي': parseFloat(order.subtotal || 0).toFixed(2),
     'الخصم': parseFloat(order.discount_amount || 0).toFixed(2),
-    'الإجمالي': order.order_status === 'cancelled' ? '0.00' : parseFloat(order.total || order.total_amount || 0).toFixed(2),
-    'الربح': order.order_status === 'cancelled' ? '0.00' : parseFloat(order.profit || 0).toFixed(2),
+    'الإجمالي': parseFloat(order.total || order.total_amount || 0).toFixed(2),
+    'الربح': order.order_status === 'cancelled' ? '0.00 (ملغي)' : parseFloat(order.profit || 0).toFixed(2),
   }));
 
   // Add summary row - only count active orders

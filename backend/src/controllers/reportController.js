@@ -171,12 +171,15 @@ exports.getSalesReport = async (req, res) => {
                 orderProfit += itemProfit;
             }
 
-            // For cancelled orders, show 0 profit (materials were restored)
+            // For cancelled orders, show original value but 0 profit (materials were restored)
+            // Don't count cancelled orders in totals
             if (order.order_status === 'cancelled') {
                 order.profit = 0;
-                order.total = 0; // Don't count cancelled order revenue
+                order.total = parseFloat(order.total_amount || 0); // Show original value
+                // Not added to totalSales or totalProfit
             } else {
                 order.profit = orderProfit;
+                order.total = parseFloat(order.total_amount || 0);
                 totalSales += parseFloat(order.total_amount || 0);
                 totalProfit += orderProfit;
                 activeOrdersCount++;
