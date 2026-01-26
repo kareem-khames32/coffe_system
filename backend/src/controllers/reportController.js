@@ -264,7 +264,7 @@ exports.getProfitReport = async (req, res) => {
         const { start_date, end_date } = req.query;
 
         // Build date conditions for orders
-        let orderDateCondition = 'status IN (\'completed\', \'ready\')';
+        let orderDateCondition = 'order_status IN (\'completed\', \'ready\', \'served\')';
         const orderParams = [];
 
         if (start_date) {
@@ -316,7 +316,9 @@ exports.getProfitReport = async (req, res) => {
              FROM order_items oi
              JOIN orders o ON oi.order_id = o.id
              JOIN products p ON oi.product_id = p.id
-             WHERE o.${orderDateCondition}`,
+             WHERE o.order_status IN ('completed', 'ready', 'served')
+             ${start_date ? 'AND DATE(o.created_at) >= ?' : ''}
+             ${end_date ? 'AND DATE(o.created_at) <= ?' : ''}`,
             orderParams
         );
 
