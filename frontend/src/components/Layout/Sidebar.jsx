@@ -132,6 +132,11 @@ const Sidebar = () => {
       icon: Layers,
     },
     {
+      name: 'سجل المشتريات',
+      path: '/inventory-purchases',
+      icon: ShoppingBasket,
+    },
+    {
       name: 'دفعات الموردين',
       path: '/supplier-payments',
       icon: DollarSign,
