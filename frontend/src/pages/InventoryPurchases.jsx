@@ -130,6 +130,9 @@ const InventoryPurchases = () => {
                   المورد
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-semibold text-white uppercase">
+                  المواد الخام
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-white uppercase">
                   الإجمالي
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-semibold text-white uppercase">
@@ -154,6 +157,11 @@ const InventoryPurchases = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {purchase.supplier_name || 'بدون مورد'}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                    <div className="truncate" title={purchase.material_names || '-'}>
+                      {purchase.material_names || '-'}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-coffee-600">
                     {parseFloat(purchase.total_amount).toFixed(2)} ج.م

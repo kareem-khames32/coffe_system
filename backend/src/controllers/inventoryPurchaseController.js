@@ -4,7 +4,11 @@ const db = require('../config/database');
 exports.getAllPurchases = async (req, res) => {
   try {
     const [purchases] = await db.query(
-      `SELECT ip.*, s.name as supplier_name, u.full_name as created_by_name
+      `SELECT ip.*, s.name as supplier_name, u.full_name as created_by_name,
+       (SELECT GROUP_CONCAT(rm.name SEPARATOR '، ')
+        FROM inventory_purchase_items ipi
+        JOIN raw_materials rm ON ipi.raw_material_id = rm.id
+        WHERE ipi.purchase_id = ip.id) as material_names
        FROM inventory_purchases ip
        LEFT JOIN suppliers s ON ip.supplier_id = s.id
        LEFT JOIN users u ON ip.created_by = u.id
