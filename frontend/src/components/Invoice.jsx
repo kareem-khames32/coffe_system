@@ -19,17 +19,11 @@ const Invoice = ({ orderData, onClose }) => {
       const response = await settingsAPI.getAll();
       const settingsData = response.data.data;
 
-      // Convert settings array to object
-      const settingsObj = {};
-      settingsData.forEach(setting => {
-        settingsObj[setting.setting_key] = setting.setting_value;
-      });
-
       setSettings({
-        cafe_name: settingsObj.cafe_name || 'مقهى الأحلام',
-        cafe_address: settingsObj.cafe_address || 'القاهرة، مصر',
-        cafe_phone: settingsObj.cafe_phone || '01234567890',
-        cafe_logo: settingsObj.cafe_logo || null,
+        cafe_name: settingsData.cafe_name || 'مقهى الأحلام',
+        cafe_address: settingsData.cafe_address || 'القاهرة، مصر',
+        cafe_phone: settingsData.cafe_phone || '01234567890',
+        cafe_logo: settingsData.logo_path || null,
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
