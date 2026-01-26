@@ -51,7 +51,7 @@ const Invoice = ({ orderData, onClose }) => {
               <img
                 src={`http://localhost:5000${settings.cafe_logo}`}
                 alt="Logo"
-                className="h-10 w-10 object-contain mx-auto mb-1"
+                className="h-10 w-10 object-contain mx-auto mb-1 print:h-16 print:w-16"
               />
             ) : (
               <div className="bg-coffee-600 p-1.5 rounded-full inline-block mb-1">
@@ -158,8 +158,14 @@ const Invoice = ({ orderData, onClose }) => {
       <style jsx global>{`
         @media print {
           @page {
-            size: 80mm auto;
+            size: 80mm 200mm;
             margin: 0;
+          }
+
+          html, body {
+            width: 80mm;
+            margin: 0;
+            padding: 0;
           }
 
           body * {
@@ -176,9 +182,32 @@ const Invoice = ({ orderData, onClose }) => {
             left: 0;
             top: 0;
             width: 80mm !important;
-            padding: 2mm !important;
-            font-size: 9pt;
+            padding: 3mm !important;
+            font-size: 12pt !important;
             font-family: monospace;
+          }
+
+          #invoice-print-area h1 {
+            font-size: 16pt !important;
+          }
+
+          #invoice-print-area .text-\\[10px\\],
+          #invoice-print-area .text-\\[9px\\],
+          #invoice-print-area .text-\\[11px\\] {
+            font-size: 11pt !important;
+          }
+
+          #invoice-print-area .text-\\[8px\\] {
+            font-size: 9pt !important;
+          }
+
+          #invoice-print-area .text-sm {
+            font-size: 14pt !important;
+          }
+
+          #invoice-print-area img {
+            width: 20mm !important;
+            height: 20mm !important;
           }
 
           .print\\:hidden {
