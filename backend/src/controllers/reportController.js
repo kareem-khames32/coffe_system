@@ -129,7 +129,12 @@ exports.getSalesReport = async (req, res) => {
             params.push(order_type);
         }
 
-        if (status && status !== 'all') {
+        // Handle status filter
+        if (status === 'active') {
+            // Exclude cancelled orders
+            query += ' AND o.order_status != ?';
+            params.push('cancelled');
+        } else if (status && status !== 'all') {
             query += ' AND o.order_status = ?';
             params.push(status);
         }
@@ -139,9 +144,11 @@ exports.getSalesReport = async (req, res) => {
         const [orders] = await db.query(query, params);
 
         // Calculate totals and profit for each order
-        const totalSales = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
-
+        // Only count non-cancelled orders in sales/profit totals
+        let totalSales = 0;
         let totalProfit = 0;
+        let activeOrdersCount = 0;
+
         for (const order of orders) {
             const [items] = await db.query(
                 `SELECT oi.quantity, oi.unit_price, p.cost_price
@@ -157,13 +164,20 @@ exports.getSalesReport = async (req, res) => {
                 orderProfit += itemProfit;
             }
 
-            // Add profit to each order object
-            order.profit = orderProfit;
-            totalProfit += orderProfit;
+            // For cancelled orders, show 0 profit (materials were restored)
+            if (order.order_status === 'cancelled') {
+                order.profit = 0;
+                order.total = 0; // Don't count cancelled order revenue
+            } else {
+                order.profit = orderProfit;
+                totalSales += parseFloat(order.total_amount || 0);
+                totalProfit += orderProfit;
+                activeOrdersCount++;
+            }
         }
 
         const totalOrders = orders.length;
-        const averageOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
+        const averageOrderValue = activeOrdersCount > 0 ? totalSales / activeOrdersCount : 0;
 
         res.json({
             success: true,
@@ -173,6 +187,7 @@ exports.getSalesReport = async (req, res) => {
                     totalSales,
                     totalProfit,
                     totalOrders,
+                    activeOrdersCount,
                     averageOrderValue
                 }
             }

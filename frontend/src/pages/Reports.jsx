@@ -25,6 +25,7 @@ const Reports = () => {
     start_date: '',
     end_date: '',
   });
+  const [statusFilter, setStatusFilter] = useState('active'); // 'all', 'active' (non-cancelled), or specific status
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
   const printRef = useRef();
@@ -64,7 +65,7 @@ const Reports = () => {
     if (selectedReport) {
       fetchReportData();
     }
-  }, [selectedReport, dateRange]);
+  }, [selectedReport, dateRange, statusFilter]);
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -75,6 +76,7 @@ const Reports = () => {
       // Only include date parameters if they have values
       if (dateRange.start_date) params.start_date = dateRange.start_date;
       if (dateRange.end_date) params.end_date = dateRange.end_date;
+      if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
 
       switch (selectedReport) {
         case 'sales':
@@ -163,11 +165,11 @@ const Reports = () => {
           </div>
         </div>
 
-        {/* Date Range Filter - Hidden when printing */}
+        {/* Filters - Hidden when printing */}
         <div className="bg-white p-6 rounded-lg shadow print:hidden">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <Calendar className="w-5 h-5 text-coffee-600" />
-            <div className="flex items-center gap-4 flex-1">
+            <div className="flex flex-wrap items-center gap-4 flex-1">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium">من:</label>
                 <input
@@ -190,8 +192,30 @@ const Reports = () => {
                   className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-coffee-500 outline-none"
                 />
               </div>
+              {selectedReport === 'sales' && (
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">الحالة:</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-coffee-500 outline-none"
+                  >
+                    <option value="active">الطلبات الفعالة (بدون الملغية)</option>
+                    <option value="all">جميع الطلبات</option>
+                    <option value="pending">قيد الانتظار</option>
+                    <option value="confirmed">مؤكد</option>
+                    <option value="preparing">قيد التحضير</option>
+                    <option value="ready">جاهز</option>
+                    <option value="completed">مكتمل</option>
+                    <option value="cancelled">ملغي</option>
+                  </select>
+                </div>
+              )}
               <button
-                onClick={() => setDateRange({ start_date: '', end_date: '' })}
+                onClick={() => {
+                  setDateRange({ start_date: '', end_date: '' });
+                  setStatusFilter('active');
+                }}
                 className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg transition"
               >
                 إعادة تعيين
