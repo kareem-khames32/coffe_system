@@ -107,7 +107,7 @@ exports.getSalesReport = async (req, res) => {
         const { start_date, end_date, order_type, status } = req.query;
 
         let query = `
-            SELECT o.*, u.full_name as cashier_name
+            SELECT o.*, o.total_amount as total, u.full_name as cashier_name
             FROM orders o
             LEFT JOIN users u ON o.created_by = u.id
             WHERE 1=1
@@ -138,10 +138,9 @@ exports.getSalesReport = async (req, res) => {
 
         const [orders] = await db.query(query, params);
 
-        // Calculate totals
+        // Calculate totals and profit for each order
         const totalSales = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
 
-        // Calculate profit from order_items (unit_price - cost_price) * quantity
         let totalProfit = 0;
         for (const order of orders) {
             const [items] = await db.query(
@@ -151,10 +150,16 @@ exports.getSalesReport = async (req, res) => {
                  WHERE oi.order_id = ?`,
                 [order.id]
             );
+
+            let orderProfit = 0;
             for (const item of items) {
                 const itemProfit = (parseFloat(item.unit_price) - parseFloat(item.cost_price || 0)) * parseFloat(item.quantity);
-                totalProfit += itemProfit;
+                orderProfit += itemProfit;
             }
+
+            // Add profit to each order object
+            order.profit = orderProfit;
+            totalProfit += orderProfit;
         }
 
         const totalOrders = orders.length;

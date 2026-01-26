@@ -274,9 +274,9 @@ const Reports = () => {
                           </td>
                           <td className="px-4 py-3">{order.customer_name || '-'}</td>
                           <td className="px-4 py-3">
-                            {order.order_type === 'in-store' ? 'داخلي' : 'أونلاين'}
+                            {order.order_type === 'dine-in' ? 'داخلي' : 'أونلاين'}
                           </td>
-                          <td className="px-4 py-3">{order.status}</td>
+                          <td className="px-4 py-3">{order.order_status}</td>
                           <td className="px-4 py-3 font-semibold">
                             {parseFloat(order.total).toFixed(2)} ج.م
                           </td>
