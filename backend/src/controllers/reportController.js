@@ -219,14 +219,15 @@ exports.getProductsReport = async (req, res) => {
         let query = `
             SELECT
                 oi.product_id,
-                oi.product_name,
+                p.name as product_name,
                 SUM(oi.quantity) as total_sold,
                 SUM(oi.subtotal) as total_revenue,
-                SUM(oi.cost_price * oi.quantity) as total_cost,
-                SUM(oi.profit) as total_profit
+                SUM(p.cost_price * oi.quantity) as total_cost,
+                SUM((oi.unit_price - p.cost_price) * oi.quantity) as total_profit
             FROM order_items oi
             JOIN orders o ON oi.order_id = o.id
-            WHERE o.status IN ('completed', 'ready')
+            JOIN products p ON oi.product_id = p.id
+            WHERE o.order_status IN ('completed', 'ready', 'served')
         `;
         const params = [];
 
@@ -240,7 +241,7 @@ exports.getProductsReport = async (req, res) => {
             params.push(end_date);
         }
 
-        query += ' GROUP BY oi.product_id, oi.product_name ORDER BY total_sold DESC';
+        query += ' GROUP BY oi.product_id, p.name ORDER BY total_sold DESC';
 
         const [products] = await db.query(query, params);
 
