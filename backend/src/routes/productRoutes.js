@@ -12,8 +12,8 @@ router.get('/low-stock', verifyToken, checkPermission('can_view_inventory'), pro
 router.get('/:id', verifyToken, checkPermission('can_view_inventory'), productController.getProductById);
 router.get('/category/:categoryId', verifyToken, checkPermission('can_view_inventory'), productController.getProductsByCategory);
 
-router.post('/', verifyToken, checkPermission('can_edit_inventory'), productController.createProduct);
-router.put('/:id', verifyToken, checkPermission('can_edit_inventory'), productController.updateProduct);
-router.delete('/:id', verifyToken, checkPermission('can_edit_inventory'), productController.deleteProduct);
+router.post('/', verifyToken, checkPermission('can_manage_inventory'), productController.createProduct);
+router.put('/:id', verifyToken, checkPermission('can_manage_inventory'), productController.updateProduct);
+router.delete('/:id', verifyToken, checkPermission('can_manage_inventory'), productController.deleteProduct);
 
 module.exports = router;

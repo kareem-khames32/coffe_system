@@ -6,8 +6,9 @@ exports.getAllUsers = async (req, res) => {
     try {
         const [users] = await db.query(
             `SELECT id, username, full_name, role, can_make_sales, can_view_inventory,
-             can_edit_inventory, can_view_order_details, can_cancel_orders, can_edit_orders,
-             can_view_reports, can_add_expenses, can_manage_offers, is_active, created_at
+             can_manage_inventory, can_view_order_details, can_cancel_edit_orders,
+             can_view_reports, can_add_expenses, can_manage_offers, can_manage_online_orders,
+             is_active, created_at
              FROM users ORDER BY created_at DESC`
         );
 
@@ -29,8 +30,9 @@ exports.getUserById = async (req, res) => {
     try {
         const [users] = await db.query(
             `SELECT id, username, full_name, role, can_make_sales, can_view_inventory,
-             can_edit_inventory, can_view_order_details, can_cancel_orders, can_edit_orders,
-             can_view_reports, can_add_expenses, can_manage_offers, is_active, created_at
+             can_manage_inventory, can_view_order_details, can_cancel_edit_orders,
+             can_view_reports, can_add_expenses, can_manage_offers, can_manage_online_orders,
+             is_active, created_at
              FROM users WHERE id = ?`,
             [req.params.id]
         );
@@ -65,13 +67,13 @@ exports.createUser = async (req, res) => {
             role,
             can_make_sales,
             can_view_inventory,
-            can_edit_inventory,
+            can_manage_inventory,
             can_view_order_details,
-            can_cancel_orders,
-            can_edit_orders,
+            can_cancel_edit_orders,
             can_view_reports,
             can_add_expenses,
-            can_manage_offers
+            can_manage_offers,
+            can_manage_online_orders
         } = req.body;
 
         // Validate required fields
@@ -101,8 +103,8 @@ exports.createUser = async (req, res) => {
         // Insert user
         const [result] = await db.query(
             `INSERT INTO users (username, password, full_name, role, can_make_sales,
-             can_view_inventory, can_edit_inventory, can_view_order_details, can_cancel_orders,
-             can_edit_orders, can_view_reports, can_add_expenses, can_manage_offers)
+             can_view_inventory, can_manage_inventory, can_view_order_details, can_cancel_edit_orders,
+             can_view_reports, can_add_expenses, can_manage_offers, can_manage_online_orders)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 username,
@@ -111,13 +113,13 @@ exports.createUser = async (req, res) => {
                 role || 'cashier',
                 can_make_sales !== undefined ? can_make_sales : true,
                 can_view_inventory !== undefined ? can_view_inventory : true,
-                can_edit_inventory || false,
+                can_manage_inventory || false,
                 can_view_order_details !== undefined ? can_view_order_details : true,
-                can_cancel_orders || false,
-                can_edit_orders || false,
+                can_cancel_edit_orders || false,
                 can_view_reports || false,
                 can_add_expenses || false,
-                can_manage_offers || false
+                can_manage_offers || false,
+                can_manage_online_orders || false
             ]
         );
 
@@ -145,13 +147,13 @@ exports.updateUser = async (req, res) => {
             role,
             can_make_sales,
             can_view_inventory,
-            can_edit_inventory,
+            can_manage_inventory,
             can_view_order_details,
-            can_cancel_orders,
-            can_edit_orders,
+            can_cancel_edit_orders,
             can_view_reports,
             can_add_expenses,
             can_manage_offers,
+            can_manage_online_orders,
             is_active
         } = req.body;
 
@@ -211,9 +213,9 @@ exports.updateUser = async (req, res) => {
             updateValues.push(can_view_inventory);
         }
 
-        if (can_edit_inventory !== undefined) {
-            updateQuery += 'can_edit_inventory = ?, ';
-            updateValues.push(can_edit_inventory);
+        if (can_manage_inventory !== undefined) {
+            updateQuery += 'can_manage_inventory = ?, ';
+            updateValues.push(can_manage_inventory);
         }
 
         if (can_view_order_details !== undefined) {
@@ -221,14 +223,9 @@ exports.updateUser = async (req, res) => {
             updateValues.push(can_view_order_details);
         }
 
-        if (can_cancel_orders !== undefined) {
-            updateQuery += 'can_cancel_orders = ?, ';
-            updateValues.push(can_cancel_orders);
-        }
-
-        if (can_edit_orders !== undefined) {
-            updateQuery += 'can_edit_orders = ?, ';
-            updateValues.push(can_edit_orders);
+        if (can_cancel_edit_orders !== undefined) {
+            updateQuery += 'can_cancel_edit_orders = ?, ';
+            updateValues.push(can_cancel_edit_orders);
         }
 
         if (can_view_reports !== undefined) {
@@ -244,6 +241,11 @@ exports.updateUser = async (req, res) => {
         if (can_manage_offers !== undefined) {
             updateQuery += 'can_manage_offers = ?, ';
             updateValues.push(can_manage_offers);
+        }
+
+        if (can_manage_online_orders !== undefined) {
+            updateQuery += 'can_manage_online_orders = ?, ';
+            updateValues.push(can_manage_online_orders);
         }
 
         if (is_active !== undefined) {

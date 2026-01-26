@@ -24,8 +24,8 @@ router.get('/:id/history', verifyToken, checkPermission('can_view_order_details'
 router.post('/in-store', verifyToken, checkPermission('can_make_sales'), orderController.createInStoreOrder);
 
 router.put('/:id/status', verifyToken, checkPermission('can_view_order_details'), orderController.updateOrderStatus);
-router.put('/:id/edit', verifyToken, checkPermission('can_edit_orders'), orderController.editOrder);
+router.put('/:id/edit', verifyToken, checkPermission('can_cancel_edit_orders'), orderController.editOrder);
 
-router.delete('/:id', verifyToken, checkPermission('can_cancel_orders'), orderController.cancelOrder);
+router.delete('/:id', verifyToken, checkPermission('can_cancel_edit_orders'), orderController.cancelOrder);
 
 module.exports = router;

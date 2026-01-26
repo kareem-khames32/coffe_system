@@ -70,7 +70,7 @@ exports.login = async (req, res) => {
 exports.getCurrentUser = async (req, res) => {
     try {
         const [users] = await db.query(
-            'SELECT id, username, full_name, role, can_make_sales, can_view_inventory, can_edit_inventory, can_view_order_details, can_cancel_orders, can_edit_orders, can_view_reports, can_add_expenses, can_manage_offers FROM users WHERE id = ?',
+            'SELECT id, username, full_name, role, can_make_sales, can_view_inventory, can_manage_inventory, can_view_order_details, can_cancel_edit_orders, can_view_reports, can_add_expenses, can_manage_offers, can_manage_online_orders FROM users WHERE id = ?',
             [req.user.id]
         );
 

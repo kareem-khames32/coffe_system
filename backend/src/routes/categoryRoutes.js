@@ -8,8 +8,8 @@ router.get('/', categoryController.getAllCategories);
 router.get('/:id', categoryController.getCategoryById);
 
 // Protected routes
-router.post('/', verifyToken, checkPermission('can_edit_inventory'), categoryController.createCategory);
-router.put('/:id', verifyToken, checkPermission('can_edit_inventory'), categoryController.updateCategory);
-router.delete('/:id', verifyToken, checkPermission('can_edit_inventory'), categoryController.deleteCategory);
+router.post('/', verifyToken, checkPermission('can_manage_inventory'), categoryController.createCategory);
+router.put('/:id', verifyToken, checkPermission('can_manage_inventory'), categoryController.updateCategory);
+router.delete('/:id', verifyToken, checkPermission('can_manage_inventory'), categoryController.deleteCategory);
 
 module.exports = router;
