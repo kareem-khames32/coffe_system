@@ -27,8 +27,8 @@ async function migratePermissions() {
         connection = await mysql.createConnection({
             host: process.env.DB_HOST || 'localhost',
             user: process.env.DB_USER || 'root',
-            password: process.env.DB_PASS || '',
-            database: process.env.DB_NAME || 'coffee_system'
+            password: process.env.DB_PASSWORD || '',
+            database: process.env.DB_NAME || 'cafe_management'
         });
 
         console.log('✅ تم الاتصال بقاعدة البيانات\n');
@@ -38,7 +38,7 @@ async function migratePermissions() {
             SELECT COLUMN_NAME
             FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users'
-        `, [process.env.DB_NAME || 'coffee_system']);
+        `, [process.env.DB_NAME || 'cafe_management']);
 
         const existingColumns = columns.map(c => c.COLUMN_NAME);
         console.log('📋 الأعمدة الموجودة:', existingColumns.filter(c => c.startsWith('can_')).join(', '));
