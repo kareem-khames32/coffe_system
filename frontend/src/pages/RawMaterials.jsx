@@ -109,7 +109,15 @@ const RawMaterials = () => {
     setLoading(true);
 
     try {
-      await rawMaterialsAPI.adjustStock(adjustingMaterial.id, adjustData);
+      // Convert quantity to negative if subtracting
+      const quantity = adjustData.adjustment_type === 'subtract'
+        ? -Math.abs(parseFloat(adjustData.quantity))
+        : Math.abs(parseFloat(adjustData.quantity));
+
+      await rawMaterialsAPI.adjustStock(adjustingMaterial.id, {
+        quantity,
+        notes: adjustData.reason
+      });
       alert('تم تعديل المخزون بنجاح');
       fetchData();
       closeAdjustModal();
