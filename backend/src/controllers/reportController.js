@@ -258,7 +258,7 @@ exports.getProfitReport = async (req, res) => {
             expenseParams.push(end_date);
         }
 
-        // Build date conditions for purchases
+        // Build date conditions for purchases (using new inventory_purchases table)
         let purchaseDateCondition = '1=1';
         const purchaseParams = [];
 
@@ -273,17 +273,19 @@ exports.getProfitReport = async (req, res) => {
 
         // Total revenue from orders
         const [revenue] = await db.query(
-            `SELECT COALESCE(SUM(total), 0) as total
+            `SELECT COALESCE(SUM(total_amount), 0) as total
              FROM orders
              WHERE ${orderDateCondition}`,
             orderParams
         );
 
-        // Total cost from orders
+        // Total cost from orders (calculate from order_items)
         const [cost] = await db.query(
-            `SELECT COALESCE(SUM(cost), 0) as total
-             FROM orders
-             WHERE ${orderDateCondition}`,
+            `SELECT COALESCE(SUM(p.cost_price * oi.quantity), 0) as total
+             FROM order_items oi
+             JOIN orders o ON oi.order_id = o.id
+             JOIN products p ON oi.product_id = p.id
+             WHERE o.${orderDateCondition}`,
             orderParams
         );
 
@@ -298,10 +300,10 @@ exports.getProfitReport = async (req, res) => {
             expenseParams
         );
 
-        // Total purchases
+        // Total purchases (using new inventory_purchases table)
         const [purchases] = await db.query(
             `SELECT COALESCE(SUM(total_amount), 0) as total
-             FROM purchases
+             FROM inventory_purchases
              WHERE ${purchaseDateCondition}`,
             purchaseParams
         );
@@ -439,19 +441,40 @@ exports.getPurchasesAndExpensesReport = async (req, res) => {
     try {
         const { start_date, end_date } = req.query;
 
-        // Build parameters for purchases
-        let purchasesQuery = 'SELECT * FROM purchases WHERE 1=1';
+        // Build parameters for purchases from inventory_purchases (new system)
+        let purchasesQuery = `
+            SELECT
+                ip.id,
+                ip.invoice_number,
+                ip.purchase_date,
+                ip.total_amount,
+                ip.notes,
+                s.name as supplier_name,
+                (SELECT GROUP_CONCAT(rm.name SEPARATOR ', ')
+                 FROM inventory_purchase_items ipi
+                 JOIN raw_materials rm ON ipi.raw_material_id = rm.id
+                 WHERE ipi.purchase_id = ip.id) as item_description,
+                (SELECT SUM(ipi.quantity)
+                 FROM inventory_purchase_items ipi
+                 WHERE ipi.purchase_id = ip.id) as quantity,
+                (SELECT AVG(ipi.unit_cost)
+                 FROM inventory_purchase_items ipi
+                 WHERE ipi.purchase_id = ip.id) as unit_price
+            FROM inventory_purchases ip
+            LEFT JOIN suppliers s ON ip.supplier_id = s.id
+            WHERE 1=1
+        `;
         const purchasesParams = [];
 
         if (start_date) {
-            purchasesQuery += ' AND DATE(purchase_date) >= ?';
+            purchasesQuery += ' AND DATE(ip.purchase_date) >= ?';
             purchasesParams.push(start_date);
         }
         if (end_date) {
-            purchasesQuery += ' AND DATE(purchase_date) <= ?';
+            purchasesQuery += ' AND DATE(ip.purchase_date) <= ?';
             purchasesParams.push(end_date);
         }
-        purchasesQuery += ' ORDER BY purchase_date DESC';
+        purchasesQuery += ' ORDER BY ip.purchase_date DESC';
 
         // Build parameters for expenses
         let expensesQuery = 'SELECT * FROM expenses WHERE 1=1';

@@ -101,12 +101,6 @@ const Sidebar = () => {
       show: hasPermission('can_add_expenses') || hasPermission('can_view_reports'),
     },
     {
-      name: 'المشتريات',
-      path: '/purchases',
-      icon: ShoppingBasket,
-      show: hasPermission('can_add_expenses') || hasPermission('can_view_reports'),
-    },
-    {
       name: 'التقارير',
       path: '/reports',
       icon: FileText,
