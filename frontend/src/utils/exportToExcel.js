@@ -17,26 +17,37 @@ export const exportToExcel = (data, filename, sheetName = 'Sheet1') => {
 export const exportSalesReportToExcel = (reportData, dateRange) => {
   if (!reportData || !reportData.orders) return;
 
+  // Filter out cancelled orders from export totals calculation
+  const activeOrders = reportData.orders.filter(order => order.order_status !== 'cancelled');
+
   const data = reportData.orders.map((order) => ({
     'رقم الطلب': order.order_number,
     'التاريخ': new Date(order.created_at).toLocaleDateString('ar-EG'),
     'العميل': order.customer_name || '-',
-    'النوع': order.order_type === 'in-store' ? 'داخلي' : 'أونلاين',
-    'الحالة': order.status,
-    'المجموع الفرعي': parseFloat(order.subtotal).toFixed(2),
-    'الخصم': parseFloat(order.discount_amount).toFixed(2),
-    'الإجمالي': parseFloat(order.total).toFixed(2),
-    'الربح': parseFloat(order.profit).toFixed(2),
+    'النوع': order.order_type === 'dine-in' ? 'داخلي' : 'أونلاين',
+    'الحالة': order.order_status === 'pending' ? 'قيد الانتظار' :
+              order.order_status === 'confirmed' ? 'مؤكد' :
+              order.order_status === 'preparing' ? 'قيد التحضير' :
+              order.order_status === 'ready' ? 'جاهز' :
+              order.order_status === 'completed' ? 'مكتمل' :
+              order.order_status === 'cancelled' ? 'ملغي' : order.order_status,
+    'المجموع الفرعي': parseFloat(order.subtotal || 0).toFixed(2),
+    'الخصم': parseFloat(order.discount_amount || 0).toFixed(2),
+    'الإجمالي': order.order_status === 'cancelled' ? '0.00' : parseFloat(order.total || order.total_amount || 0).toFixed(2),
+    'الربح': order.order_status === 'cancelled' ? '0.00' : parseFloat(order.profit || 0).toFixed(2),
   }));
 
-  // Add summary row
+  // Add summary row - only count active orders
+  const totalSales = activeOrders.reduce((sum, order) => sum + parseFloat(order.total || order.total_amount || 0), 0);
+  const totalProfit = activeOrders.reduce((sum, order) => sum + parseFloat(order.profit || 0), 0);
+
   data.push({});
   data.push({
     'رقم الطلب': 'الإجمالي',
     'المجموع الفرعي': '',
     'الخصم': '',
-    'الإجمالي': parseFloat(reportData.summary?.totalSales || 0).toFixed(2),
-    'الربح': parseFloat(reportData.summary?.totalProfit || 0).toFixed(2),
+    'الإجمالي': totalSales.toFixed(2),
+    'الربح': totalProfit.toFixed(2),
   });
 
   const dateStr = dateRange.start_date && dateRange.end_date

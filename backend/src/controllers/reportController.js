@@ -106,6 +106,9 @@ exports.getSalesReport = async (req, res) => {
     try {
         const { start_date, end_date, order_type, status } = req.query;
 
+        console.log('=== SALES REPORT ===');
+        console.log('Query params:', { start_date, end_date, order_type, status });
+
         let query = `
             SELECT o.*, o.total_amount as total, u.full_name as cashier_name
             FROM orders o
@@ -141,7 +144,11 @@ exports.getSalesReport = async (req, res) => {
 
         query += ' ORDER BY o.created_at DESC';
 
+        console.log('Final query:', query);
+        console.log('Query params:', params);
+
         const [orders] = await db.query(query, params);
+        console.log('Orders found:', orders.length);
 
         // Calculate totals and profit for each order
         // Only count non-cancelled orders in sales/profit totals
