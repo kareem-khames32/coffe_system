@@ -42,146 +42,124 @@ const Invoice = ({ orderData, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        {/* Print Area */}
-        <div id="invoice-print-area" className="p-4">
+      <div className="bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto" style={{ width: '302px' }}>
+        {/* Print Area - Receipt Style 80mm */}
+        <div id="invoice-print-area" className="p-3 font-mono" style={{ width: '302px' }}>
           {/* Header */}
-          <div className="text-center mb-3 border-b border-coffee-600 pb-3">
-            <div className="flex justify-center mb-2">
-              {settings.cafe_logo ? (
-                <img
-                  src={`http://localhost:5000${settings.cafe_logo}`}
-                  alt="Logo"
-                  className="h-12 w-12 object-contain"
-                />
-              ) : (
-                <div className="bg-coffee-600 p-2 rounded-full">
-                  <Coffee className="w-6 h-6 text-white" />
-                </div>
-              )}
-            </div>
-            <h1 className="text-xl font-bold text-coffee-800">{settings.cafe_name}</h1>
-            <p className="text-xs text-gray-600 mt-1">{settings.cafe_address} • {settings.cafe_phone}</p>
+          <div className="text-center mb-2 border-b border-dashed border-gray-400 pb-2">
+            {settings.cafe_logo ? (
+              <img
+                src={`http://localhost:5000${settings.cafe_logo}`}
+                alt="Logo"
+                className="h-10 w-10 object-contain mx-auto mb-1"
+              />
+            ) : (
+              <div className="bg-coffee-600 p-1.5 rounded-full inline-block mb-1">
+                <Coffee className="w-5 h-5 text-white" />
+              </div>
+            )}
+            <h1 className="text-sm font-bold text-gray-800">{settings.cafe_name}</h1>
+            <p className="text-[10px] text-gray-600">{settings.cafe_address}</p>
+            <p className="text-[10px] text-gray-600">{settings.cafe_phone}</p>
           </div>
 
           {/* Invoice Details */}
-          <div className="mb-3 bg-gray-50 p-2 rounded text-xs">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-gray-600">رقم الفاتورة: </span>
-                <span className="font-bold">{orderData.order_number}</span>
-              </div>
-              <div className="text-left">
-                <span className="text-gray-600">التاريخ: </span>
-                <span className="font-bold">
-                  {new Date(orderData.created_at).toLocaleDateString('ar-EG', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </span>
-              </div>
+          <div className="mb-2 text-[10px] border-b border-dashed border-gray-400 pb-2">
+            <div className="flex justify-between">
+              <span>رقم: {orderData.order_number}</span>
+              <span>
+                {new Date(orderData.created_at).toLocaleDateString('ar-EG', {
+                  year: 'numeric',
+                  month: 'numeric',
+                  day: 'numeric',
+                })}
+              </span>
+            </div>
+            <div className="text-center text-[10px] text-gray-500">
+              {new Date(orderData.created_at).toLocaleTimeString('ar-EG', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
             </div>
           </div>
 
           {/* Customer Info */}
           {orderData.customer_name && (
-            <div className="mb-3 border-t border-gray-200 pt-2 text-xs">
-              <div className="grid grid-cols-2 gap-1">
-                <div>
-                  <span className="text-gray-600">العميل: </span>
-                  <span className="font-semibold">{orderData.customer_name}</span>
-                </div>
-                {orderData.customer_phone && (
-                  <div className="text-left">
-                    <span className="text-gray-600">هاتف: </span>
-                    <span className="font-semibold">{orderData.customer_phone}</span>
-                  </div>
-                )}
-              </div>
+            <div className="mb-2 text-[10px] border-b border-dashed border-gray-400 pb-2">
+              <div>العميل: {orderData.customer_name}</div>
+              {orderData.customer_phone && <div>هاتف: {orderData.customer_phone}</div>}
             </div>
           )}
 
-          {/* Items Table */}
-          <div className="mb-3">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-coffee-700 text-white">
-                  <th className="px-2 py-1 text-right">المنتج</th>
-                  <th className="px-2 py-1 text-center w-12">الكمية</th>
-                  <th className="px-2 py-1 text-right w-16">السعر</th>
-                  <th className="px-2 py-1 text-right w-20">الإجمالي</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orderData.items?.map((item, index) => (
-                  <tr key={index} className="border-b border-gray-200">
-                    <td className="px-2 py-1">{item.product_name}</td>
-                    <td className="px-2 py-1 text-center">{item.quantity}</td>
-                    <td className="px-2 py-1">{parseFloat(item.price).toFixed(2)}</td>
-                    <td className="px-2 py-1 font-semibold">
-                      {(parseFloat(item.price) * item.quantity).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Items */}
+          <div className="mb-2 text-[10px]">
+            <div className="flex justify-between font-bold border-b border-gray-300 pb-1 mb-1">
+              <span>الصنف</span>
+              <span>المجموع</span>
+            </div>
+            {orderData.items?.map((item, index) => (
+              <div key={index} className="mb-1">
+                <div className="flex justify-between">
+                  <span className="flex-1">{item.product_name}</span>
+                  <span className="font-semibold">{(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                </div>
+                <div className="text-[9px] text-gray-500 mr-2">
+                  {item.quantity} × {parseFloat(item.price).toFixed(2)}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Totals */}
-          <div className="border-t border-gray-300 pt-2">
-            <div className="space-y-1 text-sm">
-              {discount > 0 && (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-gray-700">المجموع الفرعي:</span>
-                    <span>{subtotal.toFixed(2)} ج.م</span>
-                  </div>
-                  <div className="flex justify-between text-red-600">
-                    <span>الخصم:</span>
-                    <span>- {discount.toFixed(2)} ج.م</span>
-                  </div>
-                </>
-              )}
-              <div className="flex justify-between text-lg font-bold text-coffee-800 pt-1 border-t border-gray-300">
-                <span>الإجمالي:</span>
-                <span>{total.toFixed(2)} ج.م</span>
-              </div>
+          <div className="border-t border-dashed border-gray-400 pt-2 text-[11px]">
+            {discount > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span>المجموع:</span>
+                  <span>{subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-red-600">
+                  <span>الخصم:</span>
+                  <span>- {discount.toFixed(2)}</span>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between font-bold text-sm border-t border-double border-gray-400 pt-1 mt-1">
+              <span>الإجمالي:</span>
+              <span>{total.toFixed(2)} ج.م</span>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="mt-3 text-center border-t border-coffee-600 pt-2">
-            <p className="text-xs text-coffee-700 font-semibold">شكراً لزيارتكم!</p>
-            <div className="mt-2 text-[10px] text-gray-500">
-              <p>تم التطوير بواسطة Kareem Khames</p>
-            </div>
+          <div className="mt-3 text-center border-t border-dashed border-gray-400 pt-2">
+            <p className="text-[10px] font-bold">شكراً لزيارتكم!</p>
+            <p className="text-[8px] text-gray-400 mt-1">Developed by Kareem Khames</p>
           </div>
         </div>
 
         {/* Action Buttons - Hidden when printing */}
-        <div className="flex gap-4 p-6 border-t print:hidden">
+        <div className="flex gap-2 p-3 border-t print:hidden">
           <button
             onClick={handlePrint}
-            className="flex-1 bg-coffee-600 hover:bg-coffee-700 text-white py-3 rounded-lg font-semibold transition"
+            className="flex-1 bg-coffee-600 hover:bg-coffee-700 text-white py-2 rounded text-sm font-semibold transition"
           >
-            طباعة الفاتورة
+            طباعة
           </button>
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition"
+            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded text-sm font-semibold transition"
           >
             إغلاق
           </button>
         </div>
       </div>
 
-      {/* Print Styles */}
+      {/* Print Styles - 80mm Thermal Receipt */}
       <style jsx global>{`
         @media print {
           @page {
-            size: A5;
-            margin: 0.5cm;
+            size: 80mm auto;
+            margin: 0;
           }
 
           body * {
@@ -197,22 +175,14 @@ const Invoice = ({ orderData, onClose }) => {
             position: absolute;
             left: 0;
             top: 0;
-            width: 100%;
-            padding: 0.5cm !important;
-            font-size: 10pt;
+            width: 80mm !important;
+            padding: 2mm !important;
+            font-size: 9pt;
+            font-family: monospace;
           }
 
           .print\\:hidden {
             display: none !important;
-          }
-
-          /* Make text even smaller for print */
-          #invoice-print-area h1 {
-            font-size: 16pt;
-          }
-
-          #invoice-print-area table {
-            font-size: 9pt;
           }
         }
       `}</style>
