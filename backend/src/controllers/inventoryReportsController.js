@@ -657,12 +657,12 @@ exports.getTopPurchasedMaterials = async (req, res) => {
 
         const [materials] = await db.query(`
             SELECT
-                rm.id,
-                rm.name,
+                rm.id AS material_id,
+                rm.name AS material_name,
                 rm.unit,
                 SUM(ipi.quantity) AS total_quantity,
                 SUM(ipi.total_cost) AS total_value,
-                COUNT(DISTINCT ipi.purchase_id) AS purchase_times,
+                COUNT(DISTINCT ipi.purchase_id) AS purchase_count,
                 AVG(ipi.unit_cost) AS avg_price
             FROM inventory_purchase_items ipi
             JOIN raw_materials rm ON ipi.raw_material_id = rm.id
