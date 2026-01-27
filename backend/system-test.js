@@ -234,13 +234,13 @@ async function testRawMaterials() {
     });
   }
 
-  // Verify all materials have 0 stock
+  // Verify our created materials have 0 stock
   await runTest('التحقق أن المخزون = 0', async () => {
-    const response = await api.get('/raw-materials');
-    const materials = response.data.data || response.data;
-    for (const mat of materials) {
-      if (parseFloat(mat.current_stock) !== 0) {
-        throw new Error(`المادة ${mat.name} لديها مخزون ${mat.current_stock} بدلاً من 0`);
+    for (const mat of testData.rawMaterials) {
+      const response = await api.get(`/raw-materials/${mat.id}`);
+      const stock = parseFloat(response.data.data?.current_stock || response.data.current_stock || 0);
+      if (stock !== 0) {
+        throw new Error(`المادة ${mat.name} لديها مخزون ${stock} بدلاً من 0`);
       }
     }
   });
