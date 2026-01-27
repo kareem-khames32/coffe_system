@@ -88,7 +88,7 @@ async function testAuthentication() {
   await runTest('تسجيل الدخول', async () => {
     const response = await api.post('/auth/login', {
       username: 'admin',
-      password: 'admin123',
+      password: '123456',
     });
 
     const token = response.data.data?.token || response.data.token;
